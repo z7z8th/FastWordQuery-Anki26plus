@@ -5,8 +5,8 @@ import random
 from ..base import *
 
 
-VOICE_PATTERN = r'<a href="sound://([\w/]+\w*\.mp3)"><img src="img/spkr_%s.png"></a>'
-VOICE_PATTERN_WQ = r'<span class="%s"><a href="sound://([\w/]+\w*\.mp3)">(.*?)</span %s>'
+VOICE_PATTERN = r'''<a\s+href=['"]sound://([\w/]+\w*\.mp3)['"]\s*>\s*<img\s+src=['"]img/spkr_%s.png['"]\s*/?>\s*</a\s*>'''
+VOICE_PATTERN_WQ = r'''<span\s+class=['"]%s['"]\s*>\s*<a\s+href=['"]sound://([\w/]+\w*\.mp3)['"]\s*/?>(.*?)</span\s+%s\s*>'''
 MAPPINGS = [
     ['br', [re.compile(VOICE_PATTERN % r'r'), re.compile(VOICE_PATTERN_WQ % (r'brevoice', r'brevoice'))]],
     ['us', [re.compile(VOICE_PATTERN % r'b'), re.compile(VOICE_PATTERN_WQ % (r'amevoice', r'amevoice'))]]
@@ -27,7 +27,9 @@ class Ldoce6(MdxService):
                 service = service_pool.get(clazz.__unique__)
                 title = service.builder._title if service and service.support else u''
                 service_pool.put(service)
-                if title.startswith(u'LDOCE6'):
+                print(f'Dict Service: {title} -- {service.dict_path}')
+                if title.startswith(u'LDOCE6') or u'LDOCE6' in os.path.basename(service.dict_path):
+                    print(f"*** MDX-LDOCE6 Found dict_path: {service.dict_path}")
                     dict_path = service.dict_path
                     break
         super(Ldoce6, self).__init__(dict_path)
@@ -48,9 +50,13 @@ class Ldoce6(MdxService):
         """获取发音字段"""
         for regexp in LANG_TO_REGEXPS[voice]:
             match = regexp.search(html)
+            # print(f'_fld_voice regexp {regexp}')
             if match:
+                # print(f'_fld_voice match {match}')
                 val = '/' + match.group(1)
-                name = get_hex_name('mdx-'+self.unique.lower(), val, 'mp3')
+                ## uniq name by uuid
+                # name = get_hex_name('mdx-'+self.unique.lower(), val, 'mp3')
+                name = get_canonical_name('mdx-'+self.unique.lower()+'-sound-', val)
                 name = self.save_file(val, name)
                 if name:
                     return self.get_anki_label(name, 'audio')
