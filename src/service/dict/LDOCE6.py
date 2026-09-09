@@ -56,10 +56,10 @@ class Ldoce6(MdxService):
                 val = '/' + match.group(1)
                 ## uniq name by uuid
                 # name = get_hex_name('mdx-'+self.unique.lower(), val, 'mp3')
-                name = get_canonical_name('mdx-'+self.unique.lower()+'-sound-', val)
-                name = self.save_file(val, name)
-                if name:
-                    return self.get_anki_label(name, 'audio')
+                dest_name = get_canonical_name(f'_mdx-{self.unique.lower()}-', val)
+                dest_name = self.save_file(val, dest_name)
+                if dest_name:
+                    return self.get_anki_label(dest_name, 'audio')
         return ''
 
     @export('BRE_PRON')
@@ -74,10 +74,10 @@ class Ldoce6(MdxService):
         val = '/' + img
         # file extension isn't always jpg
         file_extension = os.path.splitext(img)[1][1:].strip().lower()
-        name = get_hex_name('mdx-'+self.unique.lower(), val, file_extension)
-        name = self.save_file(val, name)
-        if name:
-            return self.get_anki_label(name, 'img')
+        dest_name = get_canonical_name(f'_mdx-{self.unique.lower()}-', val)
+        dest_name = self.save_file(val, dest_name)
+        if dest_name:
+            return self.get_anki_label(dest_name, 'img')
         return ''
 
     @export('IMAGE')
@@ -93,10 +93,10 @@ class Ldoce6(MdxService):
         return self._range_sentence([i for i in range(0, 100)])
 
     def _fld_audio(self, audio):
-        name = get_hex_name('mdx-'+self.unique.lower(), audio, 'mp3')
-        name = self.save_file(audio, name)
-        if name:
-            return self.get_anki_label(name, 'audio')
+        dest_name = get_canonical_name(f'_mdx-{self.unique.lower()}', audio)
+        dest_name = self.save_file(audio, dest_name)
+        if dest_name:
+            return self.get_anki_label(dest_name, 'audio')
         return ''
 
     @export([u'例句加音频', u'Examples with audios'])

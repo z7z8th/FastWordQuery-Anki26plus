@@ -678,15 +678,15 @@ class MdxService(LocalService):
 
         return self.html_cache[word]
 
-    def save_file(self, filepath_in_mdx, savepath):
+    def save_file(self, filepath_in_mdx, dest_path):
         """according to filepath_in_mdx to get media file and save it to savepath"""
         try:
             bytes_list = self._get_definition_mdd(filepath_in_mdx)
             if bytes_list:
-                if not os.path.exists(savepath):
-                    with open(savepath, 'wb') as f:
+                if not os.path.exists(dest_path):
+                    with open(dest_path, 'wb') as f:
                         f.write(bytes_list[0])
-                return savepath
+                return dest_path
         except sqlite3.OperationalError as e:
             print(e)
             pass
@@ -725,16 +725,18 @@ class MdxService(LocalService):
         """
         # convert media path, save media files
         media_files_set = set()
+        
         mcss = re.findall(r'href=[\',"](\S+?\.css)[\',"]', html)
         media_files_set.update(set(mcss))
         mjs = re.findall(r'src="([\w\./]\S+?\.js)"', html)
         media_files_set.update(set(mjs))
+
         msrc = re.findall(r'<img.*?src="([\w\./]\S+?)".*?>', html)
         media_files_set.update(set(msrc))
         msound = re.findall(r'href="sound:(.*?\.(?:mp3|wav|aac))"', html)
         # TODO
         """
-        for import css
+        for import css, add to `Note Type -> Cards -> Styling`
         https://forums.ankiweb.net/t/how-to-add-external-css-in-a-field/17838/9
         <link rel="stylesheet" href="v.css" type="text/css">
         <style>@import url(style.css);</style>
