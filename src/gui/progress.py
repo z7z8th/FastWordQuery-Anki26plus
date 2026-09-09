@@ -128,7 +128,7 @@ class ProgressWindow(object):
 
     def _set_busy(self):
         self._disabled = True
-        self.mw.app.setOverrideCursor(QCursor(Qt.WaitCursor))
+        self.mw.app.setOverrideCursor(QCursor(Qt.CursorShape.WaitCursor))
 
     def _unset_busy(self):
         self._disabled = False

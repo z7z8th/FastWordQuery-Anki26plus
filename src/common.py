@@ -20,7 +20,7 @@
 from operator import itemgetter
 
 from anki.hooks import addHook, remHook, wrap
-from aqt import mw
+from aqt import gui_hooks, mw
 from aqt.addcards import AddCards
 from aqt.qt import *
 from aqt.utils import downArrow, shortcut, showInfo
@@ -131,7 +131,7 @@ def browser_menu():
         init_fastwq_menu()
         addHook('config.update', init_fastwq_menu)
 
-    addHook('browser.setupMenus', on_setup_menus)
+    gui_hooks.browser_menus_did_init.append(on_setup_menus)
 
 
 def customize_addcards():
@@ -160,7 +160,7 @@ def customize_addcards():
                         _("ALL_FIELDS"),
                         lambda: query_from_editor_fields(self.editor))  # ,QKeySequence(my_shortcut))
                     # default options
-                    mid = self.editor.note.model()['id']
+                    mid = self.editor.note.note_type()['id']
                     conf = config.get_maps(mid)
                     conf = {
                         'list': [conf],
@@ -177,7 +177,7 @@ def customize_addcards():
                                 lambda mid=mid, i=i: set_options_def(mid, i))
                         menu.addSeparator()
                     # end default options
-                    menu.addAction(_("OPTIONS"), lambda: show_options(self, self.editor.note.model()['id']))
+                    menu.addAction(_("OPTIONS"), lambda: show_options(self, self.editor.note.note_type()['id']))
                     menu.exec(
                         fastwqBtn.mapToGlobal(QPoint(0, fastwqBtn.height())))
             else:
@@ -208,7 +208,7 @@ def context_menu():
         """
         if not isinstance(web_view.editor.currentField, int):
             return
-        current_model_id = web_view.editor.note.model()['id']
+        current_model_id = web_view.editor.note.note_type()['id']
         conf = config.get_maps(current_model_id)
         maps_list = conf if isinstance(conf, list) else conf['list']
         curr_flds = []
@@ -256,6 +256,6 @@ def context_menu():
                 submenu.addAction(
                     c['name'], lambda i=c['def']: query_from_editor_hook(i))
             submenu.addSeparator()
-        submenu.addAction(_("OPTIONS"), lambda: show_options(web_view, web_view.editor.note.model()['id']))
+        submenu.addAction(_("OPTIONS"), lambda: show_options(web_view, web_view.editor.note.note_type()['id']))
 
-    addHook('EditorWebView.contextMenuEvent', on_setup_menus)
+    gui_hooks.editor_will_show_context_menu.append(on_setup_menus)

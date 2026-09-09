@@ -80,7 +80,7 @@ def query_from_editor_fields(editor, fields=None):
         tooltip(_('PLS_SET_DICTIONARY_FIELDS'))
         show_options(
             editor.parentWindow,
-            editor.note.model()['id'],
+            editor.note.note_type()['id'],
             query_from_editor_fields,
             editor,
             fields

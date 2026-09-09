@@ -1,3 +1,23 @@
+# FastWordQuery (Anki 26+)
+
+本仓库 fork 自 [sirius-fan/FastWordQuery](https://github.com/sirius-fan/FastWordQuery)（原项目为 [sth2018/FastWordQuery](https://github.com/sth2018/FastWordQuery)）。原插件支持到 Anki 24.04，这里只修了几处兼容性问题，让它能在 Anki 26.05+（Qt6 / Python 3.13）上继续用。功能和代码都是原作者的，感谢他们。
+
+改动就三处：
+
+- `Qt.WaitCursor` → `Qt.CursorShape.WaitCursor`
+- Anki 26 移除的旧钩子 `browser.setupMenus`、`EditorWebView.contextMenuEvent` 换成对应的 `gui_hooks` 钩子
+- 被移除的 `note.model()` 换成 `note.note_type()`
+
+安装：把 `src` 文件夹复制到 Anki 插件目录（Tools → Add-ons → View Files），文件夹名随意。
+
+注：百词斩接口已被官方关闭，查不到内容，请改用有道、剑桥等其它词典。
+
+A fork of sirius-fan/FastWordQuery with three small compatibility fixes for Anki 26.05+ (Qt6 / Python 3.13). All credit goes to the original authors. Install by copying the `src` folder into your Anki add-ons folder. The Baicizhan service has been shut down; use Youdao or Cambridge instead.
+
+---
+
+以下为原项目 README（未改动）/ Original README below, unchanged:
+
 # [dev] FastWordQuery_
 **没改完，慢慢来**
 
