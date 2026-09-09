@@ -45,3 +45,4 @@ class Template:
         t2=_('FEEDBACK'),
         feedback0=Endpoint.feedback_issue,
         feedback1=Endpoint.feedback_mail)
+    miss_css = u'''Dict {dict} miss css file {css}'''

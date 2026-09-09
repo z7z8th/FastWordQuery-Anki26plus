@@ -16,6 +16,8 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+import traceback
 import anki.notes
 from aqt import mw
 from aqt.qt import *
@@ -65,6 +67,7 @@ class QueryThread(QThread):
                         self.note_flush.emit(note)
             except InvalidWordException:
                 # only show error info on single query
+                print(traceback.format_exc())
                 self.manager.fails += 1
                 if self.manager.total == 1:
                     showInfo(_("NO_QUERY_WORD"))
@@ -105,10 +108,27 @@ class QueryWorkerManager(object):
         self.progress.start(max=self.total, min=0)
         self.update_progress()
         if self.total > 1:
+            # raise Number of open files limit, otherwise open sqlite db error,
+            # when query thousands of words in many threads:
+            # OSError: too many open files.
+            try:
+                import resource
+
+                soft, hard = resource.getrlimit(resource.RLIMIT_NOFILE)
+                print(f"Current open files limit: soft={soft}, hard={hard}")
+                # Raise soft up to hard (no root needed)
+                resource.setrlimit(resource.RLIMIT_NOFILE, (16384, hard))
+                soft, hard = resource.getrlimit(resource.RLIMIT_NOFILE)
+                print(f"Changed open files limit: soft={soft}, hard={hard}")
+            except Exception as e:
+                print(traceback.format_exc())
+
             for _ in range(0, min(config.thread_number, self.total)):
+                print(f"get_worker {_} of {min(config.thread_number, self.total)}")
                 self.get_worker()
 
             for worker in self.workers:
+                print(f"start worker {worker}")
                 worker.start()
         else:
             worker = self.get_worker()
@@ -158,7 +178,7 @@ class QueryWorkerManager(object):
     def handle_flush(self, note: anki.notes.Note):
         if self.flush and note:
             try:
+                note.col.update_note(note)
+            except Exception:
                 # flush is deprecated
                 note.flush()
-            except Exception:
-                note.col.update_note(note)

@@ -23,6 +23,7 @@ import re
 import shutil
 import unicodedata
 from collections import defaultdict
+import traceback
 
 from aqt.qt import *
 from aqt.utils import showInfo
@@ -241,6 +242,7 @@ def query_flds(note, fileds=None):
                 result.update({task['i']: qr})
                 success_num += 1
         except Exception as e:
+            print(traceback.format_exc())
             print(_("NO_QUERY_WORD"), e)
             pass
 

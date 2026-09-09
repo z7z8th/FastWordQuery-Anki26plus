@@ -20,6 +20,7 @@
 import inspect
 import os
 import random
+import traceback
 # use ntpath module to ensure the windows-style (e.g. '\\LDOCE.css')
 # path can be processed on Unix platform.
 # However, anki version on mac platforms doesn't including this package?
@@ -60,7 +61,7 @@ except ImportError:
     import dummy_threading as _threading
 
 __all__ = [
-    'register', 'export', 'copy_static_file', 'with_styles', 'parse_html', 'service_wrap', 'get_hex_name',
+    'register', 'export', 'copy_static_file', 'with_styles', 'parse_html', 'service_wrap', 'get_hex_name', 'get_canonical_name',
     'Service', 'WebService', 'LocalService', 'MdxService', 'StardictService', 'QueryResult'
 ]
 
@@ -76,6 +77,16 @@ def get_hex_name(prefix, val, suffix):
          suffix, ])
     return name
 
+
+def get_canonical_name(prefix, val, suffix=''):
+    '''meaning full canonical name with special chars repalced'''
+    val = val.replace('://', '-')
+    val = re.sub(r'''[^\w\d_'.-]+''', '_', val)
+    val = re.sub(r'''_*-+_*''', '-', val)
+    val = re.sub(r'''_+''', '_', val)
+    val = re.sub(r'''^_+''', '', val)
+
+    return f"{prefix}{val}{suffix}"
 
 def _is_method_or_func(object):
     return inspect.isfunction(object) or inspect.ismethod(object)
@@ -270,7 +281,7 @@ class Service(object):
         return urllib2.quote(self.word)
 
     @property
-    def support(self):
+    def support(self) -> bool:
         return True
 
     @property
@@ -288,8 +299,11 @@ class Service(object):
     def _get_exporters(self):
         flds = dict()
         methods = inspect.getmembers(self, predicate=inspect.ismethod)
+        # print(f'_get_exporters methods {methods}')
         for method in methods:
             export_attrs = getattr(method[1], '__export_attrs__', None)
+            # print(f'_get_exporters export_attrs {export_attrs}')
+            
             if export_attrs:
                 label, index = export_attrs[0], export_attrs[1]
                 flds.update({int(index): (label, method[1])})
@@ -503,6 +517,7 @@ class _DictBuildWorker(QThread):
         try:
             self._builder = self._func()
         except Exception:
+            print(traceback.format_exc())
             self._builder = None
 
     @property
@@ -529,7 +544,8 @@ class LocalService(Service):
     def _get_builder(key, func=None):
         LocalService._mutex_builder.lock()
         key = md5(str(key).encode('utf-8')).hexdigest()
-        if not (func is None):
+        # print(f'_get_builder key {key} {func} builders[key] {LocalService._mdx_builders[key]}')
+        if func:
             if not LocalService._mdx_builders[key]:
                 worker = _DictBuildWorker(func)
                 worker.start()
@@ -568,7 +584,6 @@ class MdxService(LocalService):
         self.cache = defaultdict(str)
         self.html_cache = defaultdict(str)
         self.query_interval = 0.01
-        self.word_links = []
         self.styles = []
         if MdxService.check(self.dict_path):
             self.builder = self._get_builder(dict_path, service_wrap(MdxBuilder, dict_path))
@@ -579,7 +594,7 @@ class MdxService(LocalService):
 
     @property
     def support(self):
-        return self.builder and MdxService.check(self.dict_path)
+        return bool(self.builder and MdxService.check(self.dict_path))
 
     @property
     def title(self):
@@ -592,19 +607,37 @@ class MdxService(LocalService):
     def fld_whole(self):
         html = self.get_default_html()
         js = re.findall(r'<script .*?>(.*?)</script>', html, re.DOTALL)
-        jsfile = re.findall(r'<script .*?src=[\'\"](.+?)[\'\"]', html, re.DOTALL)
+        jsfile = re.findall(r'''<script .*?src=['"](.+?)['"]''', html, re.DOTALL)
         return QueryResult(result=html, js=u'\n'.join(js), jsfile=jsfile)
 
-    def _get_definition_mdx(self, word=None):
+    def _get_definition_mdx(self, word=None, depth = 0):
         """according to the word return mdx dictionary page"""
         if word is None:
             word = self.word
         ignorecase = config.ignore_mdx_wordcase and (word != word.lower() or word != word.upper())
         content = self.builder.mdx_lookup(word, ignorecase=ignorecase)
+        
+        if not content:
+            # print(f'*** [{self.title}] No definition for "{word}"')
+            return ""
+        
         str_content = ""
-        if len(content) > 0:
-            for c in content:
-                str_content += c.replace("\r\n", "").replace("entry:/", "")
+        for c in content:
+            # print(f"_get_definition_mdx {word}: {len(c) > 100 and c[:100] or c}")
+            def replace_link(match):
+                # limit redirect depth to 1
+                # LDOCE6 word "license" and "licence" are linked to each other, causing dead loop
+                MAX_LINK_REDIR_DEPTH = 1
+                if depth >= MAX_LINK_REDIR_DEPTH:
+                    print(f'*** Max link redirect depth {MAX_LINK_REDIR_DEPTH} exceeded for "{match}"')
+                    # return f'No definition for "{match}"'
+                    return ""
+                target_word = match.group(1).strip()
+                tdef = self._get_definition_mdx(target_word, depth + 1)
+                return tdef
+
+            c = re.sub(r'@@@LINK=([^\r\n]+)[\r\n]+', replace_link, c)
+            str_content += c.replace("\r\n", "").replace("entry:/", "")
 
         return str_content
 
@@ -622,10 +655,14 @@ class MdxService(LocalService):
         """get self.word's html page from MDX"""
         if word is None:
             word = self.word
+        word_lower = word.lower()
         if not self.html_cache[word]:
             html = self._get_definition_mdx(word)
+            if not html and word != word_lower:
+                html = self._get_definition_mdx(word_lower)
             if html:
                 self.html_cache[word] = html
+
         return self.html_cache[word]
 
     def save_file(self, filepath_in_mdx, savepath):
@@ -647,7 +684,6 @@ class MdxService(LocalService):
         default get html from mdx interface
         '''
         if not self.cache[self.word]:
-            self.word_links = [self.word.upper()]
             self._get_default_html(self.word)
         return self.cache[self.word]
 
@@ -661,46 +697,13 @@ class MdxService(LocalService):
         if word is None:
             word = self.word
         result = self.get_html(word)
-        if result:
-            if result.upper().find(u"@@@LINK=") > -1:
-                raw_html, _, result = result.partition("@@@LINK=")
-                words = list(filter(None, result.split('@@@LINK=')))
-                words = [i.strip() for i in words]
-                # redirect to a new word behind the equal symol.
-                # for example '@@@LINK=あまでら【尼寺】@@@LINK=にじ【尼寺】'
-                if raw_html:
-                    html_list = [raw_html, ]
-                else:
-                    html_list = []
-
-                for redirect_word in words:
-                    if not redirect_word.upper() in self.word_links:
-                        self.word_links.append(redirect_word.upper())
-                        html_list.append(self._get_default_html(redirect_word))
-                if len(html_list) != 0:
-                    html = "<br>".join(html_list)
-
-            else:
-                # no redirect
-                html = result
-
+        if not result:
+            return
+        
+        html = result
         self.cache[word] = self.adapt_to_anki(html)
         return html
 
-    def _get_default_html_one_word(self):
-        html = u''
-        result = self.get_html()
-        if result:
-            if result.upper().find(u"@@@LINK=") > -1:
-                # redirect to a new word behind the equal symol.
-                word = result[len(u"@@@LINK="):].strip()
-                if not word.upper() in self.word_links:
-                    self.word_links.append(word.upper())
-                    self.word = word
-                    return self._get_default_html()
-            html = self.adapt_to_anki(result)
-        self.cache[self.word] = html
-        return self.cache[self.word]
 
     def adapt_to_anki(self, html):
         """

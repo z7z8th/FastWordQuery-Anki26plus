@@ -106,12 +106,14 @@ class ServiceManager(object):
         mdx_services = list()
         star_dict_services = list()
         for each in config.dirs:
+            print(f'config.dirs {each}')
             for dirpath, dirnames, filenames in os.walk(each):
                 for filename in filenames:
                     service = None
                     dict_path = os.path.join(dirpath, filename)
                     #MDX
                     if MdxService.check(dict_path):
+                        print(f'config.dirs > MdxService dict_path {dict_path}')
                         service = service_wrap(MdxService, dict_path)
                         service.__unique__ = md5(str(dict_path).encode('utf-8')).hexdigest()
                         mdx_services.append(service)

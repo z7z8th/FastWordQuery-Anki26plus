@@ -299,7 +299,7 @@ class OptionsDialog(Dialog):
             cancel=True,
             geomKey="selectModel")
         if ret.name:
-            model = mw.col.models.byName(ret.name)
+            model = mw.col.models.by_name(ret.name)
             self.models_button.setText(
                 u'%s [%s]' % (_('CHOOSE_NOTE_TYPES'), ret.name))
             return model
