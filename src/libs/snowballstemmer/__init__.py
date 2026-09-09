@@ -1,27 +1,22 @@
 __all__ = ('language', 'stemmer')
 
-from .english_stemmer import EnglishStemmer
-
-language = {
-    'english': EnglishStemmer,
-}
-
 try:
     import Stemmer
-    cext_available = True
+    algorithms = Stemmer.algorithms
+    stemmer = Stemmer.Stemmer
 except ImportError:
-    cext_available = False
+    from .english_stemmer import EnglishStemmer
 
-def algorithms():
-    if cext_available:
-        return Stemmer.language()
-    else:
-        return list(language.keys())
+    _languages = {
+        'english': EnglishStemmer,
+    }
 
-def stemmer(lang):
-    if cext_available:
-        return Stemmer.Stemmer(lang)
-    if lang.lower() in language:
-        return language[lang.lower()]()
-    else:
-        raise KeyError("Stemming algorithm '%s' not found" % lang)
+    def algorithms():
+        return list(_languages.keys())
+
+    def stemmer(lang):
+        lang = lang.lower()
+        if lang in _languages:
+            return _languages[lang]()
+        else:
+            raise KeyError("Stemming algorithm '%s' not found" % lang)
