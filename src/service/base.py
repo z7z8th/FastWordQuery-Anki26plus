@@ -669,10 +669,10 @@ class MdxService(LocalService):
             html = self._get_definition_mdx(word)
             if not html and word != word_lower:
                 html = self._get_definition_mdx(word_lower)
-            if not html:
-                word_base_form = self.get_stemmer().stemWord(word)
-                if word != word_base_form:
-                    html = self._get_definition_mdx(word_base_form)
+            # if not html:
+            #     word_base_form = self.get_stemmer().stemWord(word)
+            #     if word != word_base_form:
+            #         html = self._get_definition_mdx(word_base_form)
             if html:
                 self.html_cache[word] = html
 
