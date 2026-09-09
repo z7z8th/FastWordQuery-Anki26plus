@@ -30,6 +30,7 @@ import shutil
 import sqlite3
 import urllib
 import zlib
+import threading
 from collections import defaultdict
 from functools import wraps
 from hashlib import md5, sha1
@@ -44,6 +45,7 @@ from ..context import config
 from ..lang import _cl
 from ..libs import MdxBuilder, StardictBuilder
 from ..utils import MapDict, wrap_css
+from ..libs.snowballstemmer import stemmer
 
 try:
     import urllib2
@@ -580,6 +582,7 @@ class MdxService(LocalService):
 
     def __init__(self, dict_path):
         super(MdxService, self).__init__(dict_path)
+        self._local = threading.local()
         self.media_cache = defaultdict(set)
         self.cache = defaultdict(str)
         self.html_cache = defaultdict(str)
@@ -650,6 +653,12 @@ class MdxService(LocalService):
             return [content[0]]
         else:
             return []
+        
+    def get_stemmer(self):
+        """Retrieves or creates a thread-unique stemmer."""
+        if not hasattr(self._local, "stemmer"):
+            self._local.stemmer = stemmer("english")
+        return self._local.stemmer
 
     def get_html(self, word=None):
         """get self.word's html page from MDX"""
@@ -660,6 +669,10 @@ class MdxService(LocalService):
             html = self._get_definition_mdx(word)
             if not html and word != word_lower:
                 html = self._get_definition_mdx(word_lower)
+            if not html:
+                word_base_form = self.get_stemmer().stemWord(word)
+                if word != word_base_form:
+                    html = self._get_definition_mdx(word_base_form)
             if html:
                 self.html_cache[word] = html
 
