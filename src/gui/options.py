@@ -607,26 +607,16 @@ class TabContent(QScrollArea):
         maps = []
         for row in self._options:
             maps.append({
-                'fld_name':
-                row['model']['fld_name'],
-                'fld_ord':
-                row['model']['fld_ord'],
-                'word_checked':
-                row['word_check_btn'].isChecked(),
-                'dict_name':
-                row['dict_combo'].currentText().strip(),
-                'dict_unique':
-                row['dict_combo'].itemData(row['dict_combo'].currentIndex()),
-                'dict_fld_name':
-                row['field_combo'].currentText().strip(),
-                'dict_fld_ord':
-                row['field_combo'].itemData(row['field_combo'].currentIndex()),
-                'ignore':
-                row['ignore_check_btn'].isChecked(),
-                'skip_valued':
-                row['skip_check_btn'].isChecked(),
-                'cloze_word':
-                row['cloze_check_btn'].isChecked()
+                'fld_name':       row['model']['fld_name'],
+                'fld_ord':        row['model']['fld_ord'],
+                'word_checked':   row['word_check_btn'].isChecked(),
+                'dict_name':      row['dict_combo'].currentText().strip(),
+                'dict_unique':    row['dict_combo'].itemData(row['dict_combo'].currentIndex()),
+                'dict_fld_name':  row['field_combo'].currentText().strip(),
+                'dict_fld_ord':   row['field_combo'].itemData(row['field_combo'].currentIndex()),
+                'ignore':         row['ignore_check_btn'].isChecked(),
+                'skip_valued':    row['skip_check_btn'].isChecked(),
+                'cloze_word':     row['cloze_check_btn'].isChecked()
             })
         return maps
 

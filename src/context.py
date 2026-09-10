@@ -42,7 +42,7 @@ class Config(object):
         self.path = u'_' + self._CONFIG_FILENAME
         self.window = window
         self.version = '0'
-        self.data = None
+        self.data = {}
         self.read()
 
     @property

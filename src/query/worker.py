@@ -164,15 +164,23 @@ class QueryWorkerManager(object):
         mw.app.processEvents()
 
     def join(self):
-        for worker in self.workers:
-            while not worker.finished:
+        while True:
+            finished_worker = 0
+            for worker in self.workers:
+                if worker.finished:
+                    finished_worker += 1
+                else:
+                    mw.app.processEvents()
+                    worker.wait(1)
                 if self.progress.abort():
                     worker.exit = True
                     break
-                else:
-                    self.update_progress()
-                mw.app.processEvents()
-                worker.wait(30)
+                self.update_progress()
+            if finished_worker >= len(self.workers):
+                break
+            if self.progress.abort():
+                break
+
         self.progress.finish()
     
     def handle_flush(self, note: anki.notes.Note):

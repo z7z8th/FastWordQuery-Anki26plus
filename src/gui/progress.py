@@ -125,6 +125,7 @@ class ProgressWindow(object):
         if process and elapsed >= 0.2:
             self.app.processEvents(QEventLoop.ProcessEventsFlag.ExcludeUserInputEvents)
             self._last_update = time.time()
+            self._win.update()
 
     def _set_busy(self):
         self._disabled = True
