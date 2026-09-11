@@ -24,7 +24,7 @@ class Bing(WebService):
         #音
         element = soup.find('div', class_='hd_tf_lh')
         if element:
-            audios = element.find_all('a')
+            audios = element.select('a')
             # print(f"audios {audios}")
             #美式英标
             tag = element.find('div', class_='hd_prUS')
@@ -63,10 +63,10 @@ class Bing(WebService):
         element = soup.find('div', id='sentenceSeg')
         if element:
             #英文例句
-            tags = element.find_all('div', {"class": 'sen_en'})
+            tags = element.select('div.sen_en')
             result['sams'] = [{'eng': u''.join(tag.find_all(text=True))} for tag in tags]
             #例句翻译
-            tags = element.find_all('div', {"class": 'sen_cn'})
+            tags = element.select('div.sen_cn')
             for i, tag in enumerate(tags):
                 result['sams'][i]['chn'] = u''.join(tag.find_all(text=True))
 

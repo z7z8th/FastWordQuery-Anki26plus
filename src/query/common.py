@@ -184,8 +184,8 @@ def query_flds(note, qfields=None):
     # traceback.print_stack()
 
     word_ord, word, fields = inspect_note(note)
-    print(f"qfields {qfields}")
-    print(f'query_flds {word_ord}, {word}, {fields}')
+    # print(f"qfields {qfields}")
+    # print(f'query_flds {word_ord}, {word}, {fields}')
     if not word:
         raise InvalidWordException
 
@@ -226,7 +226,7 @@ def query_flds(note, qfields=None):
                     if svc and svc.support:
                         services[dict_unique] = svc
 
-                print(f"---service {svc} for {dict_unique}")
+                # print(f"---service {svc} for {dict_unique}")
                 if svc and svc.support:
                     tasks.append({
                         'dict_uniq': dict_unique,
@@ -235,7 +235,7 @@ def query_flds(note, qfields=None):
                         'fld': fld_ord,
                         'cloze': cloze,
                     })
-    print(f'---iter tasks {tasks}')
+    # print(f'---iter tasks {tasks}')
     if not tasks:
         print(f"*** Error: No tasks generated for word `{word}`")
 

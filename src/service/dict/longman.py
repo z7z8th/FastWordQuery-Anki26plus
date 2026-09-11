@@ -10,27 +10,30 @@ longman_download_mp3 = True
 longman_download_img = True
 
 
-@register([u'朗文', u'Longman'])
+@register([u'朗文', u'Longman'], enabled = True)
 class Longman(WebService):
 
     def __init__(self):
         super(Longman, self).__init__()
 
     def _get_from_api(self):
-        url = 'https://www.ldoceonline.com/dictionary/{}'.format(format_multi_query_word(self.quote_word))
+        url = 'https://www.ldoceonline.com/dictionary/{}'.format(
+            format_multi_query_word(self.quote_word))
         data = self.get_response(url)
         soup = parse_html(data)
         # Top Container
-        dictlinks = soup.find_all('span', {'class': 'dictlink'})
-        body_html = ""
+        dictlinks = soup.select('span.dictlink')
+        body_html = ''
         word_info = {}
-        head_finded = False
-        for dic_link in dictlinks:
-            assert isinstance(dic_link, Tag)
+        head_found = False
+        for dict_link in dictlinks:
+            # print(f'---------------------------- dict_link {dict_link}')
+            assert isinstance(dict_link, Tag)
 
             # remove sound tag
-            am_s_tag = dic_link.find('span', {'class': 'speaker amefile fa fa-volume-up hideOnAmp'})
-            br_s_tag = dic_link.find('span', {'class': 'speaker brefile fa fa-volume-up hideOnAmp'})
+            am_s_tag = dict_link.select_one('span.speaker.amefile')
+            br_s_tag = dict_link.select_one('span.speaker.brefile')
+            # print(f'---am_s_tag {am_s_tag} br_s_tag {br_s_tag}')
             if am_s_tag:
                 word_info['am_mp3'] = am_s_tag.get('data-src-mp3', u'')
                 am_s_tag.decompose()
@@ -39,77 +42,84 @@ class Longman(WebService):
                 br_s_tag.decompose()
 
             # remove image
-            image_tag = dic_link.find('img')
+            image_tag = dict_link.select_one('img')
             if image_tag:
                 word_info['image'] = image_tag.get('src', u'')
                 image_tag.decompose()
 
+            # print(f'---word_info {word_info}')
+
             # Remove related Topics Container
-            related_topic_tag = dic_link.find('div', {'class': "topics_container"})
+            related_topic_tag = dict_link.select_one('div.topics_container')
             if related_topic_tag:
                 related_topic_tag.decompose()
 
             # Remove Tail
-            tail_tag = dic_link.find("span", {'class': 'Tail'})
+            tail_tag = dict_link.select_one('span.Tail')
             if tail_tag:
                 tail_tag.decompose()
 
             # Remove SubEntry
-            sub_entries = dic_link.find_all('span', {'class': 'SubEntry'})
+            sub_entries = dict_link.select('span.SubEntry')
             for sub_entry in sub_entries:
                 sub_entry.decompose()
 
             # word elements
-            head_tag = dic_link.find('span', {'class': "Head"})
-            if head_tag and not head_finded:
+            head_tag = dict_link.select_one('span.Head')
+            # print(f'---head_tag {head_tag}')
+            if head_tag and not head_found:
                 try:
-                    hyphenation = head_tag.find("span", {'class': 'HYPHENATION'}).string  # Hyphenation
+                    hyphenation = head_tag.select_one('span.HYPHENATION').string
                 except:
                     hyphenation = u''
                 try:
-                    pron_codes = u''.join(
-                        list(head_tag.find("span", {'class': 'PronCodes'}).strings))  # Hyphenation
+                    pron_codes = u''.join(list(head_tag.select_one('span.PronCodes').strings))
                 except:
                     pron_codes = u''
                 try:
-                    POS = head_tag.find("span", {'class': 'POS'}).string  # Hyphenation
+                    POS = head_tag.select_one('span.POS').string
                 except:
                     POS = u''
 
+                # print(f'---hyphenation {hyphenation} pron_codes {pron_codes} POS {POS}')
+
+                word_info['phonetic'] = pron_codes
+                word_info['hyphenation'] = hyphenation
+                word_info['pos'] = POS
+                if word_info['phonetic'] and word_info['hyphenation'] and word_info['pos']:
+                    head_found = True
+                # self.cache_this(word_info)
+
+            if 'inflections' not in word_info or not word_info['inflections']:
                 try:
-                    Inflections = head_tag.find('span', {'class': 'Inflections'})
+                    Inflections = head_tag.select_one('span.Inflections')
                     if Inflections:
                         Inflections = str(Inflections)
                     else:
                         Inflections = u''
                 except:
                     Inflections = u''
-
-                word_info['phonetic'] = pron_codes
-                word_info['hyphenation'] = hyphenation
-                word_info['pos'] = POS
                 word_info['inflections'] = Inflections
-                head_finded = True
-                # self.cache_this(word_info)
+
             if head_tag:
                 head_tag.decompose()
 
             # remove script tag
-            script_tags = dic_link.find_all('script')
+            script_tags = dict_link.select('script')
             for t in script_tags:
                 t.decompose()
 
             # remove img tag
-            img_tags = dic_link.find_all('img')
+            img_tags = dict_link.select('img')
             for t in img_tags:
                 t.decompose()
 
             # remove example sound tag
-            emp_s_tags = dic_link.find_all('span', {'class': 'speaker exafile fa fa-volume-up'})
+            emp_s_tags = dict_link.select('span.speaker.exafile')
             for t in emp_s_tags:
                 t.decompose()
 
-            body_html += str(dic_link)
+            body_html += str(dict_link)
 
         word_info['ee'] = body_html
         return self.cache_this(word_info)
