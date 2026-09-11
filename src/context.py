@@ -44,6 +44,7 @@ class Config(object):
         self.window = window
         self.version = '0'
         self.data = {}
+        self.profile_folder = None
         self.read()
 
     @property
@@ -68,6 +69,9 @@ class Config(object):
         """
         Load from config file
         """
+        if self.data:
+            if mw.pm.profileFolder() != self.profile_folder:
+                self.data = {}
         try:
             if not self.data:
                 path = self.path  # if os.path.exists(self.path) else u'.' + self._CONFIG_FILENAME
@@ -75,6 +79,7 @@ class Config(object):
                     self.data = json.load(f)
                 # if not os.path.exists(self.path):
                 #     self.update(self.data)
+                self.profile_folder = mw.pm.profileFolder()
         except Exception as e:
             print(f'*** Can not find config file', e)
             # print(traceback.format_exc())

@@ -51,10 +51,12 @@ def start_here():
     wp = mw.pm.profileFolder()
     mediaPath = os.path.join(wp, "collection.media")
     os.chdir(mediaPath)
+    print(f"CWD {os.getcwd()}")
 
     from . import common as fastwq
     from .context import config
-    # config.read()
+    # config is only imported once, we should call read every time profile changed
+    config.read()
     fastwq.my_shortcut = shortcut
     if not fastwq.have_setup:
         fastwq.have_setup = True
