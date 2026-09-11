@@ -32,7 +32,7 @@ class Baidu_Chinese(WebService):
         #拼音
         element = soup.find('div', id='pinyin')
         if element:
-            tag = element.find_all('b')
+            tag = element.select('b')
             if tag:
                 result['pinyin'] = u' '.join(x.get_text() for x in tag)
             if tag:
@@ -43,49 +43,49 @@ class Baidu_Chinese(WebService):
         #基本释义
         element = soup.find('div', id='basicmean-wrapper')
         if element:
-            tag = element.find_all('div', {'class': 'tab-content'})
+            tag = element.select('div.tab-content')
             if tag:
                 result['basicmean'] = u''.join(str(x) for x in tag)
 
         #详细释义
         element = soup.find('div', id='detailmean-wrapper')
         if element:
-            tag = element.find_all('div', {'class': 'tab-content'})
+            tag = element.select('div.tab-content')
             if tag:
                 result['detailmean'] = u''.join(str(x) for x in tag)
 
         #出处
         element = soup.find('div', id='source-wrapper')
         if element:
-            tag = element.find('div', {'class': 'tab-content'})
+            tag = element.find('div', class_ = 'tab-content')
             if tag:
                 result['source'] = u''.join(str(x) for x in tag)
 
         #例句
         element = soup.find('div', id='liju-wrapper')
         if element:
-            tag = element.find('div', {'class': 'tab-content'})
+            tag = element.find('div', class_ = 'tab-content')
             if tag:
                 result['example'] = u''.join(str(x) for x in tag)
 
         #近义词
         element = soup.find('div', id='synonym')
         if element:
-            tag = element.find('div', {'class': 'block'})
+            tag = element.find('div', class_ = 'block')
             if tag:
-                element = tag.find_all('a')
+                element = tag.select('a')
                 result['synonym'] = u' '.join(x.get_text() for x in element)
         #反义词
         element = soup.find('div', id='antonym')
         if element:
-            tag = element.find('div', {'class': 'block'})
+            tag = element.find('div', class_ = 'block')
             if tag:
-                element = tag.find_all('a')
+                element = tag.select('a')
                 result['antonym'] = u' '.join(x.get_text() for x in element)
         #英文翻译
         element = soup.find('div', id='fanyi-wrapper')
         if element:
-            tag = element.find_all('dt')
+            tag = element.select('dt')
             if tag:
                 result['fanyi'] = u'<br>'.join(x.get_text().strip() for x in tag)
 

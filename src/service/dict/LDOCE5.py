@@ -85,7 +85,7 @@ class Ldoce5plus(MdxService):
         m = re.findall(r'<div class="EXAMPLE">\s*.*>\s*.*<\/div>', self.get_html())
         if m:
             soup = parse_html(m[0])
-            el_list = soup.findAll('div', {'class':'EXAMPLE'})
+            el_list = soup.findAll('div', class_ = 'EXAMPLE')
             if el_list:
                 maps = []
                 for element in el_list:

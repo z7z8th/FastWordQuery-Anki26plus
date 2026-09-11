@@ -108,7 +108,7 @@ class Ldoce6(MdxService):
         m = m = re.findall(r'<span class="def"\s*.*>\s*.*<\/span>', self.get_html())
         if m:
             soup = parse_html(m[0])
-            el_list = soup.findAll('span', {'class':'def'})
+            el_list = soup.findAll('span', class_ = 'def')
             if el_list:
                 maps = [u''.join(str(content) for content in element.contents) 
                                     for element in el_list]
@@ -138,7 +138,7 @@ class Ldoce6(MdxService):
         m = re.findall(r'<span class="example"\s*.*>\s*.*<\/span>', self.get_html())
         if m:
             soup = parse_html(m[0])
-            el_list = soup.findAll('span', {'class':'example'})
+            el_list = soup.findAll('span', class_ = 'example')
             if el_list:
                 maps = [u''.join(str(content) for content in element.contents) 
                                     for element in el_list]
@@ -155,7 +155,7 @@ class Ldoce6(MdxService):
         m = re.findall(r'<span class="example"\s*.*>\s*.*<\/span>', self.get_html())
         if m:
             soup = parse_html(m[0])
-            el_list = soup.findAll('span', {'class':'example'})
+            el_list = soup.findAll('span', class_ = 'example')
             if el_list:
                 maps = []
                 for element in el_list:

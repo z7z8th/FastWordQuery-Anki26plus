@@ -10,13 +10,16 @@ from ..base import WebService, export, register, with_styles
 
 oxford_download_mp3 = True
 
-@register(u'Oxford')
+# oxford api cost is very expensive
+# are you kidding?
+@register(u'Oxford', enabled = False)
 class Oxford(WebService):
 
     def __init__(self):
         super(Oxford, self).__init__()
 
     def _get_from_api(self, lang='en'):
+        # obsolute app id and key
         app_id = '45aecf84'
         app_key = 'bb36fd6a1259e5baf8df6110a2f7fc8f'
         headers = {'app_id': app_id, 'app_key': app_key}
@@ -24,7 +27,9 @@ class Oxford(WebService):
         url = u'https://od-api.oxforddictionaries.com/api/v1/entries/' + lang + u'/' + word_id
         result = {'lexicalEntries': ''}
         try:
-            result.update(json.loads(self.get_response(url, headers=headers, timeout=10))['results'][0])
+            res = self.get_response(url, headers=headers, timeout=10)
+            print(f'--- {url} res {res}')
+            result.update(json.loads(res)['results'][0])
         except:
             pass
         return self.cache_this(result)

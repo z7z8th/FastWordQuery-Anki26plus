@@ -48,9 +48,9 @@ class TLD(MdxService):
         m = re.findall(r'<div class="\s*.*<\/div>', self.get_html_all())
         if m:
             soup = parse_html(m[0])
-            el_list = soup.findAll('div', {'class':'iweb'})
+            el_list = soup.findAll('div', class_ = 'iweb')
             if el_list:
-                rank_temp = el_list[0].findAll('span',{'class':'rank'})
+                rank_temp = el_list[0].findAll('span',class_ = 'rank')
                 if rank_temp:
                     rank=[]
                     for i in rank_temp:
@@ -64,11 +64,11 @@ class TLD(MdxService):
         if m:
             soup = parse_html(m[0])
 
-            el_list = soup.findAll('div', {'class':'coca2'})
+            el_list = soup.findAll('div', class_ = 'coca2')
             def_distribution = ''
             if el_list:
                 def_distribution = str(el_list[0])
-            el_list = soup.findAll('div', {'class':'gdc'})
+            el_list = soup.findAll('div', class_ = 'gdc')
             cn_def = ''
             if el_list:
                 cn_def = str(el_list[0])

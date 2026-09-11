@@ -2,7 +2,7 @@
 from ..base import *
 from .cambridge import Cambridge
 
-@register([u'剑桥词典-英汉简', u'Cambridge(英汉简)'])
+@register([u'剑桥词典-英汉简', u'Cambridge(英汉简)'], enabled = True)
 class CambridgeCS(Cambridge):
 
     def __init__(self):
