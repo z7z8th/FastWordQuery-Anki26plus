@@ -76,7 +76,7 @@ class Config(object):
                 # if not os.path.exists(self.path):
                 #     self.update(self.data)
         except Exception as e:
-            print(f'*** Can not find config file in dir "{os.getcwd()}"', e)
+            print(f'*** Can not find config file', e)
             # print(traceback.format_exc())
             self.data = {}
 

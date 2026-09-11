@@ -25,6 +25,10 @@ from aqt import mw
 from anki.hooks import addHook
 from anki.utils import is_mac
 
+from .utils import misc
+# show current dir in open error message for easy debug
+misc.hook_builtins_open_exception()
+
 sys.dont_write_bytecode = True
 if is_mac:
     ssl._create_default_https_context = ssl._create_unverified_context

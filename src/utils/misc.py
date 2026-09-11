@@ -129,3 +129,48 @@ class MapDict(dict):
     def __delitem__(self, key):
         super(MapDict, self).__delitem__(key)
         del self.__dict__[key]
+
+
+### sys level
+
+def hook_builtins_open():
+    import builtins
+    import os
+    from pathlib import Path
+
+    # 1. Store a reference to the original built-in open function
+    original_open = builtins.open
+
+    # 2. Define the hook/wrapper function
+    def custom_open(file, mode='r', buffering=-1, encoding=None, errors=None, newline=None, closefd=True, opener=None):
+        # Perform custom action (e.g., logging or debugging path resolution)
+        abs_path = Path(file).resolve()
+        if str(file) != str(abs_path):
+            print(f"opening: `{file}` in dir `{os.getcwd()}`")
+
+        # Call the original open function
+        return original_open(file, mode, buffering, encoding, errors, newline, closefd, opener)
+
+    # 3. Replace builtins.open with the custom function
+    builtins.open = custom_open
+
+def hook_builtins_open_exception():
+    import builtins
+    import os
+    from pathlib import Path
+
+    original_open = builtins.open
+
+    def custom_open(file, *args, **kwargs):
+        try:
+            return original_open(file, *args, **kwargs)
+        except OSError as err: # Catches FileNotFoundError, PermissionError, etc.
+            cwd = os.getcwd()
+            raw_file = err.filename or file
+            abs_path = Path(raw_file).resolve() if raw_file else "Unknown"
+
+            # Mutate the strerror attribute directly
+            err.strerror = f"{err.strerror} in '{cwd}'"
+            raise err
+
+    builtins.open = custom_open
