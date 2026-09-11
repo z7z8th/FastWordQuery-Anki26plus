@@ -19,6 +19,7 @@
 
 import json
 import os
+import traceback
 
 from anki.hooks import runHook
 from aqt import mw
@@ -67,19 +68,19 @@ class Config(object):
         """
         Load from config file
         """
-        if self.data:
-            return self.data
         try:
-            path = self.path if os.path.exists(
-                self.path) else u'.' + self._CONFIG_FILENAME
-            with open(path, 'r', encoding="utf-8") as f:
-                self.data = json.load(f)
-                f.close()
-            if not os.path.exists(self.path):
-                self.update(self.data)
+            if not self.data:
+                path = self.path  # if os.path.exists(self.path) else u'.' + self._CONFIG_FILENAME
+                with open(path, 'r', encoding="utf-8") as f:
+                    self.data = json.load(f)
+                # if not os.path.exists(self.path):
+                #     self.update(self.data)
         except Exception as e:
-            print('can not find config file', e)
-            self.data = dict()
+            print(f'*** Can not find config file in dir "{os.getcwd()}"', e)
+            # print(traceback.format_exc())
+            self.data = {}
+
+        return self.data
 
     def get_maps(self, model_id):
         """
@@ -152,10 +153,8 @@ class Config(object):
             tmpstr = u'[sound:{0}]'
         return tmpstr
 
+# should chdir on profile change through hook,
+# since context.py is only imported once.
+# the chdir logic at `__init__.py`
 
-# config = Config(mw)
-# https://github.com/sth2018/FastWordQuery/issues/258
-wp = mw.pm.profileFolder()
-mediaPath = os.path.join(wp, "collection.media")
-os.chdir(mediaPath)
 config = Config(mw)

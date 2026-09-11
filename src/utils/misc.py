@@ -17,6 +17,31 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+
+## Following code can be used to debug import chain,
+## put it to where the exception occurs when importing,
+## Python doesn't print import chain when print exception stack.
+# Inside your submodule (e.g., my_package/submodule.py)
+import inspect
+
+def print_import_chain():
+    # Retrieve all active execution frames
+    frames = inspect.stack()
+    
+    chain = []
+    for frame_info in reversed(frames):
+        module_name = frame_info.frame.f_globals.get('__name__')
+        if module_name and (not chain or chain[-1] != module_name):
+            chain.append(module_name)
+            
+    print("Active Import Chain:", " -> ".join(chain))
+
+# Execute immediately when the submodule is imported
+# print_import_chain()
+# print(f"{'*'*40} {__name__} imported {'*'*40}")
+
+
+
 import os
 from functools import wraps
 from aqt.utils import showInfo

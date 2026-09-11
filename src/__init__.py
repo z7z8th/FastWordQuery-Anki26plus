@@ -17,9 +17,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import os
 import ssl
 import sys
 
+from aqt import mw
 from anki.hooks import addHook
 from anki.utils import is_mac
 
@@ -31,12 +33,24 @@ if is_mac:
 shortcut = ('Ctrl+Alt' if is_mac else 'Ctrl') + '+Q'
 
 ###################################################
+ADDON_NAME = mw.addonManager.addonFromModule(__name__)
+ADDON_DIR = mw.addonManager.addonsFolder(ADDON_NAME)
 
 
 def start_here():
+    print(f'-'*80)
+    print(__file__)
+    print(f"ADDON_NAME {ADDON_NAME}")
+    print(f"ADDON_DIR {ADDON_DIR}")
+
+    # https://github.com/sth2018/FastWordQuery/issues/258
+    wp = mw.pm.profileFolder()
+    mediaPath = os.path.join(wp, "collection.media")
+    os.chdir(mediaPath)
+
     from . import common as fastwq
     from .context import config
-    config.read()
+    # config.read()
     fastwq.my_shortcut = shortcut
     if not fastwq.have_setup:
         fastwq.have_setup = True
