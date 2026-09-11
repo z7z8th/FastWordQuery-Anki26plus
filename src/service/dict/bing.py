@@ -5,8 +5,9 @@ from ..base import *
 
 bing_download_mp3 = True
 
-@register([u'Bing', u'Bing'])
+@register([u'Bing', u'Bing'], enabled = True)
 class Bing(WebService):
+    base_url = 'https://cn.bing.com'
 
     def __init__(self):
         super(Bing, self).__init__()
@@ -24,6 +25,7 @@ class Bing(WebService):
         element = soup.find('div', class_='hd_tf_lh')
         if element:
             audios = element.find_all('a')
+            # print(f"audios {audios}")
             #美式英标
             tag = element.find('div', class_='hd_prUS')
             if tag:
@@ -31,9 +33,11 @@ class Bing(WebService):
                 #美音
                 if audios:
                     tag = audios[0]
-                    audio_url = tag.get('onclick')
-                    if audio_url:
-                        result['pronunciation']['AmEmp3'] = u''.join(re.findall(r'https://.*\.mp3', audio_url))
+                    audio_url = tag.get('data-mp3link')
+                    if audio_url.startswith('/'):
+                        result['pronunciation']['AmEmp3'] = f"{self.base_url}{audio_url}"
+                    else:
+                        result['pronunciation']['AmEmp3'] = audio_url
 
             #英式音标
             tag = element.find('div', class_='hd_pr')
@@ -42,9 +46,11 @@ class Bing(WebService):
                 #英音
                 if audios:
                     tag = audios[1]
-                    audio_url = tag.get('onclick')
-                    if audio_url:
-                        result['pronunciation']['BrEmp3'] = u''.join(re.findall(r'https://.*\.mp3', audio_url))
+                    audio_url = tag.get('data-mp3link')
+                    if audio_url.startswith('/'):
+                        result['pronunciation']['BrEmp3'] = f"{self.base_url}{audio_url}"
+                    else:
+                        result['pronunciation']['BrEmp3'] = audio_url
 
         #释义
         element = soup.find('div', class_='qdef')
@@ -64,6 +70,7 @@ class Bing(WebService):
             for i, tag in enumerate(tags):
                 result['sams'][i]['chn'] = u''.join(tag.find_all(text=True))
 
+        print(f'{self.quote_word} result {result}')
         return self.cache_this(result)
 
     @with_styles(css='.pos{font-weight:bold;margin-right:4px;}', need_wrap_css=True, wrap_class='bing')

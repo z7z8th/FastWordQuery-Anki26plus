@@ -83,7 +83,7 @@ class OptionsDialog(Dialog):
             'web': []  # 网络词典
         }
         for clazz in service_manager.local_services:
-            if dicts.get(clazz.__unique__, dict()).get('enabled', True):
+            if dicts.get(clazz.__unique__, dict()).get('enabled', clazz.__enabled__):
                 service = service_pool.get(clazz.__unique__)
                 if service and service.support:
                     self.dict_services['local'].append({
@@ -92,7 +92,7 @@ class OptionsDialog(Dialog):
                     })
                 service_pool.put(service)
         for clazz in service_manager.web_services:
-            if dicts.get(clazz.__unique__, dict()).get('enabled', True):
+            if dicts.get(clazz.__unique__, dict()).get('enabled', clazz.__enabled__):
                 service = service_pool.get(clazz.__unique__)
                 if service and service.support:
                     self.dict_services['web'].append({
@@ -177,8 +177,7 @@ class OptionsDialog(Dialog):
             self.current_model = get_model_byId(mw.col.models, self.model_id)
         if self.current_model:
             self.models_button.setText(
-                u'%s [%s]' % (_('CHOOSE_NOTE_TYPES'),
-                              self.current_model['name']))
+                u'%s [%s]' % (_('CHOOSE_NOTE_TYPES'), self.current_model['name']))
             # build fields -- dicts layout
             self.build_tabs_layout()
 
@@ -220,6 +219,11 @@ class OptionsDialog(Dialog):
         if self.current_model:
             self.build_tabs_layout()
 
+    def new_config(self, fields = []):
+        i = len(self.tabs)
+        cfg = {'fields': fields, 'name': _('CONFIG_INDEX') % (i + 1)}
+        return cfg
+
     def build_tabs_layout(self):
         """
         build dictionary、fields etc
@@ -228,38 +232,45 @@ class OptionsDialog(Dialog):
             self.tab_widget.currentChanged.disconnect()
         except Exception:
             pass
+        
         while len(self.tabs) > 0:
             self.removeTab(0, True)
         # tabs
-        conf = config.get_maps(self.current_model['id'])
-        maps_list = {
-            'list': [conf],
-            'def': 0
-        } if isinstance(conf, list) else conf
-        for maps in maps_list['list']:
-            self.addTab(maps, False)
+        mconf = config.get_query_configs(self.current_model['id'])
+        # print(f"build_tabs_layout mconf {mconf}")
+
         self.tab_widget.currentChanged.connect(self.changedTab)
-        # value
-        self.changedTab(maps_list['def'])
-        self.tab_widget.setCurrentIndex(maps_list['def'])
+        if mconf['query_configs']:
+            for cfg in mconf['query_configs']:
+                self.addTab(cfg, False)
+
+            if mconf['default'] >= 0 and mconf['default'] < len(self.tabs):
+                # self.changedTab(mconf['default'])
+                self.tab_widget.setCurrentIndex(mconf['default'])
+        else:
+            # focus = True -> call changedTab() -> TabContent.build_layout()
+            # -> if empty cfg -> fill in dict layout
+            self.addTab({}, focus=True)
         # size
+        # print(f'tabs {self.tabs}')
         self.resize(
             WIDGET_SIZE.dialog_width,
-            min(max(3,
-                    len(self.current_model['flds']) + 1), 14) *
-            WIDGET_SIZE.map_max_height + WIDGET_SIZE.dialog_height_margin)
+            min(max(3, len(self.current_model['flds']) + 1), 14) *
+            WIDGET_SIZE.map_max_height + WIDGET_SIZE.dialog_height_margin
+        )
         self.save()
 
-    def addTab(self, maps=None, forcus=True):
+    # call addTab with empty cfg and focus=True will fill in dict layout
+    def addTab(self, cfg:dict = {}, focus=True):
         i = len(self.tabs)
-        if isinstance(maps, list):
-            maps = {'fields': maps, 'name': _('CONFIG_INDEX') % (i + 1)}
-        tab = TabContent(self.current_model, maps['fields'] if maps else None,
+        if not cfg:
+            cfg = self.new_config()
+        tab = TabContent(self.current_model, cfg['fields'],
                          self.dict_services)
+
         self.tabs.append(tab)
-        self.tab_widget.addTab(
-            tab, maps['name'] if maps else _('CONFIG_INDEX') % (i + 1))
-        if forcus:
+        self.tab_widget.addTab(tab, cfg['name'])
+        if focus:
             self.tab_widget.setCurrentIndex(i)
 
     def removeTab(self, i, forcus=False):
@@ -286,39 +297,40 @@ class OptionsDialog(Dialog):
         """
         show choose note type window
         """
-        edit = QPushButton(_("MANAGE"), clicked=lambda: aqt.models.Models(mw, self))
+        manage_model = QPushButton(_("MANAGE"), clicked=lambda: aqt.models.Models(mw, self))
         ret = StudyDeck(
-            mw,
-            # names=lambda: sorted(mw.col.models.all_names()),
-            names=lambda: sorted([n.name for n in mw.col.models.all_names_and_ids()]),
-            accept=_("CHOOSE"),
-            title=_('CHOOSE_NOTE_TYPES'),
-            help="_notes",
-            parent=self,
-            buttons=[edit],
-            cancel=True,
-            geomKey="selectModel")
+                        mw,
+                        # names=lambda: sorted(mw.col.models.all_names()),
+                        names=lambda: sorted([n.name for n in mw.col.models.all_names_and_ids()]),
+                        accept=_("CHOOSE"),
+                        title=_('CHOOSE_NOTE_TYPES'),
+                        help="_notes",
+                        parent=self,
+                        buttons=[manage_model],
+                        cancel=True,
+                        geomKey="selectModel"
+                        )
         if ret.name:
+            print(f"Note Type {ret.name} selected.")
             model = mw.col.models.by_name(ret.name)
-            self.models_button.setText(
-                u'%s [%s]' % (_('CHOOSE_NOTE_TYPES'), ret.name))
+            self.models_button.setText(f"{_('CHOOSE_NOTE_TYPES')} [{ret.name}]")
             return model
+        else:
+            print(f"Note Type not selected.")
 
     def save(self):
         """save config to file"""
         if not self.current_model:
             return
         data = dict()
-        maps_list = {'list': [], 'def': self.tab_widget.currentIndex()}
+        qconfigs = {'query_configs': [], 'default': self.tab_widget.currentIndex()}
         for i, tab in enumerate(self.tabs):
-            maps_list['list'].append({
-                'fields':
-                tab.data,
-                'name':
-                self.tab_widget.tabBar().tabText(i)
+            qconfigs['query_configs'].append({
+                'fields': tab.data,
+                'name': self.tab_widget.tabBar().tabText(i)
             })
         current_model_id = str(self.current_model['id'])
-        data[current_model_id] = maps_list
+        data[current_model_id] = qconfigs
         data['last_model'] = self.current_model['id']
         config.update(data)
 
@@ -355,7 +367,7 @@ class TabContent(QScrollArea):
         self._was_built = True
 
         model = self._model
-        maps = self._conf
+        cfg = self._conf
 
         # labels
         f = QFont()
@@ -390,20 +402,17 @@ class TabContent(QScrollArea):
         for i, fld in enumerate(model['flds']):
             ord = fld['ord']
             name = fld['name']
-            if maps:
-                for j, each in enumerate(maps):
-                    if each.get('fld_ord', -1) == ord or each.get(
-                            'fld_name', '') == name:
+            if cfg:
+                for j, each in enumerate(cfg):
+                    if each.get('fld_ord', -1) == ord or each.get('fld_name', '') == name:
                         each['fld_name'] = name
                         each['fld_ord'] = ord
                         self.add_dict_layout(j, **each)
                         break
                 else:
-                    self.add_dict_layout(
-                        i, fld_name=name, fld_ord=ord, word_checked=i == 0)
+                    self.add_dict_layout(i, fld_name=name, fld_ord=ord, word_checked=i == 0)
             else:
-                self.add_dict_layout(
-                    i, fld_name=name, fld_ord=ord, word_checked=i == 0)
+                self.add_dict_layout(i, fld_name=name, fld_ord=ord, word_checked=i == 0)
 
         # update
         self.ignore_all_update()
@@ -604,9 +613,9 @@ class TabContent(QScrollArea):
     def data(self):
         if not self._was_built:
             return self._conf
-        maps = []
+        fields = []
         for row in self._options:
-            maps.append({
+            fields.append({
                 'fld_name':       row['model']['fld_name'],
                 'fld_ord':        row['model']['fld_ord'],
                 'word_checked':   row['word_check_btn'].isChecked(),
@@ -618,7 +627,7 @@ class TabContent(QScrollArea):
                 'skip_valued':    row['skip_check_btn'].isChecked(),
                 'cloze_word':     row['cloze_check_btn'].isChecked()
             })
-        return maps
+        return fields
 
     def ignore_all_check_changed(self):
         b = self.ignore_all_check_btn.isChecked()

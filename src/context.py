@@ -20,6 +20,7 @@
 import json
 import os
 import traceback
+from packaging.version import Version
 
 from anki.hooks import runHook
 from aqt import mw
@@ -31,7 +32,6 @@ __all__ = ['APP_ICON', 'config']
 
 APP_ICON = get_icon('wqicon.png')  # Addon Icon
 
-
 class Config(object):
     """
     Addon Config
@@ -40,24 +40,23 @@ class Config(object):
     _CONFIG_FILENAME = 'fastwqcfg.json'  # Config File Path
 
     def __init__(self, window):
+        self.data = {}
         self.path = u'_' + self._CONFIG_FILENAME
         self.window = window
         self.version = '0'
-        self.data = {}
         self.profile_folder = None
         self.read()
 
     @property
-    def pmname(self):
+    def pm_name(self):
         return self.window.pm.name
 
-    def update(self, data):
+    def update(self, data:dict):
         """
         Update && Save
         """
         data['version'] = VERSION
-        data['%s_last' % self.pmname] = data.get('last_model',
-                                                 self.last_model_id)
+        data['%s_last' % self.pm_name] = data.get('last_model', self.last_model_id)
         self.data.update(data)
         with open(self.path, 'w', encoding='utf-8') as f:
             json.dump(
@@ -79,27 +78,31 @@ class Config(object):
                     self.data = json.load(f)
                 # if not os.path.exists(self.path):
                 #     self.update(self.data)
+                if self.version < Version(VERSION):
+                    print(f'Version {self.version} is less than required version {Version(VERSION)}')
+                    print(f'Use empty config')
+                    self.data = {}
                 self.profile_folder = mw.pm.profileFolder()
         except Exception as e:
-            print(f'*** Can not find config file', e)
+            print(f'*** Can not find config file:', e)
             # print(traceback.format_exc())
             self.data = {}
 
         return self.data
 
-    def get_maps(self, model_id):
+    def get_query_configs(self, model_id):
         """
         Query fileds map
         """
-        return self.data.get(str(model_id), list())
+        return self.data.get(str(model_id), {'query_configs':[], 'default': -1})
 
     @property
     def last_model_id(self):
-        return self.data.get('%s_last' % self.pmname, 0)
+        return self.data.get('%s_last' % self.pm_name, 0)
 
     @property
-    def dirs(self):
-        return self.data.get('dirs', list())
+    def dict_dirs(self):
+        return self.data.get('dict_dirs', list())
 
     @property
     def dicts(self):
@@ -158,6 +161,15 @@ class Config(object):
             tmpstr = u'[sound:{0}]'
         return tmpstr
 
+    @property
+    def version(self):
+        return Version(self.data.get('version', '0'))
+    
+    @version.setter
+    def version(self, new_ver):
+        self.data.update({'version': new_ver})
+
+    
 # should chdir on profile change through hook,
 # since context.py is only imported once.
 # the chdir logic at `__init__.py`

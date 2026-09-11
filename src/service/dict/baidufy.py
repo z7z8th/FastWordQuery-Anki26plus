@@ -47,6 +47,7 @@ class BaiduFy(WebService):
     def fld_explains(self):
         return self.cache_result('explains') if self.cached('explains') else \
             self._get_from_api().get('explains', '')
+    
     @export([u'英式发音', 'uk'])
     def fld_uk_audio(self):
         audiourl = 'http://tts.baidu.com/text2audio?lan=uk&pid=101&ie=UTF-8&text={0}&spd=4'.format(self.quote_word)
@@ -55,6 +56,7 @@ class BaiduFy(WebService):
         with open(name,'wb') as f:
             f.write(audio.content)
         return self.get_anki_label(name, 'audio')
+    
     @export([u'美式发音', 'en'])
     def fld_en_audio(self):
         audiourl = 'http://tts.baidu.com/text2audio?lan=en&pid=101&ie=UTF-8&text={0}&spd=4'.format(self.quote_word)

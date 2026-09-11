@@ -89,17 +89,16 @@ class DictManageDialog(Dialog):
         confs = config.dicts
         dicts = list()
         services = service_manager.local_custom_services + service_manager.web_services
-        for clazz in services:
-            dicts.append({
-                'title':
-                clazz.__title__,
-                'unique':
-                clazz.__unique__,
-                'path':
-                clazz.__path__,
-                'enabled':
-                confs.get(clazz.__unique__, dict()).get('enabled', True)
-            })
+        for svc in services:
+            d = {
+                'title':   svc.__title__,
+                'unique':  svc.__unique__,
+                'path':    svc.__path__,
+                'enabled': confs.get(svc.__unique__, dict()).get('enabled', svc.__enabled__)
+            }
+            print(f'Add Dict {d}')
+            dicts.append(d)
+
         # add dict
         for i, d in enumerate(dicts):
             self.add_dict_layout(i, **d)
@@ -179,8 +178,10 @@ class DictManageDialog(Dialog):
         data = dict()
         dicts = {}
         for row in self._options:
-            dicts[row['unique']] = {
-                'enabled': row['check_btn'].isChecked(),
-            }
+            enabled = row['check_btn'].isChecked()
+            if enabled:
+                dicts[row['unique']] = {
+                    'enabled': enabled,
+                }
         data['dicts'] = dicts
         config.update(data)

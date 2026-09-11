@@ -66,10 +66,10 @@ def query_from_editor_fields(editor, fields=None):
     if not editor or not editor.note:
         return
 
-    word_ord, word, maps = inspect_note(editor.note)
+    word_ord, word, fields_map = inspect_note(editor.note)
     flush = not editor.addMode
     nomaps = True
-    for each in maps:
+    for each in fields_map:
         dict_unique = each.get('dict_unique', '').strip()
         ignore = each.get('ignore', True)
         if dict_unique and not ignore:

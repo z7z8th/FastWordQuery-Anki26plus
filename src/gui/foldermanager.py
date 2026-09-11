@@ -46,7 +46,7 @@ class FoldersManageDialog(Dialog):
         add_btn.clicked.connect(self.add_folder)
         remove_btn.clicked.connect(self.remove_folder)
         self.folders_lst = QListWidget()
-        self.folders_lst.addItems(config.dirs)
+        self.folders_lst.addItems(config.dict_dirs)
         self.chk_use_filename = QCheckBox(_('CHECK_FILENAME_LABEL'))
         self.chk_export_media = QCheckBox(_('EXPORT_MEDIA'))
         self.chk_use_filename.setChecked(config.use_filename)
@@ -77,7 +77,7 @@ class FoldersManageDialog(Dialog):
         del item
 
     @property
-    def dirs(self):
+    def dict_dirs(self):
         '''dictionary folders list'''
         return [
             self.folders_lst.item(i).text()
@@ -92,7 +92,7 @@ class FoldersManageDialog(Dialog):
     def save(self):
         '''save config to file'''
         data = {
-            'dirs': self.dirs,
+            'dict_dirs': self.dict_dirs,
             'use_filename': self.chk_use_filename.isChecked(),
             'export_media': self.chk_export_media.isChecked()
         }

@@ -94,13 +94,14 @@ def _is_method_or_func(object):
     return inspect.isfunction(object) or inspect.ismethod(object)
 
 
-def register(labels):
+def register(labels, enabled = False):
     """
     register the dict service with a labels, which will be shown in the dicts list.
     """
 
     def _deco(cls):
         cls.__register_label__ = _cl(labels)
+        cls.__enabled__ = enabled
 
         methods = inspect.getmembers(cls, predicate=_is_method_or_func)
         exports = []

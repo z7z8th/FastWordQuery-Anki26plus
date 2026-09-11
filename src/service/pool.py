@@ -18,13 +18,14 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from ..utils import Empty, Queue
+from .manager import ServiceManager
 
 
 class ServicePool(object):
     """
     Service instance pool
     """
-    def __init__(self, manager):
+    def __init__(self, manager:ServiceManager):
         self.pools = {}
         self.manager = manager
         

@@ -21,7 +21,7 @@ from .lang import _
 
 __all__ = ['VERSION', 'Endpoint', 'Template']
 
-VERSION = 'v3.0.0b'
+VERSION = 'v4.0.0b'
 
 
 class Endpoint:

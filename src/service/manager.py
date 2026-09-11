@@ -86,15 +86,18 @@ class ServiceManager(object):
                     continue
                 if getattr(clazz, '__register_label__', None) is None:
                     continue
-                service = service_wrap(clazz, *args)
-                service.__title__ = getattr(clazz, '__register_label__', name)
-                service.__unique__ = name
-                service.__path__ = os.path.join(mypath, f)
+                svc = service_wrap(clazz, *args)
+                svc.__title__ = getattr(clazz, '__register_label__', name)
+                svc.__unique__ = name
+                svc.__path__ = os.path.join(mypath, f)
+                svc.__enabled__ = clazz.__enabled__
+                print(f"Found service {vars(svc)}")
+
                 if issubclass(clazz, WebService):
-                    web_services.append(service)
-                    # get the customized local services
+                    web_services.append(svc)
+                # get the customized local services
                 if issubclass(clazz, LocalService):
-                    local_custom_services.append(service)
+                    local_custom_services.append(svc)
         web_services = sorted(web_services, key=lambda service: service.__title__)
         local_custom_services = sorted(local_custom_services, key=lambda service: service.__title__)
         return web_services, local_custom_services
@@ -105,22 +108,24 @@ class ServiceManager(object):
         '''
         mdx_services = list()
         star_dict_services = list()
-        for each in config.dirs:
-            print(f'config.dirs {each}')
+        for each in config.dict_dirs:
+            print(f'config.dict_dirs {each}')
             for dirpath, dirnames, filenames in os.walk(each):
                 for filename in filenames:
                     service = None
                     dict_path = os.path.join(dirpath, filename)
                     #MDX
                     if MdxService.check(dict_path):
-                        print(f'config.dirs > MdxService dict_path {dict_path}')
+                        print(f'config.dict_dirs > MdxService dict_path {dict_path}')
                         service = service_wrap(MdxService, dict_path)
                         service.__unique__ = md5(str(dict_path).encode('utf-8')).hexdigest()
+                        service.__enabled__ = True
                         mdx_services.append(service)
                     #Stardict    
                     if StardictService.check(dict_path):
                         service = service_wrap(StardictService, dict_path)
                         service.__unique__ = md5(str(dict_path).encode('utf-8')).hexdigest()
+                        service.__enabled__ = True
                         star_dict_services.append(service)
                 # support mdx dictionary and stardict format dictionary
         return mdx_services, star_dict_services

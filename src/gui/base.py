@@ -56,8 +56,8 @@ class WidgetSize(object):
     '''
     constant values
     '''
-    dialog_width = 850
-    dialog_height_margin = 166 if is_mac and sys.hexversion < 0x03000000 else 146
+    dialog_width = 950
+    dialog_height_margin = 166 if is_mac and sys.hexversion < 0x03000000 else 166
     map_min_height = 0
     map_max_height = 30
     map_fld_width = 100

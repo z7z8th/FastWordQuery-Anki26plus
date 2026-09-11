@@ -51,27 +51,25 @@ def inspect_note(note):
     inspect the note, and get necessary input parameters
     return word_ord: field index of the word in current note
     return word: the word
-    return maps: dicts map of current note
+    return fields: dicts map of current note
     """
 
-    conf = config.get_maps(note.note_type()['id'])
-    maps_list = {'list': [conf], 'def': 0} if isinstance(conf, list) else conf
-    maps = maps_list['list'][maps_list['def']]
-    maps = maps if isinstance(maps, list) else maps['fields']
-    for i, m in enumerate(maps):
-        if m.get('word_checked', False):
+    mconf = config.get_query_configs(note.note_type()['id'])
+    cfg = mconf['query_configs'][mconf['default']]
+    fields = cfg['fields']
+    for i, fld in enumerate(fields):
+        if fld.get('word_checked', False):
             word_ord = i
             break
     else:
-        # if no field is checked to be the word field, default the
-        # first one.
+        # if no field is checked to be the word field, default the first one.
         word_ord = 0
 
     def purify_word(word):
         return word.strip() if word else ''
 
     word = purify_word(note.fields[word_ord])
-    return word_ord, word, maps
+    return word_ord, word, fields
 
 
 def strip_combining(txt):
@@ -179,12 +177,15 @@ def add_to_tmpl(note, **kwargs):
         note.note_type()['tmpls'][0]['afmt'] = afmt
 
 
-def query_flds(note, fileds=None):
+def query_flds(note, qfields=None):
     """
     Query fields of single note
     """
+    # traceback.print_stack()
 
-    word_ord, word, maps = inspect_note(note)
+    word_ord, word, fields = inspect_note(note)
+    print(f"qfields {qfields}")
+    print(f'query_flds {word_ord}, {word}, {fields}')
     if not word:
         raise InvalidWordException
 
@@ -195,7 +196,8 @@ def query_flds(note, fileds=None):
 
     services = {}
     tasks = []
-    for i, each in enumerate(maps):
+    print(f'---iter fields')
+    for i, each in enumerate(fields):
         if i == word_ord:
             continue
         if i == len(note.fields):
@@ -214,14 +216,18 @@ def query_flds(note, fileds=None):
         dict_unique = each.get('dict_unique', '').strip()
         dict_fld_ord = each.get('dict_fld_ord', -1)
         fld_ord = each.get('fld_ord', -1)
+        print(f"dict_unique {dict_unique} dict_fld_ord {dict_fld_ord} fld_ord {fld_ord}")
         if dict_unique and dict_fld_ord != -1 and fld_ord != -1:
-            if fileds is None or fld_ord in fileds:
-                s = services.get(dict_unique, None)
-                if s is None:
-                    s = service_pool.get(dict_unique)
-                    if s and s.support:
-                        services[dict_unique] = s
-                if s and s.support:
+            if qfields is None or fld_ord in qfields:
+                
+                svc = services.get(dict_unique, None)
+                if svc is None:
+                    svc = service_pool.get(dict_unique)
+                    if svc and svc.support:
+                        services[dict_unique] = svc
+
+                print(f"---service {svc} for {dict_unique}")
+                if svc and svc.support:
                     tasks.append({
                         'dict_uniq': dict_unique,
                         'word': word,
@@ -229,6 +235,9 @@ def query_flds(note, fileds=None):
                         'fld': fld_ord,
                         'cloze': cloze,
                     })
+    print(f'---iter tasks {tasks}')
+    if not tasks:
+        print(f"*** Error: No tasks generated for word `{word}`")
 
     success_num = 0
     result = defaultdict(QueryResult)
@@ -236,6 +245,7 @@ def query_flds(note, fileds=None):
         try:
             service = services.get(task['dict_uniq'], None)
             qr = service.active(task['dict_fld'], task['word'])
+            # print(f"--- qr {str(qr)[:100]}")
             if qr:
                 if task['cloze']:
                     qr['result'] = cloze_deletion(qr['result'], word)

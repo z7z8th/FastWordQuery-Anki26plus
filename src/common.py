@@ -44,12 +44,11 @@ _NULL_ICON = get_icon('null.png')
 
 
 def set_options_def(mid, i):
-    conf = config.get_maps(mid)
-    conf = {'list': [conf], 'def': 0} if isinstance(conf, list) else conf
-    if conf['def'] != i:
-        conf['def'] = i
+    mconf = config.get_query_configs(mid)
+    if mconf['default'] != i:
+        mconf['default'] = i
         data = dict()
-        data[mid] = conf
+        data[mid] = mconf
         config.update(data)
 
 
@@ -94,25 +93,20 @@ def browser_menu():
             action.triggered.connect(_show_options)
             menu.addAction(action)
 
-            # Default configs
+            # Default qconfigs
             menu.addSeparator()
             b = False
             for m in sorted(
                     browser.mw.col.models.all(), key=itemgetter("name")):
-                conf = config.get_maps(m['id'])
-                conf = {
-                    'list': [conf],
-                    'def': 0
-                } if isinstance(conf, list) else conf
-                maps_list = conf['list']
-                if len(maps_list) > 1:
+                mconf = config.get_query_configs(m['id'])
+                qconfigs = mconf['query_configs']
+                if len(qconfigs) > 1:
                     submenu = menu.addMenu(m['name'])
-                    for i, maps in enumerate(maps_list):
+                    for i, cfg in enumerate(qconfigs):
                         submenu.addAction(
-                            _OK_ICON if i == conf['def'] else _NULL_ICON,
-                            _('CONFIG_INDEX') % (i + 1) if isinstance(
-                                maps, list) else maps['name'],
-                            lambda mid=m['id'], i=i: set_options_def(mid, i))
+                            _OK_ICON if i == mconf['default'] else _NULL_ICON, cfg['name'],
+                            lambda mid=m['id'], i=i: set_options_def(mid, i)
+                        )
                     b = True
             if b:
                 menu.addSeparator()
@@ -161,23 +155,19 @@ def customize_addcards():
                         lambda: query_from_editor_fields(self.editor))  # ,QKeySequence(my_shortcut))
                     # default options
                     mid = self.editor.note.note_type()['id']
-                    conf = config.get_maps(mid)
-                    conf = {
-                        'list': [conf],
-                        'def': 0
-                    } if isinstance(conf, list) else conf
-                    maps_list = conf['list']
-                    if len(maps_list) > 1:
+                    mconf = config.get_query_configs(mid)
+                    qconfigs = mconf['query_configs']
+                    if len(qconfigs) > 1:
                         menu.addSeparator()
-                        for i, maps in enumerate(maps_list):
+                        for i, cfg in enumerate(qconfigs):
                             menu.addAction(
-                                _OK_ICON if i == conf['def'] else _NULL_ICON,
-                                _('CONFIG_INDEX') % (i + 1) if isinstance(
-                                    maps, list) else maps['name'],
+                                _OK_ICON if i == mconf['default'] else _NULL_ICON,
+                                cfg['name'],
                                 lambda mid=mid, i=i: set_options_def(mid, i))
                         menu.addSeparator()
                     # end default options
-                    menu.addAction(_("OPTIONS"), lambda: show_options(self, self.editor.note.note_type()['id']))
+                    menu.addAction(_("OPTIONS"), 
+                                   lambda: show_options(self, self.editor.note.note_type()['id']))
                     menu.exec(
                         fastwqBtn.mapToGlobal(QPoint(0, fastwqBtn.height())))
             else:
@@ -209,18 +199,18 @@ def context_menu():
         if not isinstance(web_view.editor.currentField, int):
             return
         current_model_id = web_view.editor.note.note_type()['id']
-        conf = config.get_maps(current_model_id)
-        maps_list = conf if isinstance(conf, list) else conf['list']
+        mconf = config.get_query_configs(current_model_id)
+        qconfigs = mconf['query_configs']
         curr_flds = []
         names = []
-        for i, maps in enumerate(maps_list):
-            maps = maps if isinstance(maps, list) else maps['fields']
-            for mord, m in enumerate(maps):
+        for i, cfg in enumerate(qconfigs):
+            fields = cfg if isinstance(cfg, list) else cfg['fields']
+            for mord, m in enumerate(fields):
                 if m.get('word_checked', False):
                     word_ord = mord
                     break
             if web_view.editor.currentField != word_ord:
-                each = maps[web_view.editor.currentField]
+                each = fields[web_view.editor.currentField]
                 ignore = each.get('ignore', False)
                 if not ignore:
                     dict_unique = each.get('dict_unique', '').strip()
@@ -232,7 +222,7 @@ def context_menu():
                             name = s.title + ' :-> ' + s.fields[dict_fld_ord]
                             if name not in names:
                                 names.append(name)
-                                curr_flds.append({'name': name, 'def': i})
+                                curr_flds.append({'name': name, 'default': i})
                         service_pool.put(s)
 
         submenu = menu.addMenu(_('QUERY'))
@@ -241,12 +231,10 @@ def context_menu():
         if len(curr_flds) > 0:
             # quer hook method
             def query_from_editor_hook(i):
-                conf = config.get_maps(current_model_id)
-                maps_old_def = 0 if isinstance(conf, list) else conf.get(
-                    'def', 0)
+                mconf = config.get_query_configs(current_model_id)
+                maps_old_def = mconf.get('default', 0)
                 set_options_def(current_model_id, i)
-                query_from_editor_fields(
-                    web_view.editor, fields=[web_view.editor.currentField])
+                query_from_editor_fields(web_view.editor, fields=[web_view.editor.currentField])
                 set_options_def(current_model_id, maps_old_def)
 
             # sub menu
@@ -254,7 +242,7 @@ def context_menu():
             submenu.addSeparator()
             for c in curr_flds:
                 submenu.addAction(
-                    c['name'], lambda i=c['def']: query_from_editor_hook(i))
+                    c['name'], lambda i=c['default']: query_from_editor_hook(i))
             submenu.addSeparator()
         submenu.addAction(_("OPTIONS"), lambda: show_options(web_view, web_view.editor.note.note_type()['id']))
 
