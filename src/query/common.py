@@ -223,10 +223,10 @@ def query_flds(note, fileds=None):
                         services[dict_unique] = s
                 if s and s.support:
                     tasks.append({
-                        'k': dict_unique,
-                        'w': word,
-                        'f': dict_fld_ord,
-                        'i': fld_ord,
+                        'dict_uniq': dict_unique,
+                        'word': word,
+                        'dict_fld': dict_fld_ord,
+                        'fld': fld_ord,
                         'cloze': cloze,
                     })
 
@@ -234,12 +234,12 @@ def query_flds(note, fileds=None):
     result = defaultdict(QueryResult)
     for task in tasks:
         try:
-            service = services.get(task['k'], None)
-            qr = service.active(task['f'], task['w'])
+            service = services.get(task['dict_uniq'], None)
+            qr = service.active(task['dict_fld'], task['word'])
             if qr:
                 if task['cloze']:
                     qr['result'] = cloze_deletion(qr['result'], word)
-                result.update({task['i']: qr})
+                result.update({task['fld']: qr})
                 success_num += 1
         except Exception as e:
             print(traceback.format_exc())
