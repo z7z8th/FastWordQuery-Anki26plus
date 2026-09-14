@@ -12,15 +12,15 @@ MAPPINGS = [
     ['us', [re.compile(VOICE_PATTERN % r'b'), re.compile(VOICE_PATTERN_WQ % (r'amevoice', r'amevoice'))]]
 ]
 LANG_TO_REGEXPS = {lang: regexps for lang, regexps in MAPPINGS}
-DICT_PATH = u'' # u'E:\\BaiduYunDownload\\mdx\\L6mp3.mdx'
+FORCE_DICT_PATH = u'' # u'E:\\BaiduYunDownload\\mdx\\L6mp3.mdx'
 
 
 @register([u'本地词典-朗文6', u'MDX-LDOCE6'], enabled = True)
 class Ldoce6(MdxService):
 
     def __init__(self):
-        dict_path = DICT_PATH
-        # if DICT_PATH is a path, stop auto detect
+        dict_path = FORCE_DICT_PATH
+        # if FORCE_DICT_PATH is a path, stop auto detect
         if not dict_path:
             from ...service import service_manager, service_pool
             for clazz in service_manager.mdx_services:
