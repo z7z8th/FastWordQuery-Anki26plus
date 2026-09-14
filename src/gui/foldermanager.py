@@ -80,8 +80,7 @@ class FoldersManageDialog(Dialog):
     def dict_dirs(self):
         '''dictionary folders list'''
         return [
-            self.folders_lst.item(i).text()
-            for i in range(self.folders_lst.count())
+            self.folders_lst.item(i).text() for i in range(self.folders_lst.count())
         ]
 
     def accept(self):
