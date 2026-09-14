@@ -1,7 +1,5 @@
 # -*- coding:utf-8 -*-
 
-import os
-import re
 from bs4 import Tag
 from ..base import *
 from ...utils.misc import format_multi_query_word

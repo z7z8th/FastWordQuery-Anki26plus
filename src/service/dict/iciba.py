@@ -1,6 +1,5 @@
 #-*- coding:utf-8 -*-
 import os
-import re
 import json
 from collections import defaultdict
 from aqt.utils import showInfo, showText
