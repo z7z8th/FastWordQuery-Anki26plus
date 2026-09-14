@@ -22,7 +22,7 @@ import os
 from hashlib import md5
 from typing import Callable
 
-from .base import Service, LocalService, MdxService, StardictService, WebService, service_wrap
+from .base import Service, LocalService, MdxService, StardictService, WebService, object_builder
 from ..context import config
 from ..utils import importlib
 
@@ -88,7 +88,7 @@ class ServiceManager(object):
                     continue
                 if getattr(clazz, '_register_label_', None) is None:
                     continue
-                svc = service_wrap(clazz, *args)
+                svc = object_builder(clazz, *args)
                 svc._title_ = getattr(clazz, '_register_label_', name)
                 svc._unique_ = name
                 svc._src_path_ = os.path.join(svc_rootdir, f)
@@ -119,13 +119,13 @@ class ServiceManager(object):
                     #MDX
                     if MdxService.check(dict_path):
                         print(f'config.dict_dirs > MdxService dict_path {dict_path}')
-                        svc = service_wrap(MdxService, dict_path)
+                        svc = object_builder(MdxService, dict_path)
                         svc._unique_ = md5(str(dict_path).encode('utf-8')).hexdigest()
                         svc._enabled_ = True
                         mdx_services.append(svc)
                     #Stardict    
                     if StardictService.check(dict_path):
-                        svc = service_wrap(StardictService, dict_path)
+                        svc = object_builder(StardictService, dict_path)
                         svc._unique_ = md5(str(dict_path).encode('utf-8')).hexdigest()
                         svc._enabled_ = True
                         star_dict_services.append(svc)

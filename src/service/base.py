@@ -34,7 +34,7 @@ import threading
 from collections import defaultdict
 from functools import wraps
 from hashlib import md5, sha1
-from typing import Callable
+from typing import Callable, Optional
 
 import requests
 from bs4 import BeautifulSoup
@@ -64,7 +64,7 @@ except ImportError:
     import dummy_threading as _threading
 
 __all__ = [
-    'register', 'export', 'copy_static_file', 'with_styles', 'parse_html', 'service_wrap', 'get_hex_name', 'get_canonical_name',
+    'register', 'export', 'copy_static_file', 'with_styles', 'parse_html', 'object_builder', 'get_hex_name', 'get_canonical_name',
     'Service', 'WebService', 'LocalService', 'MdxService', 'StardictService', 'QueryResult'
 ]
 
@@ -316,11 +316,14 @@ class Service(object):
         return formats[type_].format(filename)
 
 
+type ServiceBuilder = Callable[[], object]
+
+
 from functools import partial
-def service_wrap(service, *args, **kwargs)-> Callable[[], Service]:
+def object_builder(service, *args, **kwargs)-> ServiceBuilder:
     return partial(service, *args, **kwargs)
 
-# def service_wrap(service, *args, **kwargs)-> Callable[[], Service]:
+# def object_builder(service, *args, **kwargs)-> Callable[[], Service]:
 #     """
 #     wrap the service class constructor
 #     """
@@ -517,8 +520,8 @@ class _DictBuildWorker(QThread):
 
     def __init__(self, func):
         super(_DictBuildWorker, self).__init__()
-        self._builder = None
-        self._func = func
+        self._builder: Optional[object] = None
+        self._func: ServiceBuilder = func
 
     def run(self):
         try:
@@ -544,11 +547,11 @@ class LocalService(Service):
         self.missed_css = set()
 
     # MdxBuilder instances map
-    _mdx_builders = defaultdict(dict)
+    _mdx_builders: defaultdict[str, object] = defaultdict(dict)
     _mutex_builder = QMutex()
 
     @staticmethod
-    def _get_builder(key, func=None):
+    def _get_builder(key: str, func: ServiceBuilder):
         LocalService._mutex_builder.lock()
         key = md5(str(key).encode('utf-8')).hexdigest()
         # print(f'_get_builder key {key} {func} builders[key] {LocalService._mdx_builders[key]}')
@@ -594,7 +597,7 @@ class MdxService(LocalService):
         self.query_interval = 0.01
         self.styles = []
         if MdxService.check(self.dict_path):
-            self.builder = self._get_builder(dict_path, service_wrap(MdxBuilder, dict_path))
+            self.builder: object = self._get_builder(dict_path, object_builder(MdxBuilder, dict_path))
 
     @staticmethod
     def check(dict_path):
@@ -848,9 +851,8 @@ class StardictService(LocalService):
         self.query_interval = 0.05
         if StardictService.check(self.dict_path):
             dict_path = dict_path[:-4]
-            self.builder = self._get_builder(
-                dict_path,
-                service_wrap(StardictBuilder, dict_path, in_memory=False)
+            self.builder = self._get_builder(dict_path, 
+                                             object_builder(StardictBuilder, dict_path, in_memory=False)
             )
             # if self.builder:
             #    self.builder.get_header()
