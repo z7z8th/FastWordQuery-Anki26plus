@@ -27,7 +27,7 @@ class Ldoce5plus(MdxService):
             from ...service import service_manager, service_pool
             for clazz in service_manager.mdx_services:
                 service = service_pool.get(clazz._unique_)
-                title = service.builder._title if service and service.support else u''
+                title = service.backend._title if service and service.support else u''
                 service_pool.put(service)
                 if title.startswith(u'LDOCE5++'):
                     dict_path = service.dict_path

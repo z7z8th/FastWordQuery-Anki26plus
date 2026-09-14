@@ -171,7 +171,7 @@ class QueryWorkerManager(object):
                     finished_worker += 1
                 else:
                     mw.app.processEvents()
-                    worker.wait(1)
+                    worker.wait(100)
                 if self.progress.abort():
                     worker.exit = True
                     break

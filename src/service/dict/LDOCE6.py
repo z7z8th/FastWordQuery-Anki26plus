@@ -25,7 +25,7 @@ class Ldoce6(MdxService):
             from ...service import service_manager, service_pool
             for clazz in service_manager.mdx_services:
                 service: Service = service_pool.get(clazz._unique_)
-                title = service.builder._title if service and service.support else u''
+                title = service.backend._title if service and service.support else u''
                 service_pool.put(service)
                 print(f'Dict Service: {title} -- {service.dict_path}')
                 if title.startswith(u'LDOCE6') or u'LDOCE6' in os.path.basename(service.dict_path):
@@ -183,7 +183,7 @@ class Ldoce6(MdxService):
         if lst:
             str_content = u''
             for m in lst:
-                content = self.builder.mdx_lookup(m)
+                content = self.backend.mdx_lookup(m)
                 if len(content) > 0:
                     for c in content:
                         str_content += c.replace("\r\n","").replace("entry:/","")

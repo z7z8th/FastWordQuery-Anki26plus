@@ -316,11 +316,11 @@ class Service(object):
         return formats[type_].format(filename)
 
 
-type ServiceBuilder = Callable[[], object]
+type ObjectBuilder = Callable[[], object]
 
 
 from functools import partial
-def object_builder(service, *args, **kwargs)-> ServiceBuilder:
+def object_builder(service, *args, **kwargs)-> ObjectBuilder:
     return partial(service, *args, **kwargs)
 
 # def object_builder(service, *args, **kwargs)-> Callable[[], Service]:
@@ -515,24 +515,24 @@ class WebService(Service):
             return False
 
 
-class _DictBuildWorker(QThread):
+class _DictBackendWorker(QThread):
     """Local Dictionary Builder"""
 
     def __init__(self, func):
-        super(_DictBuildWorker, self).__init__()
-        self._builder: Optional[object] = None
-        self._func: ServiceBuilder = func
+        super(_DictBackendWorker, self).__init__()
+        self._backend: Optional[object] = None
+        self._func: ObjectBuilder = func
 
     def run(self):
         try:
-            self._builder = self._func()
+            self._backend = self._func()
         except Exception:
             print(traceback.format_exc())
-            self._builder = None
+            self._backend = None
 
     @property
-    def builder(self):
-        return self._builder
+    def backend(self):
+        return self._backend
 
 
 class LocalService(Service):
@@ -543,28 +543,28 @@ class LocalService(Service):
     def __init__(self, dict_path):
         super(LocalService, self).__init__()
         self.dict_path = dict_path
-        self.builder = None
+        self.backend: Optional[object] = None
         self.missed_css = set()
 
     # MdxBuilder instances map
-    _mdx_builders: defaultdict[str, object] = defaultdict(dict)
+    _mdx_backends: defaultdict[str, object] = defaultdict(dict)
     _mutex_builder = QMutex()
 
     @staticmethod
-    def _get_builder(key: str, func: ServiceBuilder):
+    def _get_backend(key: str, builder: ObjectBuilder):
         LocalService._mutex_builder.lock()
         key = md5(str(key).encode('utf-8')).hexdigest()
         # print(f'_get_builder key {key} {func} builders[key] {LocalService._mdx_builders[key]}')
-        if func:
-            if not LocalService._mdx_builders[key]:
-                worker = _DictBuildWorker(func)
+        if builder:
+            if not LocalService._mdx_backends[key]:
+                worker = _DictBackendWorker(builder)
                 worker.start()
                 while not worker.isFinished():
                     mw.app.processEvents()
                     worker.wait(100)
-                LocalService._mdx_builders[key] = worker.builder
+                LocalService._mdx_backends[key] = worker.backend
         LocalService._mutex_builder.unlock()
-        return LocalService._mdx_builders[key]
+        return LocalService._mdx_backends[key]
 
     @property
     def support(self):
@@ -597,7 +597,7 @@ class MdxService(LocalService):
         self.query_interval = 0.01
         self.styles = []
         if MdxService.check(self.dict_path):
-            self.builder: object = self._get_builder(dict_path, object_builder(MdxBuilder, dict_path))
+            self.backend = self._get_backend(dict_path, object_builder(MdxBuilder, dict_path))
 
     @staticmethod
     def check(dict_path):
@@ -605,14 +605,14 @@ class MdxService(LocalService):
 
     @property
     def support(self):
-        return bool(self.builder and MdxService.check(self.dict_path))
+        return bool(self.backend and MdxService.check(self.dict_path))
 
     @property
     def title(self):
-        if config.use_filename or not self.builder._title or self.builder._title.startswith('Title'):
+        if config.use_filename or not self.backend._title or self.backend._title.startswith('Title'):
             return self._filename
         else:
-            return self.builder._title
+            return self.backend._title
 
     @export([u'默认', u'Default'])
     def fld_whole(self):
@@ -626,7 +626,7 @@ class MdxService(LocalService):
         if word is None:
             word = self.word
         ignorecase = config.ignore_mdx_wordcase and (word != word.lower() or word != word.upper())
-        content = self.builder.mdx_lookup(word, ignorecase=ignorecase)
+        content = self.backend.mdx_lookup(word, ignorecase=ignorecase)
         
         if not content:
             # print(f'*** [{self.title}] No definition for "{word}"')
@@ -656,7 +656,7 @@ class MdxService(LocalService):
         """according to the keyword(param word) return the media file contents"""
         word = word.replace('/', '\\')
         ignorecase = config.ignore_mdx_wordcase and (word != word.lower() or word != word.upper())
-        content = self.builder.mdd_lookup(word, ignorecase=ignorecase)
+        content = self.backend.mdd_lookup(word, ignorecase=ignorecase)
         if len(content) > 0:
             return [content[0]]
         else:
@@ -805,7 +805,7 @@ class MdxService(LocalService):
             else:
                 ignorecase = config.ignore_mdx_wordcase and (
                         filepath_in_mdx != filepath_in_mdx.lower() or filepath_in_mdx != filepath_in_mdx.upper())
-                bytes_list = self.builder.mdd_lookup(filepath_in_mdx, ignorecase=ignorecase)
+                bytes_list = self.backend.mdd_lookup(filepath_in_mdx, ignorecase=ignorecase)
                 if bytes_list:
                     with open(savepath, 'wb') as f:
                         f.write(bytes_list[0])
@@ -826,7 +826,7 @@ class MdxService(LocalService):
             '*' + os.path.basename(each.replace('\\', os.path.sep)) for each in diff]
         try:
             for each in wild:
-                keys = self.builder.get_mdd_keys(each)
+                keys = self.backend.get_mdd_keys(each)
                 if not keys:
                     errors.append(each)
                     lst.append(each[1:])
@@ -851,11 +851,11 @@ class StardictService(LocalService):
         self.query_interval = 0.05
         if StardictService.check(self.dict_path):
             dict_path = dict_path[:-4]
-            self.builder = self._get_builder(dict_path, 
+            self.backend = self._get_backend(dict_path, 
                                              object_builder(StardictBuilder, dict_path, in_memory=False)
             )
-            # if self.builder:
-            #    self.builder.get_header()
+            # if self.backend:
+            #    self.backend.get_header()
 
     @staticmethod
     def check(dict_path):
@@ -863,20 +863,20 @@ class StardictService(LocalService):
 
     @property
     def support(self):
-        return self.builder and StardictService.check(self.dict_path)
+        return bool(self.backend and StardictService.check(self.dict_path))
 
     @property
     def title(self):
-        if config.use_filename or not self.builder.ifo.bookname:
+        if config.use_filename or not self.backend.ifo.bookname:
             return self._filename
         else:
-            return self.builder.ifo.bookname
+            return self.backend.ifo.bookname
 
     @export([u'默认', u'Default'])
     def fld_whole(self):
-        # self.builder.check_build()
+        # self.backend.check_build()
         try:
-            result = self.builder[self.word]
+            result = self.backend[self.word]
             result = result.strip().replace('\r\n', '<br />') \
                 .replace('\r', '<br />').replace('\n', '<br />')
             return QueryResult(result=result)
