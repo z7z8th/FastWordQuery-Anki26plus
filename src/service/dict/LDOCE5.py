@@ -26,7 +26,7 @@ class Ldoce5plus(MdxService):
         if not dict_path:
             from ...service import service_manager, service_pool
             for clazz in service_manager.mdx_services:
-                service = service_pool.get(clazz.__unique__)
+                service = service_pool.get(clazz._unique_)
                 title = service.builder._title if service and service.support else u''
                 service_pool.put(service)
                 if title.startswith(u'LDOCE5++'):
@@ -36,7 +36,7 @@ class Ldoce5plus(MdxService):
 
     @property
     def title(self):
-        return getattr(self, '__register_label__', self.unique)
+        return getattr(self, '_register_label_', self.unique)
 
     def _fld_voice(self, html, voice):
         """获取发音字段"""

@@ -34,6 +34,7 @@ import threading
 from collections import defaultdict
 from functools import wraps
 from hashlib import md5, sha1
+from typing import Callable
 
 import requests
 from bs4 import BeautifulSoup
@@ -100,8 +101,8 @@ def register(labels, enabled = False):
     """
 
     def _deco(cls):
-        cls.__register_label__ = _cl(labels)
-        cls.__enabled__ = enabled
+        cls._register_label_ = _cl(labels)
+        cls._enabled_ = enabled
 
         methods = inspect.getmembers(cls, predicate=_is_method_or_func)
         exports = []
@@ -219,18 +220,6 @@ def parse_html(html):
     lock.release()
     return soup
 
-
-def service_wrap(service, *args, **kwargs):
-    """
-    wrap the service class constructor
-    """
-
-    def _service():
-        return service(*args, **kwargs)
-
-    return _service
-
-
 class Service(object):
     '''
     Dictionary Service Abstract Class
@@ -327,6 +316,21 @@ class Service(object):
         return formats[type_].format(filename)
 
 
+from functools import partial
+def service_wrap(service, *args, **kwargs)-> Callable[[], Service]:
+    return partial(service, *args, **kwargs)
+
+# def service_wrap(service, *args, **kwargs)-> Callable[[], Service]:
+#     """
+#     wrap the service class constructor
+#     """
+
+#     def _service() -> Service:
+#         return service(*args, **kwargs)
+
+#     return _service
+
+
 class WebService(Service):
     """
     Web Dictionary Service
@@ -341,7 +345,7 @@ class WebService(Service):
 
     @property
     def title(self):
-        return getattr(self, '__register_label__', self.unique)
+        return getattr(self, '_register_label_', self.unique)
 
     def get_response(self, url, data=None, headers=None, timeout=10):
         default_headers = {
@@ -565,7 +569,7 @@ class LocalService(Service):
 
     @property
     def title(self):
-        return getattr(self, '__register_label__', u'Unkown')
+        return getattr(self, '_register_label_', u'Unkown')
 
     @property
     def _filename(self):

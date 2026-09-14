@@ -18,7 +18,9 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from ..utils import Empty, Queue
+from .base import Service
 from .manager import ServiceManager
+
 
 
 class ServicePool(object):
@@ -29,7 +31,7 @@ class ServicePool(object):
         self.pools = {}
         self.manager = manager
         
-    def get(self, unique):
+    def get(self, unique) -> Service:
         queue = self.pools.get(unique, None)
         if queue:
             try:

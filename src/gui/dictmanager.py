@@ -91,10 +91,10 @@ class DictManageDialog(Dialog):
         services = service_manager.local_custom_services + service_manager.web_services
         for svc in services:
             d = {
-                'title':   svc.__title__,
-                'unique':  svc.__unique__,
-                'path':    svc.__path__,
-                'enabled': confs.get(svc.__unique__, dict()).get('enabled', svc.__enabled__)
+                'title':   svc._title_,
+                'unique':  svc._unique_,
+                'src_path':    svc._src_path_,
+                'enabled': confs.get(svc._unique_, dict()).get('enabled', svc._enabled_)
             }
             print(f'Add Dict {d}')
             dicts.append(d)
@@ -108,11 +108,11 @@ class DictManageDialog(Dialog):
 
     def add_dict_layout(self, i, **kwargs):
         # args
-        title, unique, enabled, path = (
+        title, unique, enabled, src_path = (
             kwargs.get('title', u''),
             kwargs.get('unique', u''),
             kwargs.get('enabled', False),
-            kwargs.get('path', u''),
+            kwargs.get('src_path', u''),
         )
         # button
         check_btn = QCheckBox(title)
@@ -123,7 +123,7 @@ class DictManageDialog(Dialog):
         edit_btn.setText(_('EDIT'))
         # signal
         check_btn.stateChanged.connect(self.enabled_all_update)
-        edit_btn.clicked.connect(lambda: self.on_edit(path))
+        edit_btn.clicked.connect(lambda: self.on_edit(src_path))
         # add
         self.dicts_layout.addWidget(check_btn, i + 1, 0)
         self.dicts_layout.addWidget(edit_btn, i + 1, 1)
