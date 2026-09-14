@@ -107,15 +107,15 @@ def register(labels, enabled = False):
         methods = inspect.getmembers(cls, predicate=_is_method_or_func)
         exports = []
         for method in methods:
-            attrs = getattr(method[1], '__export_attrs__', None)
+            attrs = getattr(method[1], '_export_attrs_', None)
             if attrs and attrs[1] == -1:
                 exports.append((
-                    getattr(method[1], '__def_index__', 0),
+                    getattr(method[1], '_def_index_', 0),
                     method[1]
                 ))
         exports = sorted(exports)
         for index, method in enumerate(exports):
-            attrs = getattr(method[1], '__export_attrs__', None)
+            attrs = getattr(method[1], '_export_attrs_', None)
             attrs[1] = index
 
         return cls
@@ -134,8 +134,8 @@ def export(labels):
             res = fld_func(self, *args, **kwargs)
             return QueryResult(result=res) if not isinstance(res, QueryResult) else res
 
-        _deco.__export_attrs__ = [_cl(labels), -1]
-        _deco.__def_index__ = export.EXPORT_INDEX
+        _deco._export_attrs_ = [_cl(labels), -1]
+        _deco._def_index_ = export.EXPORT_INDEX
         export.EXPORT_INDEX += 1
         return _deco
 
@@ -293,7 +293,7 @@ class Service(object):
         methods = inspect.getmembers(self, predicate=inspect.ismethod)
         # print(f'_get_exporters methods {methods}')
         for method in methods:
-            export_attrs = getattr(method[1], '__export_attrs__', None)
+            export_attrs = getattr(method[1], '_export_attrs_', None)
             # print(f'_get_exporters export_attrs {export_attrs}')
             
             if export_attrs:

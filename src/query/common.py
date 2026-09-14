@@ -31,7 +31,7 @@ from aqt.utils import showInfo
 from ..constants import Template
 from ..context import config
 from ..libs.snowballstemmer import stemmer
-from ..service import QueryResult, copy_static_file, service_pool
+from ..service import Service, QueryResult, copy_static_file, service_pool
 from ..service.base import LocalService
 from ..utils import wrap_css
 from ..lang import _
@@ -194,31 +194,32 @@ def query_flds(note, qfields=None):
 
     # progress.update_title(u'Querying [[ %s ]]' % word)
 
-    services = {}
+    services: dict[str, Service] = {}
     tasks = []
     print(f'---iter fields')
-    for i, each in enumerate(fields):
+    for i, field in enumerate(fields):
         if i == word_ord:
             continue
         if i == len(note.fields):
             break
         # ignore field
-        ignore = each.get('ignore', False)
+        ignore = field.get('ignore', False)
         if ignore:
             continue
         # skip valued
-        skip = each.get('skip_valued', False)
+        skip = field.get('skip_valued', False)
         if skip and len(note.fields[i]) != 0:
             continue
         # cloze
-        cloze = each.get('cloze_word', False)
+        cloze = field.get('cloze_word', False)
         # normal
-        dict_unique = each.get('dict_unique', '').strip()
-        dict_fld_ord = each.get('dict_fld_ord', -1)
-        fld_ord = each.get('fld_ord', -1)
-        print(f"dict_unique {dict_unique} dict_fld_ord {dict_fld_ord} fld_ord {fld_ord}")
+        dict_unique = field.get('dict_unique', '').strip()
+        dict_fld_ord = field.get('dict_fld_ord', -1)
+        fld_ord = field.get('fld_ord', -1)
+        # print(f"dict_unique {dict_unique} dict_fld_ord {dict_fld_ord} fld_ord {fld_ord}")
         if dict_unique and dict_fld_ord != -1 and fld_ord != -1:
-            if qfields is None or fld_ord in qfields:
+            if qfields is None or \
+                fld_ord in qfields:
                 
                 svc = services.get(dict_unique, None)
                 if svc is None:

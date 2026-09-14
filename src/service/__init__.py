@@ -19,7 +19,7 @@
 
 from .manager import ServiceManager
 from .pool import ServicePool
-from .base import QueryResult, copy_static_file
+from .base import Service, QueryResult, copy_static_file
 
 service_manager = ServiceManager()                             # Service Manager
 service_pool = ServicePool(service_manager)                    # Service Instance Pool Manager
