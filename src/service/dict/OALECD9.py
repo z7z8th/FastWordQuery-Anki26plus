@@ -17,14 +17,14 @@ LANG_TO_REGEXPS = {lang: regexps for lang, regexps in MAPPINGS}
 DICT_PATH = u"" # u'E:\\BaiduYunDownload\\mdx\\L6mp3.mdx'
 
 
-@register([u'本地词典-牛津高阶9例句发音', u'牛津高阶9例句发音'])
+@register([u'本地词典-牛津高阶9', u'MDX-OALECD9'], enabled=True)
 class oalecd9_mdx(MdxService):
 
     def __init__(self):
         dict_path = DICT_PATH
         # if DICT_PATH is a path, stop auto detect
         if not dict_path:
-            from ...service import service_manager, service_pool
+            from .. import service_manager, service_pool
             for clazz in service_manager.mdx_services:
                 service = service_pool.get(clazz.__unique__)
                 title = service.builder._title if service and service.support else u''

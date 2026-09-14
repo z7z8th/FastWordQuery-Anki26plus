@@ -15,7 +15,7 @@ LANG_TO_REGEXPS = {lang: regexps for lang, regexps in MAPPINGS}
 DICT_PATH = u'' # u'E:\\BaiduYunDownload\\mdx\\L6mp3.mdx'
 
 
-@register([u'本地词典-LDOCE6', u'MDX-LDOCE6'], enabled = True)
+@register([u'本地词典-朗文6', u'MDX-LDOCE6'], enabled = True)
 class Ldoce6(MdxService):
 
     def __init__(self):
