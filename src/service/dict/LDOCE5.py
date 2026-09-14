@@ -26,9 +26,10 @@ class Ldoce5plus(MdxService):
         if not dict_path:
             from ...service import service_manager, service_pool
             for clazz in service_manager.mdx_services:
-                service = service_pool.get(clazz._unique_)
+                service:MdxService = service_pool.get(clazz._unique_)
                 title = service.backend._title if service and service.support else u''
                 service_pool.put(service)
+                # print(f'Dict Service: {title} -- {service.dict_path}')
                 if title.startswith(u'LDOCE5++'):
                     dict_path = service.dict_path
                     break
@@ -85,7 +86,7 @@ class Ldoce5plus(MdxService):
         m = re.findall(r'<div class="EXAMPLE">\s*.*>\s*.*<\/div>', self.get_html())
         if m:
             soup = parse_html(m[0])
-            el_list = soup.findAll('div', class_ = 'EXAMPLE')
+            el_list = soup.find_all('div', class_ = 'EXAMPLE')
             if el_list:
                 maps = []
                 for element in el_list:

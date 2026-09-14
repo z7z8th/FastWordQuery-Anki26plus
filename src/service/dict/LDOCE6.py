@@ -14,6 +14,7 @@ MAPPINGS = [
 LANG_TO_REGEXPS = {lang: regexps for lang, regexps in MAPPINGS}
 FORCE_DICT_PATH = u'' # u'E:\\BaiduYunDownload\\mdx\\L6mp3.mdx'
 
+from typing import cast
 
 @register([u'本地词典-朗文6', u'MDX-LDOCE6'], enabled = True)
 class Ldoce6(MdxService):
@@ -24,12 +25,12 @@ class Ldoce6(MdxService):
         if not dict_path:
             from ...service import service_manager, service_pool
             for clazz in service_manager.mdx_services:
-                service: Service = service_pool.get(clazz._unique_)
+                service: MdxService = cast(MdxService, service_pool.get(clazz._unique_))
                 title = service.backend._title if service and service.support else u''
                 service_pool.put(service)
-                print(f'Dict Service: {title} -- {service.dict_path}')
+                # print(f'Dict Service: {title} -- {service.dict_path}')
                 if title.startswith(u'LDOCE6') or u'LDOCE6' in os.path.basename(service.dict_path):
-                    print(f"*** MDX-LDOCE6 Found dict_path: {service.dict_path}")
+                    print(f"--- MDX-LDOCE6 Found dict_path: {service.dict_path}")
                     dict_path = service.dict_path
                     break
         super(Ldoce6, self).__init__(dict_path)
@@ -108,7 +109,7 @@ class Ldoce6(MdxService):
         m = m = re.findall(r'<span class="def"\s*.*>\s*.*<\/span>', self.get_html())
         if m:
             soup = parse_html(m[0])
-            el_list = soup.findAll('span', class_ = 'def')
+            el_list = soup.find_all('span', class_ = 'def')
             if el_list:
                 maps = [u''.join(str(content) for content in element.contents) 
                                     for element in el_list]
@@ -138,7 +139,7 @@ class Ldoce6(MdxService):
         m = re.findall(r'<span class="example"\s*.*>\s*.*<\/span>', self.get_html())
         if m:
             soup = parse_html(m[0])
-            el_list = soup.findAll('span', class_ = 'example')
+            el_list = soup.find_all('span', class_ = 'example')
             if el_list:
                 maps = [u''.join(str(content) for content in element.contents) 
                                     for element in el_list]
@@ -155,7 +156,7 @@ class Ldoce6(MdxService):
         m = re.findall(r'<span class="example"\s*.*>\s*.*<\/span>', self.get_html())
         if m:
             soup = parse_html(m[0])
-            el_list = soup.findAll('span', class_ = 'example')
+            el_list = soup.find_all('span', class_ = 'example')
             if el_list:
                 maps = []
                 for element in el_list:

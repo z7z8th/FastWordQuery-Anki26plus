@@ -39,7 +39,7 @@ class Eudict(WebService):
                 return dict
 
             def _sentence_audio(soup, tag, class_):
-                el_list = soup.findAll(tag, class_ = class_)
+                el_list = soup.find_all(tag, class_ = class_)
                 if el_list:
                     url = 'https://api.frdic.com/api/v2/speech/speakweb?langid=ting&voicename={0}&txt=QYN{1}'
                     maps = []

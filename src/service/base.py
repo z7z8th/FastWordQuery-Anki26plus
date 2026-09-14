@@ -543,28 +543,29 @@ class LocalService(Service):
     def __init__(self, dict_path):
         super(LocalService, self).__init__()
         self.dict_path = dict_path
-        self.backend: Optional[object] = None
+        # self.backend: Optional[object] = None
         self.missed_css = set()
+        self.backend = None
 
     # MdxBuilder instances map
-    _mdx_backends: defaultdict[str, object] = defaultdict(dict)
-    _mutex_builder = QMutex()
+    _backends: defaultdict[str, object] = defaultdict(dict)
+    _mutex_backends = QMutex()
 
     @staticmethod
     def _get_backend(key: str, builder: ObjectBuilder):
-        LocalService._mutex_builder.lock()
+        LocalService._mutex_backends.lock()
         key = md5(str(key).encode('utf-8')).hexdigest()
         # print(f'_get_builder key {key} {func} builders[key] {LocalService._mdx_builders[key]}')
         if builder:
-            if not LocalService._mdx_backends[key]:
+            if not LocalService._backends[key]:
                 worker = _DictBackendWorker(builder)
                 worker.start()
                 while not worker.isFinished():
                     mw.app.processEvents()
                     worker.wait(100)
-                LocalService._mdx_backends[key] = worker.backend
-        LocalService._mutex_builder.unlock()
-        return LocalService._mdx_backends[key]
+                LocalService._backends[key] = worker.backend
+        LocalService._mutex_backends.unlock()
+        return LocalService._backends[key]
 
     @property
     def support(self):
@@ -582,6 +583,7 @@ class LocalService(Service):
         self.missed_css.clear()
         return super(LocalService, self).active(fld_ord, word)
 
+from typing import cast
 
 class MdxService(LocalService):
     """
@@ -597,7 +599,7 @@ class MdxService(LocalService):
         self.query_interval = 0.01
         self.styles = []
         if MdxService.check(self.dict_path):
-            self.backend = self._get_backend(dict_path, object_builder(MdxBuilder, dict_path))
+            self.backend: MdxBuilder = cast(MdxBuilder, self._get_backend(dict_path, object_builder(MdxBuilder, dict_path)))
 
     @staticmethod
     def check(dict_path):
@@ -851,9 +853,8 @@ class StardictService(LocalService):
         self.query_interval = 0.05
         if StardictService.check(self.dict_path):
             dict_path = dict_path[:-4]
-            self.backend = self._get_backend(dict_path, 
-                                             object_builder(StardictBuilder, dict_path, in_memory=False)
-            )
+            self.backend: StardictBuilder = cast(StardictBuilder, self._get_backend(dict_path, 
+                                                object_builder(StardictBuilder, dict_path, in_memory=False)))
             # if self.backend:
             #    self.backend.get_header()
 

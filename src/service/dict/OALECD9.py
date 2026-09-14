@@ -95,7 +95,7 @@ class oalecd9_mdx(MdxService):
         m = self.get_html()
         if m:
             soup = parse_html(m)
-            el_list = soup.findAll('x-g-blk', )
+            el_list = soup.find_all('x-g-blk', )
             if el_list:
                 maps = []
                 for element in el_list:

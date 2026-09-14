@@ -19,7 +19,7 @@ class MerriamWebster(WebService):
         word_info = {}
 
         sym_div = soup.find('div', {'id': 'synonyms-anchor'})
-        for a in sym_div.findAll('a'):
+        for a in sym_div.find_all('a'):
             if 'thesaurus' not in a['href']:
                 a['href'] = 'https://www.merriam-webster.com/dictionary{}'.format(a['href'])
             else:    
