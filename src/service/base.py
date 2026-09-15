@@ -623,6 +623,7 @@ class MdxService(LocalService):
         self.media_cache = defaultdict(set)
         self.cache = defaultdict(str)
         self.html_cache = defaultdict()
+        self.parse_html = True
         self.query_interval = 0.01
         self.styles = []
         if MdxService.check(self.dict_path):
@@ -697,7 +698,7 @@ class MdxService(LocalService):
             self._local.stemmer = stemmer("english")
         return self._local.stemmer
 
-    def get_html(self, word = None, parse = True):
+    def get_html(self, word = None):
         """get self.word's html page from MDX"""
         if word is None:
             word = self.word
@@ -711,12 +712,12 @@ class MdxService(LocalService):
             #     if word != word_base_form:
             #         html = self._get_definition_mdx(word_base_form)
             if html:
-                if parse:
+                if self.parse_html:
                     self.html_cache[word] = BeautifulSoup(html, 'html.parser')
                 else:
                     self.html_cache[word] = html
 
-        html = self.html_cache[word]
+        return self.html_cache[word]
 
     def save_file(self, filepath_in_mdx, dest_path):
         """according to filepath_in_mdx to get media file and save it to savepath"""
@@ -737,26 +738,10 @@ class MdxService(LocalService):
         default get html from mdx interface
         '''
         if not self.cache[self.word]:
-            self._get_default_html(self.word)
+            html = self.get_html(self.word)
+            if html:
+                self.cache[self.word] = self.adapt_to_anki(html)
         return self.cache[self.word]
-
-    def _get_default_html(self, word=None):
-        """    
-        :param self: Refer to the instance of the class
-        :param word: Pass the word to be searched for
-        :return: The no adapt_to_anki html of the word
-        """
-        html = u''
-        if word is None:
-            word = self.word
-        result = self.get_html(word)
-        if not result:
-            return
-        
-        html = result
-        self.cache[word] = self.adapt_to_anki(html)
-        return html
-
 
     def adapt_to_anki(self, html):
         """
@@ -778,15 +763,17 @@ class MdxService(LocalService):
         """
         for import css, add to `Note Type -> Cards -> Styling`
         https://forums.ankiweb.net/t/how-to-add-external-css-in-a-field/17838/9
-        <link rel="stylesheet" href="v.css" type="text/css">
-        <style>@import url(style.css);</style>
-        <style>@import "style.css";</style>
+        from:
+            <link rel="stylesheet" href="v.css" type="text/css">
+        to (in `Note Type -> Cards -> Template/Styling`):
+            <style>@import url(style.css);
+                   @import "style.css";</style>
         """
         css_style = ''
         if len(mcss) != 0:
-            css_list = ["@import url(_{});".format(i) for i in mcss]
+            css_list = [f"@import url(_{css});" for css in mcss]
             css_style = "\n".join(css_list)
-            css_style = "<style> {} </style>".format(css_style)
+            css_style = f"<style> {css_style} </style>"
         if config.export_media:
             media_files_set.update(set(msound))
         for each in media_files_set:
@@ -795,8 +782,7 @@ class MdxService(LocalService):
             html = css_style + html
         # find sounds
         # in css ".replay-button" can config play-button
-        p = re.compile(
-            r'<a[^>]+?href=\"sound:_(.*?\.(?:mp3|wav|aac))\"[^>]*?>(.*?)</a>')
+        p = re.compile(r'<a[^>]+?href=\"sound:_(.*?\.(?:mp3|wav|aac))\"[^>]*?>(.*?)</a>')
         html = p.sub("[sound:mdx-" + self.title + "-" + u"\\1]\\2", html)
         self.save_media_files(media_files_set)
         for f in mcss:
