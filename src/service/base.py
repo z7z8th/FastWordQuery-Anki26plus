@@ -91,6 +91,7 @@ def get_canonical_name(prefix, val, suffix=''):
 
     return f"{prefix}{val}{suffix}"
 
+
 def _is_method_or_func(object):
     return inspect.isfunction(object) or inspect.ismethod(object)
 
@@ -105,17 +106,20 @@ def register(labels, enabled = False):
         cls._enabled_ = enabled
 
         methods = inspect.getmembers(cls, predicate=_is_method_or_func)
-        exports = []
-        for method in methods:
-            attrs = getattr(method[1], '_export_attrs_', None)
+        exports: list[tuple[int, Callable]] = []
+        for name, method in methods:
+            attrs = getattr(method, '_export_attrs_', None)
             if attrs and attrs[1] == -1:
+                # [(global _def_index_, method), (,)]
                 exports.append((
-                    getattr(method[1], '_def_index_', 0),
-                    method[1]
+                    getattr(method, '_def_index_', 0),
+                    method
                 ))
+
         exports = sorted(exports)
-        for index, method in enumerate(exports):
-            attrs = getattr(method[1], '_export_attrs_', None)
+        # local sorted index
+        for index, (_, method) in enumerate(exports):
+            attrs = getattr(method, '_export_attrs_', None)
             attrs[1] = index
 
         return cls
@@ -127,7 +131,6 @@ def export(labels):
     """
     export dict field function with a labels, which will be shown in the fields list.
     """
-
     def _with(fld_func):
         @wraps(fld_func)
         def _deco(self, *args, **kwargs):
@@ -228,7 +231,8 @@ class Service(object):
     def __init__(self):
         self.cache = defaultdict(defaultdict)
         self._unique = self.__class__.__name__
-        self._exporters = self._get_exporters()
+        self._exporters = self._get_exporters()  # [(label1, method1), (label2, method2)]
+        # (label1, label2), (method1, method2) = zip(("label1", "method1"), ("label2", "method2"))
         self._fields, self._actions = zip(*self._exporters) \
             if self._exporters else (None, None)
         self._word = ''
@@ -292,14 +296,15 @@ class Service(object):
         flds = dict()
         methods = inspect.getmembers(self, predicate=inspect.ismethod)
         # print(f'_get_exporters methods {methods}')
-        for method in methods:
-            export_attrs = getattr(method[1], '_export_attrs_', None)
+        for name, method in methods:
+            export_attrs = getattr(method, '_export_attrs_', None)
             # print(f'_get_exporters export_attrs {export_attrs}')
             
             if export_attrs:
                 label, index = export_attrs[0], export_attrs[1]
-                flds.update({int(index): (label, method[1])})
+                flds.update({int(index): (label, method)})
         sorted_flds = sorted(flds)
+        # [(label, method), (label, method)]
         return [flds[key] for key in sorted_flds]
 
     def active(self, fld_ord, word):
