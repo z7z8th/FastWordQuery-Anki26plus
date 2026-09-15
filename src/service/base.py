@@ -64,7 +64,7 @@ except ImportError:
     import dummy_threading as _threading
 
 __all__ = [
-    'register', 'export', 'copy_static_file', 'with_styles', 'parse_html', 'object_builder', 'get_hex_name', 'get_canonical_name',
+    'register', 'export', 'auto_bind_exports', 'copy_static_file', 'with_styles', 'parse_html', 'object_builder', 'get_hex_name', 'get_canonical_name',
     'Service', 'WebService', 'LocalService', 'MdxService', 'StardictService', 'QueryResult'
 ]
 
@@ -146,6 +146,28 @@ def export(labels):
 
 
 export.EXPORT_INDEX = 0
+
+
+
+# 1. Define decorator helper first
+def auto_bind_exports(cls):
+    for field_name, labels, getter_fn in getattr(cls, '_EXPORTS', []):
+
+        def make_handler(fn=getter_fn):
+            def handler(self):
+                return fn(self)
+
+            return handler
+
+        exported_fn = export(labels)(make_handler())
+        exported_fn.__name__ = field_name
+
+        # if field_name == 'fld_ee':
+        #     exported_fn = with_styles(cssfile='_oxford.css')(exported_fn)
+
+        setattr(cls, field_name, exported_fn)
+    return cls
+
 
 
 def copy_static_file(filename, new_filename=None, static_dir='static'):
@@ -243,17 +265,17 @@ class Service(object):
         self.cache[self.word].update(result)
         return result
 
-    def cached(self, key):
+    def is_field_cached(self, key):
         return (self.word in self.cache) and (key in self.cache[self.word])
 
-    def cache_result(self, key):
+    def get_cache_by_field(self, key):
         return self.cache[self.word].get(key, u'')
 
     def _get_from_api(self):
         return {}
 
     def _get_field(self, key, default=u''):
-        return self.cache_result(key) if self.cached(key) else self._get_from_api().get(key, default)
+        return self.get_cache_by_field(key) if self.is_field_cached(key) else self._get_from_api().get(key, default)
 
     @property
     def unique(self):
@@ -600,7 +622,7 @@ class MdxService(LocalService):
         self._local = threading.local()
         self.media_cache = defaultdict(set)
         self.cache = defaultdict(str)
-        self.html_cache = defaultdict(str)
+        self.html_cache = defaultdict()
         self.query_interval = 0.01
         self.styles = []
         if MdxService.check(self.dict_path):
@@ -675,7 +697,7 @@ class MdxService(LocalService):
             self._local.stemmer = stemmer("english")
         return self._local.stemmer
 
-    def get_html(self, word=None):
+    def get_html(self, word = None, parse = True):
         """get self.word's html page from MDX"""
         if word is None:
             word = self.word
@@ -689,9 +711,12 @@ class MdxService(LocalService):
             #     if word != word_base_form:
             #         html = self._get_definition_mdx(word_base_form)
             if html:
-                self.html_cache[word] = html
+                if parse:
+                    self.html_cache[word] = BeautifulSoup(html, 'html.parser')
+                else:
+                    self.html_cache[word] = html
 
-        return self.html_cache[word]
+        html = self.html_cache[word]
 
     def save_file(self, filepath_in_mdx, dest_path):
         """according to filepath_in_mdx to get media file and save it to savepath"""

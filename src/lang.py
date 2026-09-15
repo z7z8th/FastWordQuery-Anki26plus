@@ -95,6 +95,7 @@ _arr = [
     ['CLOZE_WORD', u'单词填空', u'Cloze word'],
     ['CLOZE_WORD_FORMAT', '单词填空格式', 'Cloze word formater'],
     ['SOUND_FORMAT', '发音格式化', 'Sound formater'],
+    
     ['BRE_PRON', u'英式发音', u'British Pronunciation'],
     ['AME_PRON', u'美式发音', u'American Pronunciation'],
     ['PRON', u'发音', u'Audio Pronunciation'],
@@ -107,6 +108,8 @@ _arr = [
     ['AME_PHON', u'美式音标', u'Phonetic Symbols (US)'],
     ['AME_PHON_NO_PREFIX', u'美式音标无前缀', u'Phonetic Symbols (US) no prefix'],
     ['IMAGE', u'图片', u'Images'],
+    ['WORD_ORIGIN', u'词源', u'Word Origin'],
+
     ['EDITOR_NAME_NOTE', 
      u'新版本不再提供插件内代码编辑, 而是使用外部文本编辑器,\n win使用记事本, linux使用xdg-open 用默认.py文件的打开方式打开文件, macos默认使用open\n可以在下方填入自定义的打开方式, 如 gvim、 neovide、 code 等',
      u'The new version no longer provides in-plugin code editing, but uses an external text editor.\n Win uses Notepad, Linux uses xdg-open to open the file with the default .py file opening method, and macos uses “open” by default. \nYou can fill in the fields below. Customized opening methods, such as gvim, neovide, code, etc.'],

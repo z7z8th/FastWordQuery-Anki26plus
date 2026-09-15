@@ -196,7 +196,7 @@ def query_flds(note, qfields=None):
 
     services: dict[str, Service] = {}
     tasks = []
-    print(f'---iter fields')
+
     for i, field in enumerate(fields):
         if i == word_ord:
             continue

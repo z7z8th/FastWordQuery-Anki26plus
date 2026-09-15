@@ -45,8 +45,7 @@ class BaiduFy(WebService):
 
     @export([u'翻译结果', 'translation'])
     def fld_explains(self):
-        return self.cache_result('explains') if self.cached('explains') else \
-            self._get_from_api().get('explains', '')
+        return self._get_field('explains')
     
     @export([u'英式发音', 'uk'])
     def fld_uk_audio(self):

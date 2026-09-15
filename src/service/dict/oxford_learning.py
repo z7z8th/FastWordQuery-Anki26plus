@@ -1,341 +1,168 @@
 # coding=utf-8
-# from warnings import filterwarnings
-
+from functools import cached_property
 from bs4 import Tag
 from ..base import *
 from ...utils.misc import format_multi_query_word
 
-#filterwarnings('ignore')
-
-import sys
-
-#reload(sys)
-#sys.setdefaultencoding('utf8')
 
 @register([u'牛津学习词典', u'Oxford Learner'])
+@auto_bind_exports
 class OxfordLearning(WebService):
+
+    @with_styles(cssfile='_oxford.css')
+    def _fld_ee(self):
+        return self._get_field('ee')
+    
+    # Field Registry: (field_method_name, export_labels, getter_fn)
+    _EXPORTS = [
+        ('fld_phonetic', 'PHON', lambda self: self._get_field('phonetic')),
+        ('fld_phonetic_us', 'AME_PHON', lambda self: self._get_field('phon_ame')),
+        ('fld_phonetic_uk', 'BRE_PHON', lambda self: self._get_field('phon_bre')),
+        ('fld_pos', [u'词性', u'POS'], lambda self: self._get_field('pos')),
+        ('fld_ee', 'DEF', lambda self: self._fld_ee()),
+        ('fld_image_full', 'IMAGE', lambda self: self.get_image_full()),
+        ('fld_image_thumb', [u'缩略图', u'Thumbnails'], lambda self: self.get_image_thumb()),
+        ('fld_sound_bre', 'BRE_PRON', lambda self: self.get_sound_bre()),
+        ('fld_sound_ame', 'AME_PRON', lambda self: self.get_sound_ame()),
+        ('fld_sound_pri', [u'英式发音优先', u'British Pronunciation First'],
+         lambda self: self.get_sound_bre() or self.get_sound_ame()),
+        ('fld_examples', 'EXAMPLE', lambda self: self._get_field('examples')),
+        ('fld_word_origin', 'WORD_ORIGIN', lambda self: self._get_field('word_origin')),
+        ('fld_idiom', ['俚语', 'Idioms'], lambda self: self._get_field('idioms')),
+    ]
 
     def __init__(self):
         super(OxfordLearning, self).__init__()
 
-    def query(self, word):
-        """
-        :param word:
-        :rtype:  WebWord
-        """
-        qry_url = u'https://www.oxfordlearnersdictionaries.com/definition/english/{}'.format(format_multi_query_word(word))
+    def query(self, word: str):
+        """Query Oxford Learner's Dictionary for target word."""
+        qry_url = f'https://www.oxfordlearnersdictionaries.com/definition/english/{format_multi_query_word(word)}'
 
-        retried = 10
-        while retried:
+        for _ in range(10):
             try:
                 rsp = self.get_response(qry_url, timeout=15)
                 if rsp:
                     return OxfordLearningDictWord(rsp)
                 break
-            except:
-                retried -= 1
+            except Exception:
                 continue
+        return None
 
-    def _get_single_dict(self, single_dict):
-        if not (self.cached(single_dict) and self.cache_result(single_dict)):
-            web_word = self.query(self.quote_word)
-            if web_word:
-                self.cache_this(
-                    {
-                        'phonetic': '{} {}'.format(web_word.wd_phon_bre, web_word.wd_phon_ame),
-                        'phon_bre': '{}'.format(web_word.wd_phon_bre),
-                        'phon_ame': '{}'.format(web_word.wd_phon_ame),
-                        'phon_bre_no_prefix': '{}'.format(web_word.wd_phon_bre_no_prefix),
-                        'phon_ame_no_prefix': '{}'.format(web_word.wd_phon_ame_no_prefix),
-                        'pos': web_word.wd_pos,
-                        'img_full': web_word.wd_image_full_url,
-                        'img_thumb': web_word.wd_image_thumb_url,
-                        'ee': ''.join(web_word.definitions_html),
-                        's_bre': web_word.wd_sound_url_bre,
-                        's_ame': web_word.wd_sound_url_nam,
-                    }
-                )
-            else:
-                self.cache_this(
-                    {
-                        'phonetic': '',
-                        'phon_bre': '',
-                        'phon_ame': '',
-                        'pos': '',
-                        'img_full': '',
-                        'img_thumb': '',
-                        'ee': '',
-                        's_bre': '',
-                        's_ame': '',
-                    }
-                )
-        return self.cache_result(single_dict)
+    def _get_from_api(self):
+        ret = self.query(self.quote_word)
+        if not ret:
+            return None
 
-    @export('PHON')
-    def fld_phonetic(self):
-        return self._get_single_dict('phonetic')
+        return self.cache_this(
+            {
+                'phonetic': f'{ret.phon_bre} {ret.phon_ame}'.strip(),
+                'phon_bre': ret.phon_bre,
+                'phon_ame': ret.phon_ame,
+                'pos': ret.pos,
+                'img_full': ret.image_full_url,
+                'img_thumb': ret.image_thumb_url,
+                'ee': ''.join(ret.definitions_html),
+                's_bre': ret.sound_url_bre,
+                's_ame': ret.sound_url_nam,
+                'examples': ret.examples,
+                'word_origin': ret.word_origin,
+                'idioms': ret.idioms,
+            }
+        )
 
-    @export('AME_PHON')
-    def fld_phonetic_us(self):
-        return self._get_single_dict('phon_ame')
+    # --- Media Handlers ---
 
-    @export('BRE_PHON')
-    def fld_phonetic_uk(self):
-        return self._get_single_dict('phon_bre')
-
-    @export('BRE_PHON_NO_PREFIX')
-    def fld_phonetic_us_no_prefix(self):
-        return self._get_single_dict('phon_bre_no_prefix')
-
-    @export('AME_PHON_NO_PREFIX')
-    def fld_phonetic_uk_no_prefix(self):
-        return self._get_single_dict('phon_ame_no_prefix')
-
-    @export([u'词性', u'POS'])
-    def fld_pos(self):
-        return self._get_single_dict('pos')
-
-    @export('DEF')
-    @with_styles(cssfile='_oxford.css')
-    def fld_ee(self):
-        # return '<div style="margin-left: 20px">' + self._get_single_dict(
-        #     'ee') + "</div>" if "<li>" not in self._get_single_dict('ee') else self._get_single_dict('ee')
-        return self._get_single_dict('ee')
+    def _download_asset(self, field_key: str, ext: str, label_type: str) -> str:
+        url = self._get_field(field_key)
+        if not url:
+            return ''
+        filename = get_hex_name(self.unique.lower(), url, ext)
+        return self.get_anki_label(filename, label_type) if self.download(url, filename) else ''
 
     def get_image_full(self):
-        url = self._get_single_dict('img_full')
-        filename = get_hex_name(self.unique.lower(), url, 'jpg')
-        if url and self.download(url, filename):
-            return self.get_anki_label(filename, 'img')
-        return ''
+        return self._download_asset('img_full', 'jpg', 'img')
 
     def get_image_thumb(self):
-        url = self._get_single_dict('img_thumb')
-        filename = get_hex_name(self.unique.lower(), url, 'jpg')
-        if url and self.download(url, filename):
-            return self.get_anki_label(filename, 'img')
-        return ''
+        return self._download_asset('img_thumb', 'jpg', 'img')
 
     def get_sound_bre(self):
-        url = self._get_single_dict('s_bre')
-        filename = get_hex_name(self.unique.lower(), url, 'mp3')
-        if url and self.download(url, filename):
-            return self.get_anki_label(filename, 'audio')
-        return ''
+        return self._download_asset('s_bre', 'mp3', 'audio')
 
     def get_sound_ame(self):
-        url = self._get_single_dict('s_ame')
-        filename = get_hex_name(self.unique.lower(), url, 'mp3')
-        if url and self.download(url, filename):
-            return self.get_anki_label(filename, 'audio')
-        return ''
-
-    @export('IMAGE')
-    def fld_image_full(self):
-        return self.get_image_full()
-
-    @export([u'缩略图', u'Thumbnails'])
-    def fld_image_thumb(self):
-        return self.get_image_thumb()
-
-    @export('BRE_PRON')
-    def fld_sound_bre(self):
-        return self.get_sound_bre()
-
-    @export('AME_PRON')
-    def fld_sound_ame(self):
-        return self.get_sound_ame()
-
-    @export([u'英式发音优先', u'British Pronunciation First'])
-    def fld_sound_pri(self):
-        bre = self.get_sound_bre()
-        return bre if bre else self.get_sound_ame()
-
+        return self._download_asset('s_ame', 'mp3', 'audio')
+    
 
 class OxfordLearningDictWord:
 
     def __init__(self, markups):
         if not markups:
             return
-        self.markups = markups
-        self.bs = parse_html(self.markups)
+        self.page = parse_html(markups)
         self._defs = []
         self._defs_html = []
 
-    @staticmethod
-    def _cls_dic(class_nm):
-        return {'class': class_nm}
+    # --- Navigation & Extraction Helpers ---
 
-    # region Tags
-    @property
-    def tag_web_top(self):
-        """
+    def _get_text(self, selector: str, scope=None) -> str:
+        target = (scope or self.page).select_one(selector)
+        return target.get_text(strip=True) if target else ''
 
-        word - class: h
-        pos - class: pos
+    def _get_attr(self, selector: str, attr: str, scope=None) -> str:
+        target = (scope or self.page).select_one(selector)
+        return target.get(attr, '') if target else ''
 
-        :rtype: Tag
-        """
-        return self.bs.find("div", self._cls_dic('webtop-g'))
-
-    @property
-    def tag_img(self):
-        """
-
-        :rtype: Tag
-        """
-        return self.bs.find('a', self._cls_dic('topic'))
-
-    @property
-    def tag_pron(self):
-        """
-
-        :rtype: Tag
-        """
-        return self.bs.find("div", self._cls_dic('pron-gs ei-g'))
-
-    @property
-    def tag_phon_bre(self):
-        """
-
-        :rtype: Tag
-        """
-        return self.tag_pron.find('span', self._cls_dic('pron-g'), geo='br')
-
-    @property
-    def tag_phon_nam(self):
-        """
-
-        :rtype: Tag
-        """
-        return self.tag_pron.find('span', self._cls_dic('pron-g'), geo='n_am')
-
-    # ---- Explains
-    @property
-    def tag_explain(self):
-        """
-
-        :rtype: Tag
-        """
-        return self.bs.find('span', self._cls_dic('sn-gs'))
-
-    # endregion
-
-    def _pull_bre_phon(self):
-        try:
-            _tag_phn = self.tag_phon_bre.find('span', self._cls_dic('phon')).get_text().replace('/', '').replace('BrE', '')
-            phon = '/{}/'.format(_tag_phn.text if isinstance(_tag_phn, Tag) else _tag_phn)
-        except:
-            phon = ''
-        return phon
-
-    @property
-    def wd_phon_bre_no_prefix(self):
-        """
-
-        :return: phon
-        """
-        return self._pull_bre_phon()
-
-    @property
-    def wd_phon_bre(self):
-        """
-
-        :return: pre_fix, phon
-        """
-        try:
-            prefix = self.tag_phon_bre.find('span', self._cls_dic('prefix')).string
-        except:
-            prefix = ''
-        return "{} {}".format(
-            prefix,
-            self._pull_bre_phon()
-        )
-
-    @property
-    def wd_pos(self):
-        try:
-            return self.tag_web_top.find("span", 'pos').text
-        except:
+    def _get_phonetic(self, selector: str, remove_label: str) -> str:
+        scope = self.page.select_one(selector)
+        if not scope:
             return ''
+        phon = self._get_text('span.phon', scope=scope).replace('/', '').replace(remove_label, '').strip()
+        return f'/{phon}/' if phon else ''
 
-    def _pull_ame_phon(self):
-        try:
-            _tag_phn = self.tag_phon_nam.find('span', self._cls_dic('phon')).get_text().replace('/', '').replace('NAmE', '')
-            phon = '/{}/'.format(_tag_phn.text if isinstance(_tag_phn, Tag) else _tag_phn)
-        except:
-            phon = ''
-        return phon
+    # --- Cached Properties ---
 
-    @property
-    def wd_phon_ame_no_prefix(self):
-        """
+    @cached_property
+    def phon_bre(self) -> str:
+        return self._get_phonetic('.phonetics .phons_br', 'BrE')
 
-        :return: phon
-        """
-        return self._pull_ame_phon()
+    @cached_property
+    def phon_ame(self) -> str:
+        return self._get_phonetic('.phonetics .phons_n_am', 'NAmE')
 
-    @property
-    def wd_phon_ame(self):
-        """
+    @cached_property
+    def pos(self) -> str:
+        return self._get_text('div.webtop span.pos')
 
-        :return: pre_fix, phon
-        """
-        try:
-            prefix = self.tag_phon_nam.find('span', self._cls_dic('prefix')).string
-        except:
-            prefix = ''
-        return "{} {}".format(
-            prefix,
-            self._pull_ame_phon()
-        )
+    @cached_property
+    def image_full_url(self) -> str:
+        return self._get_attr('a.topic', 'href')
 
-    @property
-    def wd_image_full_url(self):
-        try:
-            return self.tag_img['href']
-        except:
-            return ''
+    @cached_property
+    def image_thumb_url(self) -> str:
+        return self._get_attr('a.topic img.thumb', 'src')
 
-    @property
-    def wd_image_thumb_url(self):
-        try:
-            return self.tag_img.find('img', self._cls_dic('thumb'))['src']
-        except:
-            return ''
+    @cached_property
+    def sound_url_bre(self) -> str:
+        return self._get_attr('.phons_br div.sound.audio_play_button.pron-uk', 'data-src-mp3')
 
-    @property
-    def wd_sound_url_bre(self):
-        try:
-            return self.tag_phon_bre.find('div', self._cls_dic('sound audio_play_button pron-uk icon-audio'))[
-                'data-src-mp3']
-        except:
-            return ''
+    @cached_property
+    def sound_url_nam(self) -> str:
+        return self._get_attr('.phons_n_am div.sound.audio_play_button.pron-us', 'data-src-mp3')
 
-    @property
-    def wd_sound_url_nam(self):
-        try:
-            return self.tag_phon_nam.find('div', self._cls_dic('sound audio_play_button pron-us icon-audio'))[
-                'data-src-mp3']
-        except:
-            return ''
+    # --- Definitions ---
 
     def get_definitions(self):
-        defs = []
-        defs_html = []
-        if self.tag_explain and not self._defs:
-            tag_exp = self._clean(self.tag_explain)
-            lis = [li for li in tag_exp.find_all('li')]
-            if not lis:
-                defs_html.append(str(tag_exp.prettify()))
-                defs.append(tag_exp.text)
+        tag_exp = self.page.select_one('.def')
+        if tag_exp and not self._defs:
+            cleaned = self._clean(tag_exp)
+            lis = cleaned.find_all('li')
 
+            if not lis:
+                self._defs_html = [str(cleaned.prettify())]
+                self._defs = [cleaned.get_text(strip=True)]
             else:
-                for li in lis:
-                    defs_html.append(str(li.prettify()))
-                    defs.append(li.text)
-            self._defs = defs
-            self._defs_html = defs_html
+                self._defs_html = [str(li.prettify()) for li in lis]
+                self._defs = [li.get_text(strip=True) for li in lis]
+
         return self._defs, self._defs_html
 
     @property
@@ -346,30 +173,34 @@ class OxfordLearningDictWord:
     def definitions_html(self):
         return self.get_definitions()[1]
 
-    def _clean(self, tg):
-        """
+    # --- HTML Sanitization ---
 
-        :type tg:Tag
-        :return:
-        """
-        if not tg:
+    def _clean(self, tg: Tag) -> Tag:
+        if not tg or not isinstance(tg, Tag):
             return tg
-        decompose_cls = ['xr-gs', 'sound', 'heading', 'topic', 'collapse', 'oxford3000']
 
-        if tg.attrs and 'class' in tg.attrs:
-            for _cls in decompose_cls:
-                _tgs = tg.find_all(attrs=self._cls_dic(_cls), recursive=True)
-                for _tg in _tgs:
-                    _tg.decompose()
+        decompose_classes = ['.xr-gs', '.sound', '.heading', '.topic', '.collapse', '.oxford3000']
+        for cls in decompose_classes:
+            for elem in tg.select(cls):
+                elem.decompose()
 
-        rmv_attrs = ['dpsid', 'id', 'psg', 'reg']
-        try:
-            tg.attrs = {key: value for key, value in tg.attrs.items()
-                        if key not in rmv_attrs}
-        except ValueError:
-            pass
-        for child in tg.children:
-            if not isinstance(child, Tag):
-                continue
-            self._clean(child)
+        rmv_attrs = {'dpsid', 'id', 'psg', 'reg'}
+        for child in tg.find_all(True):
+            if child.attrs:
+                child.attrs = {k: v for k, v in child.attrs.items() if k not in rmv_attrs}
+
         return tg
+
+    # --- Supplementary Sections ---
+
+    @cached_property
+    def examples(self):
+        return str(self.page.select_one('.entry .sense > .examples'))
+
+    @cached_property
+    def word_origin(self):
+        return str(self.page.select_one('.entry [unbox="wordorigin"]'))
+
+    @cached_property
+    def idioms(self):
+        return str(self.page.select_one('.entry .idioms'))

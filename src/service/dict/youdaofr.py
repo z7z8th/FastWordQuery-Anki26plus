@@ -1,5 +1,5 @@
 #-*- coding:utf-8 -*-
-
+import traceback
 import xml.etree.ElementTree
 from ..base import WebService, export, register, with_styles
 
@@ -35,8 +35,7 @@ class Youdaofr(WebService):
 
     @export([u'基本释义', 'Explanations'])
     def fld_explains(self):
-        return self.cache_result('explains') if self.cached('explains') else \
-            self._get_from_api().get('explains', '')
+        return self._get_field('explains')
 
     @with_styles(cssfile='_youdao.css', need_wrap_css=True, wrap_class='youdao')
     def _get_singledict(self, single_dict, lang='fr'):
@@ -57,6 +56,7 @@ class Youdaofr(WebService):
                 html.decode('utf-8')
             )
         except:
+            print(traceback.format_exc())
             return ''
 
     @export([u'网络释义', 'Web translation'])

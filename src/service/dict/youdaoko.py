@@ -35,8 +35,7 @@ class Youdaoko(WebService):
 
     @export([u'基本释义', u'Explanations'])
     def fld_explains(self):
-        return self.cache_result('explains') if self.cached('explains') else \
-            self._get_from_api().get('explains', '')
+        return self._get_field('explains')
 
     @with_styles(cssfile='_youdao.css', need_wrap_css=True, wrap_class='youdao')
     def _get_singledict(self, single_dict, lang='ko'):
