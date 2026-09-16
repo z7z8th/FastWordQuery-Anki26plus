@@ -54,7 +54,7 @@ class MiniDict(WebService):
         return self._get_field('expressions')
 
     @export([u'例句与用法', u'Examples and patterns'])
-    @with_styles(css='em {color:#cc0066;font-style:normal;}', need_wrap_css=True, wrap_class='minidict')
+    @with_styles(css='em {color:#cc0066;font-style:normal;}', wrap_class='minidict')
     def fld_sentences(self):
         return self._get_field('sentences')
 

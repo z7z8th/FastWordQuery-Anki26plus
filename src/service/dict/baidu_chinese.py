@@ -91,7 +91,7 @@ class Baidu_Chinese(WebService):
 
         return self.cache_this(result)
 
-    @with_styles(need_wrap_css=True, cssfile='_baidu.css')
+    @with_styles(do_wrap=True, css_file='_baidu.css')
     def _css(self, val):
         return val
 

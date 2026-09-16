@@ -169,11 +169,11 @@ class Longman(WebService):
         return self._get_field('pos')
 
     @export('DEF')
-    @with_styles(cssfile='_longman.css')
+    @with_styles(css_file='_longman.css')
     def fld_ee(self):
         return self._get_field('ee')
 
     @export([u'变形', u'Inflections'])
-    @with_styles(cssfile='_longman.css')
+    @with_styles(css_file='_longman.css')
     def fld_inflections(self):
         return self._get_field('inflections')

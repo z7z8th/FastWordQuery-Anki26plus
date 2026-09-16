@@ -42,7 +42,7 @@ class Dreye(WebService):
 
         return self.cache_this(result)
 
-    @with_styles(need_wrap_css=True, cssfile='_dreye.css')
+    @with_styles(do_wrap=True, css_file='_dreye.css')
     def _css(self, val):
         return val
 

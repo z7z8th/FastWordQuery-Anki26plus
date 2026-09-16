@@ -18,6 +18,8 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import traceback
+from collections import defaultdict
+
 import anki.notes
 from aqt import mw
 from aqt.qt import *
@@ -30,7 +32,7 @@ from ..gui import ProgressWindow
 from ..utils import Empty, MapDict, Queue
 
 from .common import InvalidWordException, query_flds, update_note_fields
-
+from ..service import Service, QueryResult
 
 __all__ = ['QueryWorkerManager']
 
@@ -47,7 +49,7 @@ class QueryThread(QThread):
         self.index = 0
         self.exit = False
         self.finished = False
-        self.manager = manager
+        self.manager:QueryWorkerManager = manager
         self.note_flush.connect(manager.handle_flush)
 
     def run(self):
@@ -135,7 +137,7 @@ class QueryWorkerManager(object):
             worker.run()
             self.update_progress()
 
-    def update(self, note, results, success_num, missed_css):
+    def update(self, note, results: defaultdict[int, QueryResult], success_num: int, missed_css:list):
         self.mutex.lock()
         if success_num > 0:
             self.counter += 1

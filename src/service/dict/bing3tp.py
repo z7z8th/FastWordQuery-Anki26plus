@@ -61,7 +61,7 @@ class BingXtk(WebService):
     def fld_mp3_uk(self):
         return self._fld_mp3('BrEmp3')
     
-    @with_styles(css='.pos{font-weight:bold;margin-right:4px;}', need_wrap_css=True, wrap_class='bing')
+    @with_styles(css='.pos{font-weight:bold;margin-right:4px;}', wrap_class='bing')
     def _css(self, val):
         return val
 

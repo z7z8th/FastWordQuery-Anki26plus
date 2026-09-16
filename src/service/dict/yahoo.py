@@ -50,7 +50,7 @@ class Yahoo_Dict(WebService):
 
         return self.cache_this(result)
 
-    @with_styles(need_wrap_css=True, cssfile='_yahoo.css')
+    @with_styles(do_wrap=True, css_file='_yahoo.css')
     def _css(self, val):
         return val
 

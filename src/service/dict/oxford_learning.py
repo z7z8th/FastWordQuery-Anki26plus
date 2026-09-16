@@ -9,7 +9,7 @@ from ...utils.misc import format_multi_query_word
 @auto_bind_exports
 class OxfordLearning(WebService):
 
-    @with_styles(cssfile='_oxford.css')
+    @with_styles(css_file='_oxford.css')
     def _fld_ee(self):
         return self._get_field('ee')
     

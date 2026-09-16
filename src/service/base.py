@@ -35,6 +35,7 @@ from collections import defaultdict
 from functools import wraps
 from hashlib import md5, sha1
 from typing import Callable, Optional
+from copy import deepcopy
 
 import requests
 from bs4 import BeautifulSoup
@@ -64,7 +65,7 @@ except ImportError:
     import dummy_threading as _threading
 
 __all__ = [
-    'register', 'export', 'auto_bind_exports', 'copy_static_file', 'with_styles', 'parse_html', 'object_builder', 'get_hex_name', 'get_canonical_name',
+    'register', 'export', 'auto_bind_exports', 'copy_static_file', 'with_styles', 'with_scripts', 'parse_html', 'object_builder', 'get_hex_name', 'get_canonical_name',
     'Service', 'WebService', 'LocalService', 'MdxService', 'StardictService', 'QueryResult'
 ]
 
@@ -163,7 +164,7 @@ def auto_bind_exports(cls):
         exported_fn.__name__ = field_name
 
         # if field_name == 'fld_ee':
-        #     exported_fn = with_styles(cssfile='_oxford.css')(exported_fn)
+        #     exported_fn = with_styles(css_file='_oxford.css')(exported_fn)
 
         setattr(cls, field_name, exported_fn)
     return cls
@@ -182,50 +183,73 @@ def copy_static_file(filename, new_filename=None, static_dir='static'):
 
 def with_styles(**styles):
     """
-    cssfile: specify the css file in static folder
     css: css strings
-    js: js strings
-    jsfile: specify the js file in static folder
+    css_file: specify the css file in static folder
     """
 
     def _with(fld_func):
         @wraps(fld_func)
         def _deco(cls, *args, **kwargs):
             res = fld_func(cls, *args, **kwargs)
-            cssfile, css, jsfile, js, need_wrap_css, class_wrapper = \
-                styles.get('cssfile', None), \
-                    styles.get('css', None), \
-                    styles.get('jsfile', None), \
-                    styles.get('js', None), \
-                    styles.get('need_wrap_css', False), \
-                    styles.get('wrap_class', '')
+            css, css_file, do_wrap, class_wrapper = \
+                styles.get('css', None), \
+                styles.get('css_file', None), \
+                styles.get('do_wrap', False), \
+                styles.get('wrap_class', '')
 
-            def wrap(html, css_obj, is_file=True):
+            def _wrap(html, css_obj, is_file=True):
                 # wrap css and html
-                if need_wrap_css and class_wrapper:
-                    html = u'<div class="{}">{}</div>'.format(
-                        class_wrapper, html)
-                    return html, wrap_css(css_obj, is_file=is_file, class_wrapper=class_wrapper)[0]
+                if do_wrap or class_wrapper:
+                    html = f'<div class="{class_wrapper}">{html}</div>'
+                    return html, wrap_css(css_obj, is_file=is_file, class_wrapper=class_wrapper, get_canional_name=lambda val: get_canonical_name(cls.media_prefix, val))[0]
                 return html, css_obj
 
-            if cssfile:
-                new_cssfile = cssfile if cssfile.startswith('_') \
-                    else u'_' + cssfile
+            new_res = res
+            new_css_file = ''
+            if css_file:
+                new_css_file = css_file if css_file.startswith('_') \
+                    else u'_' + css_file
                 # copy the css file to media folder
-                copy_static_file(cssfile, new_cssfile)
+                copy_static_file(css_file, new_css_file)
                 # wrap the css file
-                res, new_cssfile = wrap(res, new_cssfile)
-                res = u'<link type="text/css" rel="stylesheet" href="{0}" />{1}'.format(
-                    new_cssfile, res)
+                new_res, new_css_file = _wrap(res, new_css_file)
+            if new_css_file:
+                new_css_file = [new_css_file]
             if css:
-                res, css = wrap(res, css, is_file=False)
-                res = u'<style>{0}</style>{1}'.format(css, res)
+                new_res, css = _wrap(res, css, is_file=False)
 
             if not isinstance(res, QueryResult):
-                return QueryResult(result=res, jsfile=jsfile, js=js)
+                res = QueryResult(result=new_res, css=css, css_files=new_css_file)
             else:
-                res.set_styles(jsfile=jsfile, js=js)
-                return res
+                res.result = new_res
+                res.css = css
+                res.css_files = new_css_file
+
+            return res
+
+        return _deco
+
+    return _with
+
+
+def with_scripts(js='', js_files=[]):
+    """
+    js: js strings
+    js_files: js files list
+    """
+
+    def _with(fld_func):
+        @wraps(fld_func)
+        def _deco(cls, *args, **kwargs):
+            res = fld_func(cls, *args, **kwargs)
+            
+            if not isinstance(res, QueryResult):
+                res = QueryResult(result=res, js=js, js_files=js_files)
+            else:
+                res.js = js
+                res.js_files = js_files
+
+            return res
 
         return _deco
 
@@ -329,17 +353,19 @@ class Service(object):
         # [(label, method), (label, method)]
         return [flds[key] for key in sorted_flds]
 
-    def active(self, fld_ord, word):
+    def active(self, dict_fld_ord, word):
         self.word = word
-        if fld_ord >= 0 and fld_ord < len(self.actions):
-            return self.actions[fld_ord]()
+        if dict_fld_ord >= 0 and dict_fld_ord < len(self.actions):
+            return self.actions[dict_fld_ord]()
         return QueryResult.default()
 
     @staticmethod
     def get_anki_label(filename, type_):
-        formats = {'audio': config.sound_str,
-                   'img': u'<img src="{0}">',
-                   'video': u'<video controls="controls" width="100%" height="auto" src="{0}"></video>'}
+        formats = {
+            'audio': config.sound_str,
+            'img': u'<img src="{0}">',
+            'video': u'<video controls="controls" width="100%" height="auto" src="{0}"></video>'
+        }
         return formats[type_].format(filename)
 
 
@@ -572,6 +598,7 @@ class LocalService(Service):
         self.dict_path = dict_path
         # self.backend: Optional[object] = None
         self.missed_css = set()
+        self.css_files = set()
         self.backend = None
 
     # MdxBuilder instances map
@@ -622,10 +649,11 @@ class MdxService(LocalService):
         self._local = threading.local()
         self.media_cache = defaultdict(set)
         self.cache = defaultdict(str)
-        self.html_cache = defaultdict()
+        self.html_cache = defaultdict(str)
         self.parse_html = True
         self.query_interval = 0.01
         self.styles = []
+        self.media_prefix = f'_mdx-{self.unique.lower()}-'
         if MdxService.check(self.dict_path):
             self.backend: MdxBuilder = cast(MdxBuilder, self._get_backend(dict_path, object_builder(MdxBuilder, dict_path)))
 
@@ -647,9 +675,10 @@ class MdxService(LocalService):
     @export([u'默认', u'Default'])
     def fld_whole(self):
         html = self.get_default_html()
-        js = re.findall(r'<script .*?>(.*?)</script>', html, re.DOTALL)
-        jsfile = re.findall(r'''<script .*?src=['"](.+?)['"]''', html, re.DOTALL)
-        return QueryResult(result=html, js=u'\n'.join(js), jsfile=jsfile)
+        return html
+        # js = re.findall(r'<script .*?>(.*?)</script>', html, re.DOTALL)
+        # js_files = re.findall(r'''<script .*?src=['"](.+?)['"]''', html, re.DOTALL)
+        # return QueryResult(result=html, js=u'\n'.join(js), js_files=js_files)
 
     def _get_definition_mdx(self, word=None, depth = 0):
         """according to the word return mdx dictionary page"""
@@ -698,7 +727,7 @@ class MdxService(LocalService):
             self._local.stemmer = stemmer("english")
         return self._local.stemmer
 
-    def get_html(self, word = None):
+    def get_html(self, word: str | None = None) -> str | BeautifulSoup:
         """get self.word's html page from MDX"""
         if word is None:
             word = self.word
@@ -742,23 +771,47 @@ class MdxService(LocalService):
             if html:
                 self.cache[self.word] = self.adapt_to_anki(html)
         return self.cache[self.word]
+    
+    @staticmethod
+    def to_mdd_path(src_path):
+        p = re.sub(r'/+', r'\\', src_path)
+        p = re.sub(r'\\+', r'\\', p)
+
+        return f'\\{p.lstrip("\\")}'
 
     def adapt_to_anki(self, html):
         """
         1. convert the media path to actual path in anki's collection media folder.
         2. remove the js codes (js inside will expires.)
         """
+        html = deepcopy(html)
         # convert media path, save media files
         media_files_set = set()
         
-        mcss = re.findall(r'href=[\',"](\S+?\.css)[\',"]', html)
-        media_files_set.update(set(mcss))
-        mjs = re.findall(r'src="([\w\./]\S+?\.js)"', html)
-        media_files_set.update(set(mjs))
+        # mcss = re.findall(r'href=[\',"](\S+?\.css)[\',"]', html)
+        css_files_tags = html.select('link[rel="stylesheet"][href]')
+        mcss_files = set( tag['href'] for tag in css_files_tags )
+        media_files_set.update(mcss_files)
 
-        msrc = re.findall(r'<img.*?src="([\w\./]\S+?)".*?>', html)
-        media_files_set.update(set(msrc))
-        msound = re.findall(r'href="sound:(.*?\.(?:mp3|wav|aac))"', html)
+        # mjs = re.findall(r'src="([\w\./]\S+?\.js)"', html)
+        js_files_tags = html.select('script[src$=".js"]')
+        mjs_files = set( tag['src'] for tag in js_files_tags )
+        media_files_set.update(mjs_files)
+
+        # msrc = re.findall(r'<img.*?src="([\w\./]\S+?)".*?>', html)
+        img_tags = html.select('img')
+        mimg = set( tag['src'] for tag in img_tags )
+        media_files_set.update(mimg)
+        # msound = re.findall(r'href="sound:(.*?\.(?:mp3|wav|aac))"', html)
+        sound_tags = html.select('a[href^="sound:"]')
+        msound = set( tag['href'].removeprefix('sound:/') for tag in sound_tags )
+
+        print(f'mcss {mcss_files}')
+        print(f'mjs {mjs_files}')
+        print(f'mimg {mimg}')
+
+        print(f'media_files_set {media_files_set}')
+        print(f'msound {msound}')
         # TODO
         """
         for import css, add to `Note Type -> Cards -> Styling`
@@ -770,93 +823,125 @@ class MdxService(LocalService):
                    @import "style.css";</style>
         """
         css_style = ''
-        if len(mcss) != 0:
-            css_list = [f"@import url(_{css});" for css in mcss]
+        if len(mcss_files) != 0:
+            css_list = [f"@import url(_{css});" for css in mcss_files]
             css_style = "\n".join(css_list)
             css_style = f"<style> {css_style} </style>"
         if config.export_media:
-            media_files_set.update(set(msound))
-        for each in media_files_set:
-            html = html.replace(each, u'_' + each.split('/')[-1])
-        if html != '' and css_style != '':
-            html = css_style + html
+            media_files_set.update(msound)
+        # for each in media_files_set:
+        #     html = html.replace(each, u'_' + each.split('/')[-1])
+        print(f'TODO: parse css files')
+        # if html != '' and css_style != '':
+        #     html = css_style + html
         # find sounds
         # in css ".replay-button" can config play-button
-        p = re.compile(r'<a[^>]+?href=\"sound:_(.*?\.(?:mp3|wav|aac))\"[^>]*?>(.*?)</a>')
-        html = p.sub("[sound:mdx-" + self.title + "-" + u"\\1]\\2", html)
-        self.save_media_files(media_files_set)
-        for f in mcss:
-            cssfile = u'_{}'.format(os.path.basename(f.replace('\\', os.path.sep)))
+        # p = re.compile(r'<a[^>]+?href=\"sound:_(.*?\.(?:mp3|wav|aac))\"[^>]*?>(.*?)</a>')
+        # html = p.sub("[sound:mdx-" + self.title + "-" + u"\\1]\\2", html)
+
+        # save media files
+        path_map, errors = self.save_media_files(media_files_set)
+        print(f'path_map {path_map}')
+        print(f'errors {errors}')
+
+        ### css and js are not allow in field html anymore
+        for tag in css_files_tags:
+            tag.decompose()
+        for tag in js_files_tags:
+            tag.decompose()
+        for tag in img_tags:
+            mdd_path = MdxService.to_mdd_path(tag['src'])
+            tag['src'] = path_map[mdd_path]
+        if config.export_media:
+            for tag in sound_tags:
+                mdd_path = MdxService.to_mdd_path(tag['href'].removeprefix('sound:/'))
+                tag['href'] = f'sound:{path_map[mdd_path]}'
+
+        wrap_class_names = set()
+        for src_css_file in mcss_files:
+            target_css_file = path_map[MdxService.to_mdd_path(src_css_file)]
             # if not exists the css file, the user can place the file to media
             # folder first, and it will also execute the wrap process to generate
             # the desired file.
-            if not os.path.exists(cssfile):
-                css_src = self.dict_path.replace(self._filename + u'.mdx', f)
-                if os.path.exists(css_src):
-                    shutil.copy(css_src, cssfile)
-                else:
-                    self.missed_css.add(cssfile[1:])
-            new_css_file, wrap_class_name = wrap_css(cssfile)
-            html = html.replace(cssfile, new_css_file)
+            if not os.path.exists(target_css_file):
+                self.missed_css.add(target_css_file)
+            new_css_file, wrap_class_name = wrap_css(target_css_file)
+            wrap_class_names.add(wrap_class_name)
+            self.css_files.add(new_css_file)
+            # html = html.replace(css_file, new_css_file)
             # add global div to the result html
-            html = u'<div class="{0}">{1}</div>'.format(
-                wrap_class_name, html)
+            
+        mcss = [ str(tag) for tag in html.select('style') ]
+        mjs = [ str(tag) for tag in html.select('script:not([src])') ]
+        html = f'''<div class="{' '.join(wrap_class_names)}">{str(html)}</div>'''
 
-        return html
+        return QueryResult(result=html, js_files = mjs_files, css_files = self.css_files)
 
-    def save_default_file(self, filepath_in_mdx, savepath=None):
+    def save_default_file(self, src_path, savepath=None):
         '''
         default save file interface
         '''
-        basename = os.path.basename(filepath_in_mdx.replace('\\', os.path.sep))
-        if savepath is None:
-            savepath = '_' + basename
-            if basename.lower().endswith(("mp3", "wav")):
-                savepath = "mdx-" + self.title + "-" + basename
+        filename = src_path.replace('\\', os.path.sep)
+        basename = os.path.basename(filename)
+        if not savepath:
+            savepath = get_canonical_name(self.media_prefix, filename)
         if os.path.exists(savepath):
             return savepath
+        
         try:
-            src_fn = self.dict_path.replace(self._filename + u'.mdx', basename)
+            print('TODO: save_default_file basename or filename')
+
+            src_fn = os.path.join(os.path.dirname(self.dict_path), basename)
             if os.path.exists(src_fn):
                 shutil.copy(src_fn, savepath)
                 return savepath
+
+            ignorecase = config.ignore_mdx_wordcase and (
+                            src_path != src_path.lower() or src_path != src_path.upper()
+                        )
+            blob = self.backend.mdd_lookup(src_path, ignorecase=ignorecase)
+            if blob:
+                with open(savepath, 'wb') as f:
+                    f.write(blob[0])
             else:
-                ignorecase = config.ignore_mdx_wordcase and (
-                        filepath_in_mdx != filepath_in_mdx.lower() or filepath_in_mdx != filepath_in_mdx.upper())
-                bytes_list = self.backend.mdd_lookup(filepath_in_mdx, ignorecase=ignorecase)
-                if bytes_list:
-                    with open(savepath, 'wb') as f:
-                        f.write(bytes_list[0])
-                    return savepath
+                print(f'*** Error {src_path} not found in file system and mdd')
+                
         except sqlite3.OperationalError as e:
+            traceback.print_exc()
             print('save default file error', e)
-            pass
+
+        return savepath
 
     def save_media_files(self, data):
         """
         get the necessary static files from local mdx dictionary
         ** kwargs: data = list
         """
-        diff = data.difference(self.media_cache['files'])
-        self.media_cache['files'].update(diff)
-        lst, errors = list(), list()
-        wild = [
-            '*' + os.path.basename(each.replace('\\', os.path.sep)) for each in diff]
+        new_files = data - self.media_cache['files']
+        self.media_cache['files'].update(new_files)
+
+        mdd_keys, errors = list(), list()
+        path_map = {}
+        wild = [ '*' + MdxService.to_mdd_path(f) for f in new_files ]
         try:
-            for each in wild:
-                keys = self.backend.get_mdd_keys(each)
+            for mdd_key in wild:
+                keys = self.backend.get_mdd_keys(mdd_key)
+                # print(f'keys {keys}')
                 if not keys:
-                    errors.append(each)
-                    lst.append(each[1:])
+                    errors.append(mdd_key)
+                    mdd_keys.append(mdd_key[1:])
                 else:
-                    lst.extend(keys)
-            for each in lst:
-                self.save_default_file(each)
+                    mdd_keys.extend(keys)
+            # lookup and save files
+            for mdd_key in mdd_keys:
+                savepath = self.save_default_file(mdd_key)
+                path_map[mdd_key] = savepath
 
         except AttributeError:
+            traceback.print_exc()
             pass
 
-        return errors
+        return path_map, errors
 
 
 class StardictService(LocalService):
@@ -905,14 +990,13 @@ class QueryResult(MapDict):
     """Query Result structure"""
 
     def __init__(self, *args, **kwargs):
+        self['result'] = ''
+        self['js'] = []
+        self['css'] = []
         super(QueryResult, self).__init__(*args, **kwargs)
         # avoid return None
-        if self['result'] is None:
-            self['result'] = ""
-
-    def set_styles(self, **kwargs):
-        for key, value in kwargs.items():
-            self[key] = value
+        # if self['result'] is None:
+        #     self['result'] = ""
 
     @classmethod
     def default(cls):

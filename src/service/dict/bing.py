@@ -72,7 +72,7 @@ class Bing(WebService):
         print(f'{self.quote_word} result {result}')
         return self.cache_this(result)
 
-    @with_styles(css='.pos{font-weight:bold;margin-right:4px;}', need_wrap_css=True, wrap_class='bing')
+    @with_styles(css='.pos{font-weight:bold;margin-right:4px;}', wrap_class='bing')
     def _css(self, val):
         return val
 

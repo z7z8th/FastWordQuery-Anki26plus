@@ -28,6 +28,6 @@ class MerriamWebster(WebService):
         return self.cache_this(word_info)
 
     @export([u'同义词反义词', u'Synonyms & Antonyms'])
-    @with_styles(cssfile='_mw.css')
+    @with_styles(css_file='_mw.css')
     def fld_sa(self):
         return self._get_field('sa')

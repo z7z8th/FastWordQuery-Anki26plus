@@ -25,10 +25,6 @@ from aqt import mw
 from anki.hooks import addHook
 from anki.utils import is_mac
 
-from .utils import misc
-# show current dir in open error message for easy debug
-misc.hook_builtins_open_exception()
-
 sys.dont_write_bytecode = True
 if is_mac:
     ssl._create_default_https_context = ssl._create_unverified_context
@@ -39,7 +35,17 @@ shortcut = ('Ctrl+Alt' if is_mac else 'Ctrl') + '+Q'
 ###################################################
 ADDON_NAME = mw.addonManager.addonFromModule(__name__)
 ADDON_DIR = mw.addonManager.addonsFolder(ADDON_NAME)
+# 1. Point Anki's Python environment to your bundled offline library
+for ldir in ["libs", "vendor"]:
+    vendor_dir = os.path.join(ADDON_DIR, ldir)
+    if vendor_dir not in sys.path:
+        sys.path.append(vendor_dir)
 
+print(f'sys.path {sys.path}')
+
+from .utils import misc
+# show current dir in open error message for easy debug
+misc.hook_builtins_open_exception()
 
 def start_here():
     print(f'-'*80)

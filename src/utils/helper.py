@@ -1,6 +1,8 @@
 #-*- coding:utf-8 -*-
 import re
 import os
+import traceback
+from aqt.utils import showInfo
 
 __all__ = ['add_metaclass', 'wrap_css']
 
@@ -21,40 +23,71 @@ def add_metaclass(metaclass):
     return wrapper
 
 
-def wrap_css(orig_css, is_file=True, class_wrapper=None, new_cssfile_suffix=u'wrap'):
+import tinycss2
+from tinycss2.ast import QualifiedRule
 
-    def process(content):
-        # clean the comments
-        regx = re.compile(r'/\*.*?\*/', re.DOTALL)
-        content = regx.sub(r'', content).strip()
-        # add wrappers to all the selectors except the first one
-        regx = re.compile(r'([^\r\n,{}]+)(,(?=[^}]*{)|\s*{)', re.DOTALL)
-        new_css = regx.sub(u'.{} \\1\\2'.format(class_wrapper), content)
-        return new_css
+def wrap_css_selectors(css_text: str, class_wrapper: str) -> str:
+    wrapper_prefix = (
+        class_wrapper if class_wrapper.startswith(".") else f".{class_wrapper}"
+    )
 
+    rules = tinycss2.parse_stylesheet(
+        css_text, skip_whitespace=False, skip_comments=False
+    )
+    modified_rules = []
+
+    # Parse raw prefix string into tokens once
+    prefix_tokens = tinycss2.parse_component_value_list(f"{wrapper_prefix} ")
+
+    for rule in rules:
+        if isinstance(rule, QualifiedRule):
+            new_prelude = []
+            new_prelude.extend(prefix_tokens)
+
+            # rule.prelude is already a list of tokens, iterate over it directly
+            for token in rule.prelude:
+                new_prelude.append(token)
+                # If there's a comma (multiple selectors like `h1, p`), insert wrapper after the comma
+                if token.type == "literal" and token.value == ",":
+                    new_prelude.extend(prefix_tokens)
+
+            rule.prelude = new_prelude
+
+        modified_rules.append(rule)
+
+    return tinycss2.serialize(modified_rules)
+
+
+def wrap_css(orig_css, is_file=True, class_wrapper=None, get_canional_name=lambda x: x, new_css_file_suffix=u'wrapped'):
     if is_file:
+        css_basename, ext = os.path.splitext(os.path.basename(orig_css))
+
         if not class_wrapper:
-            class_wrapper = os.path.splitext(os.path.basename(orig_css))[0]
-        new_cssfile = u'{css_name}_{suffix}.css'.format(
-            css_name=orig_css[:orig_css.rindex('.css')],
-            suffix=new_cssfile_suffix)
+            class_wrapper = re.sub(r'^_+', '', css_basename)
+        new_css_file = get_canional_name(f'{css_basename}_{new_css_file_suffix}.css')
         # if new css file exists, not process
         # if input original css file doesn't exist, return the new css filename and class wrapper
         # to make the subsequent process easy.
-        if os.path.exists(new_cssfile) or not os.path.exists(orig_css):
-            return new_cssfile, class_wrapper
+        if os.path.exists(new_css_file):
+            return new_css_file, class_wrapper
+        if not os.path.exists(orig_css):
+            print(f"*** Error: {orig_css} does not exist, can't wrap!")
+            return new_css_file, class_wrapper
+        
         result = ''
-        with open(orig_css, 'rb') as f:
+        with open(orig_css, 'r', encoding='utf-8-sig') as f:
             try:
-                result = process(f.read().strip().decode('utf-8', 'ignore'))
+                result = wrap_css_selectors(f.read().strip(), class_wrapper)
             except:
-                showInfo('error: ' + orig_css)
+                traceback.print_exc()
+                showInfo('Error wrapping: ' + orig_css)
 
         if result:
-            with open(new_cssfile, 'wb') as f:
-                f.write(result.encode('utf-8'))
-        return new_cssfile, class_wrapper
+            with open(new_css_file, 'w', encoding='utf-8') as f:
+                f.write(result)
+        return new_css_file, class_wrapper
     else:
         # class_wrapper must be valid.
         assert class_wrapper
-        return process(orig_css), class_wrapper
+        return wrap_css_selectors(orig_css, class_wrapper), class_wrapper
+    

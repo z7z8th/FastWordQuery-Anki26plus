@@ -101,7 +101,8 @@ _arr = [
     ['PRON', u'发音', u'Audio Pronunciation'],
     ['EXAMPLE', u'例句', u'Examples'],
     ['TRANS', u'翻译', u'Translation'],
-    ['DEF', u'释义', u'Definition'],
+    ['DEF', u'释义', u'Definition'],  # English Definition by default in LDOCE6
+    ['DEF_CN', u'中文释义', u'Chinese Definition'],
     ['PHON', u'音标', u'Phonetic Symbols'],
     ['BRE_PHON', u'英式音标', u'Phonetic Symbols (UK)'],
     ['BRE_PHON_NO_PREFIX', u'英式音标无前缀', u'Phonetic Symbols (UK) no prefix'],

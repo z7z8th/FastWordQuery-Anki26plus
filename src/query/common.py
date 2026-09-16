@@ -55,7 +55,11 @@ def inspect_note(note):
     """
 
     mconf = config.get_query_configs(note.note_type()['id'])
-    cfg = mconf['query_configs'][mconf['default']]
+    idx = mconf['default']
+    if idx<0 or idx >= len(mconf['query_configs']):
+        return -1, '',[]
+    
+    cfg = mconf['query_configs'][idx]
     fields = cfg['fields']
     for i, fld in enumerate(fields):
         if fld.get('word_checked', False):
@@ -78,7 +82,7 @@ def strip_combining(txt):
     return u"".join([c for c in norm if not unicodedata.combining(c)])
 
 
-def update_note_fields(note, results):
+def update_note_fields(note, results: defaultdict[int, QueryResult]):
     """
     Update query result to note fields, return updated fields count.
     """
@@ -86,29 +90,30 @@ def update_note_fields(note, results):
     if not results or not note or len(results) == 0:
         return 0
     count = 0
-    for i, q in results.items():
-        if isinstance(q, QueryResult) and i < len(note.fields):
-            count += update_note_field(note, i, q)
+    for ord, fld in results.items():
+        if isinstance(fld, QueryResult) and ord < len(note.fields):
+            count += update_note_field(note, ord, fld)
 
     return count
 
 
-def update_note_field(note, fld_index, fld_result):
+def update_note_field(note, fld_ord:int, fld_result: QueryResult):
     """
     Update single field, if result is valid then return 1, else return 0
     """
 
-    result, js, jsfile = fld_result.result, fld_result.js, fld_result.jsfile
     # js process: add to template of the note model
-    add_to_tmpl(note, js=js, jsfile=jsfile)
-    # if not result:
-    #     return
+    add_to_tmpl(note, js_list=fld_result.js, js_files=fld_result.js_files, 
+                css_list=fld_result.css, css_files=fld_result.css_file)
+
+    result = fld_result.result
+
     if not config.force_update and not result:
         return 0
 
     value = result if result else ''
-    if note.fields[fld_index] != value:
-        note.fields[fld_index] = value
+    if note.fields[fld_ord] != value:
+        note.fields[fld_ord] = value
         return 1
 
     return 0
@@ -120,8 +125,8 @@ def promot_choose_css(missed_css):
     """
     checked = set()
     for css in missed_css:
-        filename = u'_' + css['file']
-        if not os.path.exists(filename) and not css['file'] in checked:
+        dest_name = u'_' + css['file']
+        if not os.path.exists(dest_name) and not css['file'] in checked:
             checked.add(css['file'])
             showInfo(
                 Template.miss_css.format(dict=css['title'], css=css['file']))
@@ -133,51 +138,71 @@ def promot_choose_css(missed_css):
                     caption=u'Choose css file',
                     filter=u'CSS (*.css)')
                 if filepath:
-                    shutil.copy(filepath, filename)
-                    wrap_css(filename)
+                    shutil.copy(filepath, dest_name)
+                    wrap_css(dest_name)
 
             except KeyError:
                 pass
 
 
-def add_to_tmpl(note, **kwargs):
+def add_to_tmpl(note, js_list=[], js_files=[], css_list=[], css_files=[]):
     # templates
     """
-    [{u'name': u'Card 1', u'qfmt': u'{{Front}}\n\n', u'did': None, u'bafmt': u'',
-        u'afmt': u'{{FrontSide}}\n\n<hr id=answer>\n\n{{Back}}\n\n{{12}}\n\n{{44}}\n\n', u'ord': 0, u'bqfmt': u''}]
+    [{ 
+        'name': 'Card 1',
+        'qfmt': '{{Front}}\n\n',
+        'did': None,
+        'bafmt': '',
+        'afmt': '{{FrontSide}}\n\n<hr id=answer>\n\n{{Back}}\n\n{{12}}\n\n{{44}}\n\n',
+        'ord': 0,
+        'bqfmt': '',
+        'css': '',
+    }]
     """
-    # showInfo(str(kwargs))
-    afmt = note.note_type()['tmpls'][0]['afmt']
-    if kwargs:
-        jsfile, js = kwargs.get('jsfile', None), kwargs.get('js', None)
-        if js and js.strip():
-            addings = js.strip()
-            if addings not in afmt:
-                if not addings.startswith(u'<script') and not addings.endswith(
-                        u'/script>'):
-                    addings = u'\n<script type="text/javascript">\n{}\n</script>'.format(
-                        addings)
-                afmt += addings
-        if jsfile:
-            # new_jsfile = u'_' + \
-            #     jsfile if not jsfile.startswith(u'_') else jsfile
-            # copy_static_file(jsfile, new_jsfile)
-            # addings = u'\r\n<script src="{}"></script>'.format(new_jsfile)
-            # afmt += addings
-            jsfile = jsfile if isinstance(jsfile, list) else [jsfile]
-            for fn in jsfile:
-                addings = '''
-<script type="text/javascript">
-    var script = document.createElement("script");
-    script.src   = "{}";
-    document.getElementsByTagName('head')[0].appendChild(script);
-</script>'''.format(fn)
-                if addings not in afmt:
-                    afmt += addings
-        note.note_type()['tmpls'][0]['afmt'] = afmt
 
+    note_afmt = note.note_type()['tmpls'][0]['afmt']
 
-def query_flds(note, qfields=None):
+    if js_list:
+        for js in js_list:
+            js = js.strip()
+            if js in note_afmt:
+                continue
+            if not js.startswith(u'<script') and not js.endswith(u'/script>'):
+                js = f'\n<script type="text/javascript">\n{js}\n</script>'
+            note_afmt += js
+
+    if js_files:
+        js_files = js_files if isinstance(js_files, list) else [js_files]
+        for file in js_files:
+            print(f"### warning {file} not copied yet")
+            src = f'''\n<script src="{file}" type="text/javascript"></script>'''
+            if src not in note_afmt:
+                note_afmt += src
+
+    note.note_type()['tmpls'][0]['afmt'] = note_afmt
+
+    note_css = note.note_type()['css']
+
+    if css_list:
+        for css in css_list:
+            css = css.strip()
+            if css in note_css:
+                continue
+            if not css.startswith('<style'):
+                css = f"<style>\n{css}\n</style>"
+            
+            note_css = f"{note_css}\n{css}"
+
+    if css_files:
+        css_files = css_files if isinstance(css_files, list) else [css_files]
+        for file in css_files:
+            src = f'@import url("{file}")'
+            if src not in note_css:
+                note_css = f"{src}\n{note_css}"
+
+    note.note_type()['css'] = note_css
+
+def query_flds(note, qfields=None) -> tuple[defaultdict[int, QueryResult], int, list]:
     """
     Query fields of single note
     """
@@ -232,8 +257,8 @@ def query_flds(note, qfields=None):
                     tasks.append({
                         'dict_uniq': dict_unique,
                         'word': word,
-                        'dict_fld': dict_fld_ord,
-                        'fld': fld_ord,
+                        'dict_fld_ord': dict_fld_ord,
+                        'fld_ord': fld_ord,
                         'cloze': cloze,
                     })
     # print(f'---iter tasks {tasks}')
@@ -241,16 +266,16 @@ def query_flds(note, qfields=None):
         print(f"*** Error: No tasks generated for word `{word}`")
 
     success_num = 0
-    result = defaultdict(QueryResult)
+    result = defaultdict(int)
     for task in tasks:
         try:
             service = services.get(task['dict_uniq'], None)
-            qr = service.active(task['dict_fld'], task['word'])
+            qr = service.active(task['dict_fld_ord'], task['word'])
             # print(f"--- qr {str(qr)[:100]}")
             if qr:
                 if task['cloze']:
                     qr['result'] = cloze_deletion(qr['result'], word)
-                result.update({task['fld']: qr})
+                result.update({task['fld_ord']: qr})
                 success_num += 1
         except Exception as e:
             print(traceback.format_exc())

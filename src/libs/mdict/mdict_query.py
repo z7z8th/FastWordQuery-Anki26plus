@@ -93,8 +93,7 @@ class IndexBuilder(object):
             self._tlocal_mdd_db_conn.connection.close()
 
     def _query_meta(self, conn, key):
-        cursor = conn.execute(
-                f"SELECT * FROM META WHERE key = \"{key}\"")
+        cursor = conn.execute(f'SELECT * FROM META WHERE key = ?', (key,))
         for cc in cursor:
             return cc[1]
         return ''
@@ -126,10 +125,7 @@ class IndexBuilder(object):
             with conn:
                 # build the metadata table
                 c = conn.cursor()
-                c.execute('''CREATE TABLE META
-                        (key text,
-                         value text
-                        )''')
+                c.execute('''CREATE TABLE META  (key TEXT, value TEXT)''')
 
                 #for k,v in meta:
                 #    c.execute(
@@ -242,14 +238,12 @@ class IndexBuilder(object):
     def lookup_indexes(conn, keyword, ignorecase=None):
         indexes = []
         if ignorecase:
-            sql = 'SELECT * FROM MDX_INDEX WHERE lower(key_text) = lower("{}")'.format(
-                keyword)
+            sql = 'SELECT * FROM MDX_INDEX WHERE lower(key_text) = lower(?)'
         else:
-            sql = 'SELECT * FROM MDX_INDEX WHERE key_text = "{}"'.format(
-                keyword)
+            sql = 'SELECT * FROM MDX_INDEX WHERE key_text = ?'
         # with sqlite3.connect(db) as conn:  # leaks fd hanlder
         with conn:
-            cursor = conn.execute(sql)
+            cursor = conn.execute(sql, (keyword,))
             for result in cursor:
                 index = {}
                 index['file_pos'] = result[1]
@@ -282,16 +276,18 @@ class IndexBuilder(object):
     def get_keys(conn, query=''):
         if not conn:
             return []
+
         if query:
             if '*' in query:
                 query = query.replace('*', '%')
             else:
                 query = query + '%'
-            sql = 'SELECT key_text FROM MDX_INDEX WHERE key_text LIKE \"' + query + '\"'
+            sql = 'SELECT key_text FROM MDX_INDEX WHERE key_text LIKE ?'
         else:
             sql = 'SELECT key_text FROM MDX_INDEX'
+
         with conn:
-            cursor = conn.execute(sql)
+            cursor = conn.execute(sql, (query,)) if query else conn.execute(sql)
             keys = [item[0] for item in cursor]
             return keys
 

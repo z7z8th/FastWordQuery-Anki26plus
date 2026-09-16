@@ -129,7 +129,7 @@ class Cambridge(WebService):
 
         return self.cache_this(result)
 
-    @with_styles(need_wrap_css=True, cssfile='_cambridge.css')
+    @with_styles(do_wrap=True, css_file='_cambridge.css')
     def _css(self, val):
         return val
 
