@@ -1,733 +1,971 @@
+* {
+  word-wrap: break-word !important;
+}
+
 .entry {
-    line-height: 150%;
-    color: black;
-    display: block;
+  line-height: 150%;
+  color: black;
+  display: block;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: #000;
 }
+
+a {
+  color: #36f;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
 .abbr {
-    font-weight: bold;
+  font-weight: bold;
 }
-.ac,.ac {
-    padding-left: 2px;
-    padding-right: 2px;
-    border-radius: 2px 2px 2px 2px;
-    border-style: solid;
-    border-width: 1px;
-    font-variant: small-caps;
-    font-size: 80%;
-    font-weight: bold;
-    color: blue;
+
+.ac,
+.ac {
+  padding-left: 2px;
+  padding-right: 2px;
+  border-radius: 2px 2px 2px 2px;
+  border-style: solid;
+  border-width: 1px;
+  font-variant: small-caps;
+  font-size: 80%;
+  font-weight: bold;
+  color: blue;
 }
+
 .amequiv {
-    font-weight: bold;
+  font-weight: bold;
 }
+
 .brequiv {
-    font-weight: bold;
+  font-weight: bold;
 }
+
 .collo {
-    font-weight: bold;
+  font-weight: bold;
 }
+
 .colloexa {
-    display: block;
+  display: block;
 }
+
 .colloinexa {
-    font-style: italic;
-    font-weight: bold;
+  font-style: italic;
+  font-weight: bold;
 }
+
 .comp {
-    font-weight: bold;
+  font-weight: bold;
 }
+
 .deriv {
-    font-weight: bold;
-    color: blue;
+  font-weight: bold;
+  color: blue;
 }
+
 .errorbox {
-    display: block;
+  display: block;
 }
+
 .etymsense {
-    display: block;
+  display: block;
 }
+
 .etymrefhwd {
-    font-style: italic;
+  font-style: italic;
 }
+
 .etymrefhom {
-    font-size: 80%;
-    vertical-align: super;
-    font-style: normal;
+  font-size: 80%;
+  vertical-align: super;
+  font-style: normal;
 }
+
 .etymorigin {
-    font-style: italic;
+  font-style: italic;
 }
+
 .etymtran {
-    font-weight: bold;
+  font-weight: bold;
 }
+
 .etymbox {
-    margin-top: 1em;
-    display: block;
+  margin-top: 1em;
+  display: block;
 }
+
 .example {
-    font-style: italic;
-    display: block;
-    color: blue;
+  font-style: italic;
+  display: block;
+  color: blue;
 }
-.freq,.freq {
-    padding-left: 2px;
-    padding-right: 2px;
-    border-radius: 2px 2px 2px 2px;
-    border-style: solid;
-    border-width: 1px;
-    font-variant: small-caps;
-    font-size: 80%;
-    font-weight: bold;
-    color: red;
+
+.freq,
+.freq {
+  padding-left: 2px;
+  padding-right: 2px;
+  border-radius: 2px 2px 2px 2px;
+  border-style: solid;
+  border-width: 1px;
+  font-variant: small-caps;
+  font-size: 80%;
+  font-weight: bold;
+  color: red;
 }
+
 .level {
-    color: red;
-    font-size: 160%;
+  color: red;
+  font-size: 160%;
 }
+
 .fullform {
-    font-weight: bold;
+  font-weight: bold;
 }
-.geo,span.geo {
-    font-weight: normal;
-    font-style: italic;
-    color: purple;
+
+.geo,
+span.geo {
+  font-weight: normal;
+  font-style: italic;
+  color: purple;
 }
-.gloss,.collgloss {
-    font-weight: normal;
-    font-style: normal;
-    color: black;
+
+.gloss,
+.collgloss {
+  font-weight: normal;
+  font-style: normal;
+  color: black;
 }
+
 .gram {
-    color: green;
+  color: green;
 }
+
 .hintbold {
-    font-weight: bold;
+  font-weight: bold;
 }
+
 .hintitalic {
-    font-style: italic;
+  font-style: italic;
 }
-hinttitle {
-    font-weight: bold;
-}
+
 .homnum {
-    vertical-align: super;
-    font-size: 8pt;
-    color: blue;
-    font-weight: bold;
+  vertical-align: super;
+  font-size: 8pt;
+  color: blue;
+  font-weight: bold;
 }
+
 .hwd {
-    display: none;
+  display: none;
 }
+
 .hyphenation {
-    font-weight: bold;
-    font-size: 120%;
-    color: blue;
+  font-weight: bold;
+  font-size: 120%;
+  color: blue;
 }
+
 .frequent {
-    color: red;
+  color: red;
 }
+
 .lexunit {
-    font-weight: bold;
+  font-weight: bold;
 }
+
 .lexvar {
-    font-weight: bold;
+  font-weight: bold;
 }
+
 .linkword {
-    font-style: italic;
+  font-style: italic;
 }
-note {
-    display: block;
-}
+
 object {
-    font-weight: normal;
+  font-weight: normal;
 }
+
 .opp {
-    font-weight: bold;
+  font-weight: bold;
 }
+
 .orthvar {
-    font-weight: bold;
+  font-weight: bold;
 }
+
 .pastpart {
-    font-weight: bold;
+  font-weight: bold;
 }
-pastpartx {
-    font-weight: bold;
-}
+
 .pasttense {
-    font-weight: bold;
+  font-weight: bold;
 }
-pasttensex {
-    font-weight: bold;
-}
+
 .phrvbentry {
-    display: block;
-    margin-top: 10px;
-    margin-left: 10px;
+  display: block;
+  margin-top: 10px;
+  margin-left: 10px;
 }
+
 .phrvbhwd {
-    font-weight: bold;
-    color: blue;
+  font-weight: bold;
+  color: blue;
 }
+
 .pluralform {
-    font-weight: bold;
+  font-weight: bold;
 }
+
 .pos {
-    font-style: italic;
-    color: green;
-    font-weight: normal;
+  font-style: italic;
+  color: green;
+  font-weight: normal;
 }
+
 .prespart {
-    font-weight: bold;
+  font-weight: bold;
 }
-prespartx {
-    font-weight: bold;
-}
+
 .propform {
-    font-weight: bold;
-    display: block;
+  font-weight: bold;
+  display: block;
 }
+
 .propformprep {
-    font-weight: bold;
-    display: block;
+  font-weight: bold;
+  display: block;
 }
+
 .ptandpp {
-    font-weight: bold;
+  font-weight: bold;
 }
-ptandppx {
-    font-weight: bold;
-}
+
 .refhomnum {
-    vertical-align: super;
-    font-size: 60%;
+  vertical-align: super;
+  font-size: 60%;
 }
-.refhwd,.refsensenum,refsense {
-    font-style: normal;
-    font-variant: small-caps;
-    text-transform: lowercase;
-}
+
+.refhwd,
 .refsensenum {
-    font-size: 80%;
+  font-style: normal;
+  font-variant: small-caps;
+  text-transform: lowercase;
 }
-crossrefto .reflex {
-    display: none;
+
+.refsensenum {
+  font-size: 80%;
 }
+
 .reflex {
-    font-weight: bold;
+  font-weight: bold;
 }
+
 .registerlab {
-    font-style: italic;
-    color: purple;
+  font-style: italic;
+  color: purple;
 }
+
 .relatedwd {
-    font-weight: bold;
+  font-weight: bold;
 }
+
 .runon {
-    display: block;
-    margin-top: 8px;
+  display: block;
+  margin-top: 8px;
 }
+
 .sense {
-    display: block;
-    margin-bottom: 14px;
-    margin-top: 6px;
+  display: block;
 }
+
 .signpost {
-    color: white;
-    background-color: #35A3FF;
-    margin-left: .5em;
-    font-weight: bold;
-    font-variant: small-caps;
-    text-transform: uppercase;
-    font-size: 80%;
-    padding: 1px 2px 1px 1px;
+  color: white;
+  background-color: #35a3ff;
+  margin-left: 0.5em;
+  font-weight: bold;
+  font-variant: small-caps;
+  text-transform: uppercase;
+  font-size: 80%;
+  padding: 1px 2px 1px 1px;
 }
+
 .spokensect {
-    border-top: solid;
-    border-bottom: solid;
-    border-width: 2px;
-    display: block;
-    margin-bottom: 1ex;
-    clear: both;
-    margin-top: 1ex;
-    border-color: #00A2E8;
-    padding: 3px;
+  border-top: solid;
+  border-bottom: solid;
+  border-width: 2px;
+  display: block;
+  margin-bottom: 1ex;
+  clear: both;
+  margin-top: 1ex;
+  border-color: #00a2e8;
+  padding: 3px;
 }
+
 .spokensecthead {
-    display: block;
-    color: #00A2E8;
-    font-weight: bold;
+  display: block;
+  color: #00a2e8;
+  font-weight: bold;
 }
+
 .pronstrong {
-    font-style: italic;
+  font-style: italic;
 }
+
 .subsense {
-    display: block;
+  display: block;
 }
+
 .superl {
-    font-weight: bold;
+  font-weight: bold;
 }
+
 .syn {
-    font-weight: bold;
+  font-weight: bold;
 }
+
 .t3perssing {
-    font-weight: bold;
+  font-weight: bold;
 }
-t3perssingx {
-    font-weight: bold;
-}
-unclassified {
-    font-weight: bold;
-}
+
 span.neutral {
-    font-style: normal;
-    font-weight: normal;
-    font-variant: normal;
-    color: black;
-    text-decoration: none;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  color: black;
+  text-decoration: none;
 }
+
 .cross {
-    color: red;
-    font-weight: bold;
+  color: red;
+  font-weight: bold;
 }
+
 span.italic {
-    color: black;
-    font-style: italic;
-    font-weight: normal;
+  color: black;
+  font-style: italic;
+  font-weight: normal;
 }
+
 .badexa {
-    text-decoration: line-through;
-    font-style: italic;
+  text-decoration: line-through;
+  font-style: italic;
 }
+
 .hint .expl {
-    display: inline;
+  display: inline;
 }
+
 span.infllab {
-    font-style: italic;
-    font-weight: normal;
+  font-style: italic;
+  font-weight: normal;
 }
+
 span.warning {
-    font-style: normal;
-    font-weight: bold;
-    color: red;
+  font-style: normal;
+  font-weight: bold;
+  color: red;
 }
+
 span.sensenum {
-    font-style: normal;
-    font-weight: bold;
-    margin-right: 3px;
-    color: blue;
+  font-style: normal;
+  font-weight: bold;
+  margin-right: 3px;
+  color: blue;
 }
+
 span.synopp {
-    padding-left: 3px;
-    padding-right: 3px;
-    border-radius: 2px 2px 2px 2px;
-    border-style: solid;
-    border-width: 1px;
-    font-variant: small-caps;
-    font-size: 80%;
-    font-weight: bold;
-    color: blue;
+  padding-left: 3px;
+  padding-right: 3px;
+  border-radius: 2px 2px 2px 2px;
+  border-style: solid;
+  border-width: 1px;
+  font-variant: small-caps;
+  font-size: 80%;
+  font-weight: bold;
+  color: blue;
 }
-.subheading,.secheading {
-    display: block;
-    font-weight: bold;
-    font-weight: bold;
-    color: white;
-    background-color: #8187BF;
-    margin-left: -3px;
-    margin-right: -3px;
-    font-variant: small-caps;
-    padding-left: 3px;
+
+.subheading,
+.secheading {
+  display: block;
+  font-weight: bold;
+  font-weight: bold;
+  color: white;
+  background-color: #8187bf;
+  margin-left: -3px;
+  margin-right: -3px;
+  font-variant: small-caps;
+  padding-left: 3px;
 }
-.collocate,.exponent {
-    display: block;
-    padding-bottom: 5px;
-    margin-top: 5px;
+
+.collocate,
+.exponent {
+  display: block;
+  margin-top: 5px;
 }
+
 .collocate.inline {
-    display: inline;
+  display: inline;
 }
+
 .expl {
-    display: block;
-    padding: 0 3px;
+  display: block;
+  padding: 0 3px;
 }
+
 .colloc {
-    font-weight: bold;
+  font-weight: bold;
 }
+
 .exp {
-    font-weight: bold;
+  font-weight: bold;
 }
+
 .expr {
-    font-weight: bold;
+  font-weight: bold;
 }
+
 .colloc.key {
-    color: blue;
+  color: blue;
 }
+
 span.keycollo {
-    font-weight: bold;
-    color: blue;
+  font-weight: bold;
+  color: blue;
 }
+
 .thespropform {
-    font-weight: bold;
+  font-weight: bold;
 }
-collexa {
-    font-style: italic;
-}
-collexa .colloinexa {
-    font-weight: normal;
-}
-thesexa {
-    font-style: italic;
-}
-learneritem {
-    display: block;
-}
+
 .goodcollo {
-    font-weight: bold;
+  font-weight: bold;
 }
+
 .badcollo {
-    text-decoration: line-through;
+  text-decoration: line-through;
 }
+
 .defbold {
-    font-weight: bold;
+  font-weight: bold;
 }
-topic {
-    font-variant: small-caps;
-    color: blue;
-}
+
 .thesref.newline {
-    display: block;
+  display: block;
 }
+
 .heading.newline {
-    display: block;
+  display: block;
 }
+
 .thesref span.thesaurus {
-    color: blue;
-    font-variant: small-caps;
+  color: blue;
+  font-variant: small-caps;
 }
-.thesref .refhwd,.thesref .refhomnum {
-    color: blue;
-    font-weight: bold;
+
+.thesref .refhwd,
+.thesref .refhomnum {
+  color: blue;
+  font-weight: bold;
 }
+
 i {
-    font-style: italic;
+  font-style: italic;
 }
+
 .imgholder {
-    cursor: pointer;
-    /*float: right;*/
-    display: block;
-    margin-bottom: 1ex;
-    padding: 2px;
-    clear: both}
+  cursor: pointer;
+  display: block;
+  margin-bottom: 1ex;
+  padding: 2px;
+  clear: both;
+}
+
 .imgholder img {
-    border: 1px solid #DDD;
+  max-height: 4em;
 }
+
 .buttons {
-    display: block;
+  display: block;
 }
+
 .popup-button {
-    background-color: #f0f2fc;
-    border-radius: 2px;
-    border: 1px solid #7e92c7;
-    color: #7e92c7;
-    text-transform: uppercase;
-    font-size: 66%;
-    padding: 2px 3px;
-    text-decoration: none;
+  background-color: #f0f2fc;
+  border-radius: 2px;
+  border: 1px solid #7e92c7;
+  color: #7e92c7;
+  text-transform: uppercase;
+  font-size: 66%;
+  padding: 2px 3px;
+  text-decoration: none;
 }
+
 .popup-button-hover {
-    background-color: #dfe3f8;
-    cursor: pointer;
+  background-color: #dfe3f8;
+  cursor: pointer;
 }
+
 .popverbs {
-    display: block;
-    color: white;
-    font-weight: bold;
-    background-color: #ec008d;
-    padding-left: 3px;
-    margin-bottom: 5px;
+  display: block;
+  color: white;
+  font-weight: bold;
+  background-color: #ec008d;
+  padding-left: 3px;
+  margin-bottom: 5px;
 }
+
 .verbtable .lemma {
-    color: blue;
-    font-size: 120%;
-    font-weight: bold;
+  color: blue;
+  font-size: 120%;
+  font-weight: bold;
 }
+
 .verbtable table {
-    border-collapse: separate;
-    border-spacing: 1px;
-    margin-top: 10px;
+  border-collapse: separate;
+  border-spacing: 1px;
+  margin-top: 10px;
 }
+
 .verbtable td {
-    padding: 0 5px 0 2px;
-    border-style: solid;
-    border-width: 1px;
-    border-color: #D2D2D2;
+  padding: 0 5px 0 2px;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #d2d2d2;
 }
+
 .header {
-    font-weight: bold;
-    font-variant: small-caps;
+  font-weight: bold;
+  font-variant: small-caps;
 }
+
 .verbtable td.col1 {
-    font-weight: bold;
+  font-weight: bold;
 }
+
 .verbtable td.col2 {
-    font-style: italic;
+  font-style: italic;
 }
+
 .verbtable .geo {
-    font-style: italic;
-    color: #000;
-    font-size: normal;
-    font-weight: normal;
+  font-style: italic;
+  color: #000;
+  font-size: 100%;
+  font-weight: normal;
 }
+
 .verbtable .aux {
-    font-weight: bold;
+  font-weight: bold;
 }
+
 .verbtable .verb_form {
-    color: blue;
-    font-weight: bold;
+  color: blue;
+  font-weight: bold;
 }
+
 .collocations .last {
-    margin-bottom: 20px;
+  margin-bottom: 20px;
 }
+
 .collocations .colloc {
-    display: inline-block;
-    font-weight: bold;
-    margin-left: -2px;
+  display: inline-block;
+  font-weight: bold;
+  margin-left: -2px;
 }
-.collobox,.thesbox,.usagebox,.grambox,spoken,.f2nbox {
-    border-radius: 9px 9px 9px 9px;
-    border-style: solid;
-    border-width: 2px;
-    display: block;
-    margin-bottom: 1ex;
-    clear: both;
-    margin-top: 1ex;
-}
+
+.collobox,
+.thesbox,
+.usagebox,
+.grambox,
 .f2nbox {
-    border-color: #00A2E8;
+  border-radius: 9px 9px 9px 9px;
+  border-style: solid;
+  border-width: 2px;
+  display: block;
+  margin-bottom: 1ex;
+  clear: both;
+  margin-top: 1ex;
 }
+
+.f2nbox {
+  border-color: #00a2e8;
+}
+
 .f2nbox .heading {
-    color: #00A2E8;
+  color: #00a2e8;
 }
+
 .heading {
-    color: white;
-    font-weight: bold;
-    line-height: 100%;
-    padding: 3px;
+  color: white;
+  font-weight: bold;
+  line-height: 100%;
+  padding: 3px;
 }
+
 .section {
-    display: block;
-    padding: 0 3px;
+  display: block;
+  padding: 0 3px;
 }
+
 .last {
-    border-bottom-left-radius: 9px;
-    border-bottom-right-radius: 9px;
+  border-bottom-left-radius: 9px;
+  border-bottom-right-radius: 9px;
 }
+
 .thesbox {
-    background-color: #652D91;
-    border-color: #652D91;
+  background-color: #652d91;
+  border-color: #652d91;
 }
+
 .thesbox .section {
-    background-color: #E8E2F0;
+  background-color: #e8e2f0;
 }
+
 .collobox {
-    background-color: #1D3E99;
-    border-color: #1D3E99;
+  background-color: #1d3e99;
+  border-color: #1d3e99;
 }
+
 .collobox .section {
-    background-color: #E2F4FD;
+  background-color: #e2f4fd;
 }
+
 .usagebox {
-    background-color: #00A2E8;
-    border-color: #00A2E8;
+  background-color: #00a2e8;
+  border-color: #00a2e8;
 }
+
 .usagebox .expl {
-    background-color: #E2F4FD;
+  background-color: #e2f4fd;
 }
+
 .grambox {
-    background-color: #00ADEE;
-    border-color: #00ADEE;
+  background-color: #00adee;
+  border-color: #00adee;
 }
-.grambox .expl,.grambox .compareword {
-    background-color: #E2F4FD;
-    display: block;
-    padding-left: 3px;
+
+.grambox .expl,
+.grambox .compareword {
+  background-color: #e2f4fd;
+  display: block;
+  padding-left: 3px;
 }
+
 .compareword {
-    padding-top: 5px;
-    padding-bottom: 5px;
+  padding-top: 5px;
+  padding-bottom: 5px;
 }
+
 .gramrefcont {
-    display: block;
-    text-transform: lowercase;
-    font-variant: small-caps;
-    padding-left: 3px;
-    padding-bottom: 1px;
+  display: block;
+  text-transform: lowercase;
+  font-variant: small-caps;
+  padding-left: 3px;
+  padding-bottom: 1px;
 }
+
 .thesaurus .sense {
-    padding-left: 3px;
-    padding-right: 3px;
-    margin-top: 0;
+  padding-left: 3px;
+  padding-right: 3px;
+  margin-top: 0;
 }
-.thesaurus .section,.collocations .section {
-    margin-bottom: 10px;
+
+.thesaurus .section,
+.collocations .section {
+  margin-bottom: 10px;
 }
-.thesaurus .secheading,.thesbox .secheading {
-    background-color: #A186BD;
+
+.thesaurus .secheading,
+.thesbox .secheading {
+  background-color: #a186bd;
 }
+
 .add_exa {
-    font-style: italic;
-    display: block;
+  font-style: italic;
+  display: block;
 }
+
 .nodeword {
-    color: blue;
-    font-weight: bold;
+  color: blue;
+  font-weight: bold;
 }
+
 .phrase {
-    display: block;
+  display: block;
 }
+
 .phrasetext {
-    font-weight: bold;
+  font-weight: bold;
 }
+
 .expandable {
-    cursor: pointer;
+  cursor: pointer;
 }
+
 .entry div.content {
-    display: none;
-    margin-bottom: 10px;
+  display: none;
+  margin-bottom: 10px;
 }
-.group,.w {
-    display: block;
-}
-.group .pos {
-    font-weight: bold;
-    display: block;
-}
-.item {
-    display: block;
-}
+
+.group,
 .w {
-    font-weight: bold;
+  display: block;
 }
+
+.group .pos {
+  font-weight: bold;
+  display: block;
+}
+
+.item {
+  display: block;
+}
+
+.w {
+  font-weight: bold;
+}
+
 .popheader {
-    display: block;
-    color: white;
-    font-weight: bold;
-    padding-left: 3px;
+  display: block;
+  color: white;
+  font-weight: bold;
+  padding-left: 3px;
 }
+
 .popheader.popexa {
-    background-color: red;
+  background-color: red;
 }
+
 .popheader.popphrase {
-    background-color: purple;
+  background-color: purple;
 }
+
 .popheader.popcollo {
-    background-color: #1D3E99;
+  background-color: #1d3e99;
 }
+
 .popheader.popthes {
-    background-color: #652D91;
+  background-color: #652d91;
 }
+
 .popheader.popetym {
-    background-color: green;
+  background-color: green;
 }
+
 .popheader.popwf {
-    background-color: #FFD448;
+  background-color: #ffd448;
 }
+
 .popheader.pope_menu {
-    background-color: #57C0E0;
+  background-color: #57c0e0;
 }
+
 .ws-head {
-    font-weight: bold;
-    color: blue;
-    font-size: larger;
+  font-weight: bold;
+  color: blue;
+  font-size: larger;
 }
+
 .ws-head.ref {
-    display: block;
-    margin-top: 10px;
+  display: block;
+  margin-top: 10px;
 }
+
 .wswd {
-    font-weight: bold;
-    display: block;
+  font-weight: bold;
+  display: block;
 }
+
 .cyan {
-    color: #00A2E8;
-    font-size: larger;
+  color: #00a2e8;
+  font-size: larger;
 }
+
 .menuitem {
-    display: block;
+  display: block;
 }
+
+ul.exas {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+  padding-left: 2em;
+  padding-right: 1em;
+}
+
 ul.exas li {
-    font-style: italic;
-    color: blue;
-    margin-bottom: 3px;
+  font-style: italic;
+  color: blue;
 }
+
 .grammar {
-    display: block;
+  display: block;
 }
+
 .str {
-    font-size: large;
-    font-weight: bold;
+  font-size: large;
+  font-weight: bold;
 }
+
 .etymology {
-    margin-top: 10px;
+  margin-top: 10px;
 }
+
 .group {
-    margin-top: 10px;
+  margin-top: 10px;
 }
+
 .menuitem .signpost {
-    background-color: #FFF;
-    color: black;
-    margin-left: 0;
-    font-size: 90%;
+  background-color: transparent;
+  color: black;
+  margin-left: 0;
+  font-size: 90%;
 }
+
 .phrvbs {
-    display: block;
-    margin-top: 10px;
-    margin-left: 5px;
+  display: block;
+  margin-top: 10px;
+  margin-left: 5px;
 }
+
 .phrvbs .heading {
-    display: block;
-    color: blue;
-    font-weight: bold;
+  display: block;
+  color: blue;
+  font-weight: bold;
 }
+
 .phrv {
-    font-weight: bold;
+  font-weight: bold;
 }
-.secheading,.subheading {
-    font-variant: normal;
-    text-transform: uppercase;
+
+.secheading,
+.subheading {
+  font-variant: normal;
+  text-transform: uppercase;
 }
+
 .secheading.no_convert {
-    text-transform: none;
+  text-transform: none;
 }
+
 .grambox .heading.newline {
-    background-color: #6CD0F6;
+  background-color: #6cd0f6;
 }
-img[src*="img/spkr_"] {
-    margin-bottom: -5px;
+
+img[src*="spkr_"] {
+  max-height: 1em;
+  margin-bottom: -3px;
+  margin-right: 2px;
 }
+
+img[src*="spkr_g"] {
+  max-height: 0.7em;
+  margin-bottom: 0;
+}
+
 .chwd {
-    margin-top: 10px;
-    margin-left: 8px;
-    margin-right: 8px;
+  margin-top: 10px;
 }
+
 .chwd a {
-    display: inline-block;
-    background-color: green;
-    color: white;
-    padding-top: 2px;
-    padding-bottom: 3px;
-    padding-left: 5px;
-    padding-right: 5px;
-    margin-right: 3px;
-    margin-bottom: 3px;
-    text-decoration: none;
-    font-size: 80%;
-    border-radius: 2px;
+  display: inline-block;
+  background-color: green;
+  color: white;
+  padding-top: 2px;
+  padding-bottom: 3px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin-bottom: 3px;
+  text-decoration: none;
+  font-size: 80%;
+  border-radius: 2px;
 }
+
 .chwd .hw {
-    color: white;
+  color: white;
 }
-.entry, .entry.lozenge, .verbtable {
-    margin-top: 10px;
-    margin-left: 10px;
-    margin-right: 10px;
+
+.entry,
+.entry.lozenge,
+.verbtable {
+  margin-top: 0.5em;
+}
+
+.no-sound img {
+  border: 1px solid gray;
+  border-radius: 3px;
+  max-height: 0.9em;
+}
+
+.at-link {
+  border: 1px solid #e4e4e4;
+  border-radius: 9px;
+  padding: 0.1em 0.5em;
+  margin: 0.5em 0;
+  background-color: rgba(199, 110, 6, 0.1);
+}
+
+.at-link {
+  display: none;
+}
+
+.popup-button:hover {
+  cursor: pointer;
+}
+
+.popup-button {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+span[onclick*="toggle"] {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.hs0:before {
+  content: "‧";
+}
+
+.arrow {
+  color: #333;
+  border: 1px solid #666;
+  border-radius: 2px;
+  font-size: smaller;
+}
+
+.dict-faq img[src*="cover"] {
+  max-height: 8em;
+}
+
+.defcn {
+  margin-left: 5px;
+}
+
+expcn {
+  margin-left: 5px;
+  font-style: normal;
+}
+
+.collocn {
+  margin-left: 5px;
+}
+
+explcn {
+  margin-left: 5px;
+  font-style: normal;
+  display: block;
+}
+
+.gramcn {
+  margin-left: 5px;
 }
