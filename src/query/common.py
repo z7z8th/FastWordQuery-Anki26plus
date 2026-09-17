@@ -103,8 +103,8 @@ def update_note_field(note, fld_ord: int, fld_result: QueryResult):
     """
 
     # js process: add to template of the note model
-    add_to_tmpl(note, js_list=fld_result.js, js_files=fld_result.js_files, 
-                css_list=fld_result.css, css_files=fld_result.css_files)
+    mw.taskman.run_on_main(lambda: add_to_tmpl(note, js_list=fld_result.js, js_files=fld_result.js_files, 
+                    css_list=fld_result.css, css_files=fld_result.css_files))
 
     result = fld_result.result
 
@@ -142,8 +142,37 @@ def promot_choose_css(missed_css):
                     wrap_css(dest_name)
 
             except KeyError:
+                traceback.print_exc()
                 pass
 
+
+class ReschedulableTimer:
+
+    def __init__(self):
+        self.timer = QTimer()
+        self.timer.setSingleShot(True)
+
+    def schedule(self, delay_ms, func, *args, **kwargs):
+        # Stop existing run if it hasn't fired yet
+        if self.timer.isActive():
+            self.timer.stop()
+
+        # Disconnect any old target function
+        try:
+            self.timer.timeout.disconnect()
+        except (TypeError, RuntimeError):
+            pass
+
+        # Bind parameters and connect
+        def _wrapper():
+            func(*args, **kwargs)
+
+        self.timer.timeout.connect(_wrapper)
+
+        # Start or restart timer
+        self.timer.start(delay_ms)
+
+save_timer = ReschedulableTimer()
 
 def add_to_tmpl(note, js_list=[], js_files=[], css_list=[], css_files=[]):
     # templates
@@ -176,7 +205,6 @@ def add_to_tmpl(note, js_list=[], js_files=[], css_list=[], css_files=[]):
             note_afmt += js
 
     if js_files:
-        js_files = js_files if isinstance(js_files, list) else [js_files]
         for file in js_files:
             print(f"### warning {file} not copied yet")
             src = f'''\n<script src="{file}" type="text/javascript"></script>'''
@@ -197,29 +225,28 @@ def add_to_tmpl(note, js_list=[], js_files=[], css_list=[], css_files=[]):
                 continue
             if not css.startswith('<style'):
                 css = f"<style>\n{css}\n</style>"
-            
             note_css = f"{note_css}\n{css}"
 
     if css_files:
-        css_files = css_files if isinstance(css_files, list) else [css_files]
-        if css_files and '@import' not in note_css:
+        if '@import' not in note_css:
             note_css = f'\n{note_css}'
+
+        css_files = css_files if isinstance(css_files, list) else [css_files]
+
         for file in css_files:
-            src = f'@import url("{file}");\n'
+            src = f'@import url("{file}");'
             if src not in note_css:
                 print(f'Inject css file `{src}`')
-                note_css = f"{src}{note_css}"
+                note_css = f"{src}\n{note_css}"
 
     model['css'] = note_css
-    mw.col.models.save(model)
-    print(f"TODO: save too freq")
-    # def _apply(src):
-    #     model = note.note_type()
-    #     note_css = model["css"]
-    #     if src not in note_css:
-    #         model["css"] = f"{src}{note_css}"
-    #     mw.col.models.save(model)
-    # main.run_on_main(lambda: _apply("@import ..."))
+
+    def _save_model():
+        print(f'--- Saving model {model['name']}')
+        mw.col.models.save(model)
+    # QTimer.singleShot(1000*10, lambda: mw.col.models.save(model))
+    save_timer.schedule(1000*5, _save_model)
+
 
 def query_flds(note, qfields=None) -> tuple[defaultdict[int, QueryResult], int, list]:
     """

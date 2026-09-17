@@ -207,7 +207,8 @@ def with_styles(**styles):
                 if do_wrap or class_wrapper:
                     if add_wrapper:
                         html = f'<div class="{class_wrapper}">{html}</div>'
-                    css_obj_new, _ = wrap_css(css_obj, is_file=is_file, class_wrapper=class_wrapper, get_canional_name=lambda val: get_canonical_name(cls.media_prefix, val))
+                    # get_canional_name=lambda val: get_canonical_name(cls.media_prefix
+                    css_obj_new, _ = wrap_css(css_obj, is_file=is_file, class_wrapper=class_wrapper)
                     return html, css_obj_new
                 return html, css_obj
 
