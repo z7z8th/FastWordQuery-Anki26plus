@@ -89,7 +89,7 @@ def query_from_editor_fields(editor, fields=None):
         editor.setNote(editor.note)
         query_all([editor.note], flush, fields)
         editor.setNote(editor.note, focusTo=0)
-        editor.saveNow(lambda:None)
+        editor.saveNow(lambda: print("Saved"))
 
 
 def query_all(notes, flush=True, fields=None):

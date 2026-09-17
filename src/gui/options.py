@@ -467,8 +467,10 @@ class TabContent(QScrollArea):
         field_combo.setMaximumSize(WIDGET_SIZE.map_field_width,
                                    WIDGET_SIZE.map_max_height)
         field_combo.setEnabled(not word_checked and not ignore)
-        self.fill_field_combo_options(field_combo, dict_name, dict_unique,
-                                      dict_fld_name, dict_fld_ord)
+        # dict_unique is None means no local and web dict yet
+        if dict_unique:
+            self.fill_field_combo_options(field_combo, dict_name, dict_unique,
+                                        dict_fld_name, dict_fld_ord)
 
         # ignore
         ignore_check_btn = QCheckBox(_("NOT_DICT_FIELD"))
@@ -558,6 +560,8 @@ class TabContent(QScrollArea):
     def fill_dict_combo_options(self, dict_combo, current_unique, services):
         """setup dict combo box"""
         dict_combo.clear()
+
+        # print(f'--- fill_dict_combo_options local {services["local"]} web {services["web"]}')
 
         # local dict service
         for service in services['local']:

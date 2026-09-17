@@ -47,13 +47,15 @@ class Ldoce6(MdxService):
         html = self.get_html()
         # m = re.search(r'<span class="pron">(.*?)</span>', html)
         tag = html.select_one('.entry .pron')
+        # print(f'fld_phonetic {tag}')
         if tag:
             return str(tag)
         return ''
 
-    def _fld_voice(self, html, region):
+    def _fld_voice(self, html, spkr_src):
         """获取发音字段"""
-        tag = html.select_one(f"a[href='sound://*']:has(img[src='img/{region}'])")
+        tag = html.select_one(f"a[href^='sound:']:has(img[src='img/{spkr_src}'])")
+        # print(f'_fld_voice region {spkr_src} tag {tag}')
         if not tag:
             return ''
 
@@ -72,7 +74,7 @@ class Ldoce6(MdxService):
     def fld_voiceame(self):
         return self._fld_voice(self.get_html(), Ldoce6.region_to_audio_img['us'])
 
-    def _fld_image(self, img):
+    def _fld_image(self, img, do_copy = True):
         val = '/' + img['src']
         # file extension isn't always jpg
         file_extension = os.path.splitext(img['src'])[1][1:].strip().lower()
@@ -81,7 +83,8 @@ class Ldoce6(MdxService):
         if not dest_name:
             print(f'*** Eror: _fld_image: No image found for {img}')
             return img
-        img = deepcopy(img)
+        if do_copy:
+            img = deepcopy(img)
         img['src'] = dest_name
         return img
 
@@ -148,15 +151,19 @@ class Ldoce6(MdxService):
     def fld_first2_sentence_audio(self):
         return self._range_sentence_audio([0, 1])
 
-    def _range_sentence_audio(self, range_arr=None, with_audio=True):
+    def _range_sentence_audio(self, range_arr: list | str | range = 'all', with_audio=True):
         # m = re.findall(r'<span class="example"\s*.*>\s*.*<\/span>', self.get_html())
-        html = self.get_html()
-        tags = html.select(f'.example a[href^="sound:"]')
+        html: BeautifulSoup = self.get_html()
+        if with_audio:
+            tags = html.select(f'.entry .sense .example:has(a[href^="sound:"]), .entry .tail .collocate .example:has(a[href^="sound:"])')
+        else:
+            tags = html.select(f'.entry .sense .example, .entry .tail .collocate .example')
+        # print(f"_range_sentence_audio {len(tags)}")
         if not tags:
             return ''
 
         if range_arr == 'rand':
-            range_arr = [random.randrange(0, len(tags) - 1, 1)]
+            range_arr = [random.randrange(0, len(tags), 1)]
         elif range_arr == 'all':
             range_arr = range(0, len(tags))
 
@@ -165,16 +172,18 @@ class Ldoce6(MdxService):
             if i < 0 or i >= len(tags):
                 print(f'*** Error: _range_sentence_audio: {i} is out of range [0, {len(tags)})')
                 continue
-            tag = tags[i]
             # deepcopy before modify, so self.get_html() always return the same one
-            example = deepcopy(tag.parent)
-            tag = example.select_one(f'a[href^="sound:"]')
-            audio = tag['href']
-            mp3 = self._fld_audio(audio, False)
+            example = deepcopy(tags[i])
+
             if with_audio:
+                tag = example.select_one(f'a[href^="sound:"]')
+                audio = tag['href']
+                mp3 = self._fld_audio(audio, False)
                 tag['href'] = f'sound:{mp3}'
-            else:
-                tag.decompose()
+                
+            for img in example.select(f'img'):
+                self._fld_image(img, do_copy=False)
+
             examples.append(str(example))
         return self._css('\n'.join(examples))
 

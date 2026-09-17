@@ -136,6 +136,7 @@ def export(labels):
         @wraps(fld_func)
         def _deco(self, *args, **kwargs):
             res = fld_func(self, *args, **kwargs)
+            print(f'--- {fld_func} ret {res}')
             return QueryResult(result=res) if not isinstance(res, QueryResult) else res
 
         _deco._export_attrs_ = [_cl(labels), -1]
@@ -278,9 +279,10 @@ class Service(object):
         self.cache = defaultdict(defaultdict)
         self._unique = self.__class__.__name__
         self._exporters = self._get_exporters()  # [(label1, method1), (label2, method2)]
+        # print(f'{self._unique} exports {self._exporters}')
         # (label1, label2), (method1, method2) = zip(("label1", "method1"), ("label2", "method2"))
         self._fields, self._actions = zip(*self._exporters) \
-            if self._exporters else (None, None)
+            if self._exporters else ([], [])
         self._word = ''
         # query interval: default 500ms
         self.query_interval = 0.5
@@ -355,8 +357,11 @@ class Service(object):
 
     def active(self, dict_fld_ord, word):
         self.word = word
+        # print(f'--- active {dict_fld_ord} {self.actions[dict_fld_ord]}')
         if dict_fld_ord >= 0 and dict_fld_ord < len(self.actions):
             return self.actions[dict_fld_ord]()
+        else:
+            print(f"*** Error: {self._unique} query {dict_fld_ord} not in range [0, {len(self.actions)})")
         return QueryResult.default()
 
     @staticmethod
