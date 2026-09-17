@@ -138,17 +138,17 @@ class QueryWorkerManager(object):
             self.update_progress()
 
     def update(self, note, results: defaultdict[int, QueryResult], success_num: int, missed_css:list):
-        self.mutex.lock()
-        if success_num > 0:
-            self.counter += 1
-        elif success_num == 0:
-            self.fails += 1
-        else:
-            self.skips += 1
-        val = update_note_fields(note, results)
-        self.fields += val
-        self.missed_css += missed_css
-        self.mutex.unlock()
+        with QMutexLocker(self.mutex):
+            if success_num > 0:
+                self.counter += 1
+            elif success_num == 0:
+                self.fails += 1
+            else:
+                self.skips += 1
+            val = update_note_fields(note, results)
+            self.fields += val
+            self.missed_css += missed_css
+            # self.mutex.unlock()
         if self.total > 1:
             return val > 0
         else:

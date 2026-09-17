@@ -179,8 +179,12 @@ def copy_static_file(filename, new_filename=None, static_dir='static'):
     abspath = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                            static_dir,
                            filename)
-    shutil.copy(abspath, new_filename if new_filename else filename)
+    dest = new_filename if new_filename else filename
+    print(f'Copy "{abspath}" -> "{dest}"')
+    shutil.copy(abspath, dest)
 
+
+from aqt.theme import theme_manager
 
 def with_styles(**styles):
     """
@@ -198,33 +202,52 @@ def with_styles(**styles):
                 styles.get('do_wrap', False), \
                 styles.get('wrap_class', '')
 
-            def _wrap(html, css_obj, is_file=True):
+            def _wrap(html, css_obj, is_file, class_wrapper, add_wrapper = True):
                 # wrap css and html
                 if do_wrap or class_wrapper:
-                    html = f'<div class="{class_wrapper}">{html}</div>'
-                    return html, wrap_css(css_obj, is_file=is_file, class_wrapper=class_wrapper, get_canional_name=lambda val: get_canonical_name(cls.media_prefix, val))[0]
+                    if add_wrapper:
+                        html = f'<div class="{class_wrapper}">{html}</div>'
+                    css_obj_new, _ = wrap_css(css_obj, is_file=is_file, class_wrapper=class_wrapper, get_canional_name=lambda val: get_canonical_name(cls.media_prefix, val))
+                    return html, css_obj_new
                 return html, css_obj
 
             new_res = res
-            new_css_file = ''
+            new_css_files = []
+            if str and isinstance(css_file, str):
+                css_file = { 'light': css_file }
+
             if css_file:
-                new_css_file = css_file if css_file.startswith('_') \
-                    else u'_' + css_file
+                print(f'--- night mode: {theme_manager.night_mode}')
+                # new_css_file = css_file if css_file.startswith('_') \
+                #     else u'_' + css_file
+                css_file_light = css_file['light']
                 # copy the css file to media folder
-                copy_static_file(css_file, new_css_file)
+                copy_static_file(css_file_light, css_file_light)
                 # wrap the css file
-                new_res, new_css_file = _wrap(res, new_css_file)
-            if new_css_file:
-                new_css_file = [new_css_file]
+                new_res, css_file_light = _wrap(res, css_file_light, is_file=True, class_wrapper=class_wrapper)
+                new_css_files.append(css_file_light)
+
+                if 'dark' in css_file:
+                    css_file_dark = css_file['dark']
+                    copy_static_file(css_file_dark, css_file_dark)
+
+                    new_res, css_file_dark = _wrap(new_res, css_file_dark, is_file=True, 
+                                                   class_wrapper=f'.nightMode {re.sub(r'^\.?', '.', class_wrapper) if class_wrapper else ''}', 
+                                                   add_wrapper=False)
+                    new_css_files.append(css_file_dark)
+
             if css:
-                new_res, css = _wrap(res, css, is_file=False)
+                new_res, css = _wrap(res, css, is_file=False, class_wrapper=class_wrapper)
+            css=[css] if css else []
+
+            print(f'with_styles css {css} new_css_file {new_css_files}')
 
             if not isinstance(res, QueryResult):
-                res = QueryResult(result=new_res, css=css, css_files=new_css_file)
+                res = QueryResult(result=new_res, css=css, css_files=new_css_files)
             else:
                 res.result = new_res
                 res.css = css
-                res.css_files = new_css_file
+                res.css_files = new_css_files
 
             return res
 

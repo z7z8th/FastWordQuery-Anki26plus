@@ -25,6 +25,7 @@ import unicodedata
 from collections import defaultdict
 import traceback
 
+from aqt import main, mw
 from aqt.qt import *
 from aqt.utils import showInfo
 
@@ -81,7 +82,6 @@ def strip_combining(txt):
     norm = unicodedata.normalize('NFKD', txt)
     return u"".join([c for c in norm if not unicodedata.combining(c)])
 
-
 def update_note_fields(note, results: defaultdict[int, QueryResult]):
     """
     Update query result to note fields, return updated fields count.
@@ -97,14 +97,14 @@ def update_note_fields(note, results: defaultdict[int, QueryResult]):
     return count
 
 
-def update_note_field(note, fld_ord:int, fld_result: QueryResult):
+def update_note_field(note, fld_ord: int, fld_result: QueryResult):
     """
     Update single field, if result is valid then return 1, else return 0
     """
 
     # js process: add to template of the note model
     add_to_tmpl(note, js_list=fld_result.js, js_files=fld_result.js_files, 
-                css_list=fld_result.css, css_files=fld_result.css_file)
+                css_list=fld_result.css, css_files=fld_result.css_files)
 
     result = fld_result.result
 
@@ -160,7 +160,11 @@ def add_to_tmpl(note, js_list=[], js_files=[], css_list=[], css_files=[]):
     }]
     """
 
-    note_afmt = note.note_type()['tmpls'][0]['afmt']
+    print(f"--- add_to_tmpl js_list {js_list} js_files {js_files} css_list {css_list} css_files {css_files}")
+    model = note.note_type()
+
+
+    note_afmt = model['tmpls'][0]['afmt']
 
     if js_list:
         for js in js_list:
@@ -179,9 +183,12 @@ def add_to_tmpl(note, js_list=[], js_files=[], css_list=[], css_files=[]):
             if src not in note_afmt:
                 note_afmt += src
 
-    note.note_type()['tmpls'][0]['afmt'] = note_afmt
+    model['tmpls'][0]['afmt'] = note_afmt
 
-    note_css = note.note_type()['css']
+    note_css = model['css']
+    text_align = '.card { text-align: left; }'
+    if text_align not in note_css:
+        note_css += f'\n{text_align}\n'
 
     if css_list:
         for css in css_list:
@@ -195,12 +202,24 @@ def add_to_tmpl(note, js_list=[], js_files=[], css_list=[], css_files=[]):
 
     if css_files:
         css_files = css_files if isinstance(css_files, list) else [css_files]
+        if css_files and '@import' not in note_css:
+            note_css = f'\n{note_css}'
         for file in css_files:
-            src = f'@import url("{file}")'
+            src = f'@import url("{file}");\n'
             if src not in note_css:
-                note_css = f"{src}\n{note_css}"
+                print(f'Inject css file `{src}`')
+                note_css = f"{src}{note_css}"
 
-    note.note_type()['css'] = note_css
+    model['css'] = note_css
+    mw.col.models.save(model)
+    print(f"TODO: save too freq")
+    # def _apply(src):
+    #     model = note.note_type()
+    #     note_css = model["css"]
+    #     if src not in note_css:
+    #         model["css"] = f"{src}{note_css}"
+    #     mw.col.models.save(model)
+    # main.run_on_main(lambda: _apply("@import ..."))
 
 def query_flds(note, qfields=None) -> tuple[defaultdict[int, QueryResult], int, list]:
     """

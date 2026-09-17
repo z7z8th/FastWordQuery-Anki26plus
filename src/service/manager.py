@@ -44,6 +44,7 @@ class ServiceManager(object):
         self.web_services, self.local_custom_services = self._get_services_from_files()
         # combine the customized local services into local services
         self.local_services = self.mdx_services + self.star_dict_services + self.local_custom_services
+        # print(f"service local {self.mdx_services} {self.local_custom_services} web {self.web_services}")
 
     def get_service(self, unique) -> Service:
         # webservice unique: class name
@@ -76,6 +77,8 @@ class ServiceManager(object):
             StardictService
         )
         for f in files:
+            if 'LDOCE6' not in f:
+                continue
             #try:
             module = importlib.import_module( 
                 u'.%s.%s' % (service_dirname, os.path.splitext(f)[0]), 

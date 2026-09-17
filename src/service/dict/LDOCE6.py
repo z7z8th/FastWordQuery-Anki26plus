@@ -204,7 +204,7 @@ class Ldoce6(MdxService):
     #         return self._css(str_content)
     #     return ''    
 
-    @with_styles(css_file='_ldoce6.css')
+    @with_styles(css_file={ 'light': '_ldoce6.css', 'dark': '_ldoce6_dark.css' })
     def _css(self, val):
         return val
     
