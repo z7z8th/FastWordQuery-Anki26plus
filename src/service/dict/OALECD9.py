@@ -55,7 +55,7 @@ class oalecd9_mdx(MdxService):
                 self.word = original_word
                 val = '/' + selected_voice
                 name = get_hex_name('mdx-'+self.unique.lower(), val, 'mp3')
-                name = self.save_file(val, name)
+                name = self.save_file_from_mdd(val, name)
                 if name:
                     return self.get_anki_label(name, 'audio')
         return ''
@@ -84,9 +84,9 @@ class oalecd9_mdx(MdxService):
     def fld_first2_sentence_audio(self):
         return self._range_sentence_audio([0, 1])
 
-    def _fld_audio(self, audio):
+    def _save_audio(self, audio):
         name = get_hex_name('mdx-'+self.unique.lower(), audio, 'mp3')
-        name = self.save_file(audio, name)
+        name = self.save_file_from_mdd(audio, name)
         if name:
             return self.get_anki_label(name, 'audio')
         return ''
@@ -126,9 +126,9 @@ class oalecd9_mdx(MdxService):
                         us_sound = e[1]
                         en_text = e[2]
                         cn_text = e[3]
-                        us_mp3 = self._fld_audio(us_sound)
+                        us_mp3 = self._save_audio(us_sound)
                         if br_sound != 'None':
-                            br_mp3 = self._fld_audio(br_sound)
+                            br_mp3 = self._save_audio(br_sound)
                         else:
                             br_mp3 = ''
                         # please modify the code here to get br_mp3

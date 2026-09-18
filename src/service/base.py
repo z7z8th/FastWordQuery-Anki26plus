@@ -19,6 +19,7 @@
 
 import inspect
 import os
+from pathlib import Path
 import random
 import traceback
 # use ntpath module to ensure the windows-style (e.g. '\\LDOCE.css')
@@ -170,18 +171,17 @@ def auto_bind_exports(cls):
         setattr(cls, field_name, exported_fn)
     return cls
 
-
+def get_static_file_abspath(filename, static_dir='static'):
+    return os.path.join(os.path.dirname(os.path.realpath(__file__)), static_dir, filename)
 
 def copy_static_file(filename, new_filename=None, static_dir='static'):
     """
     copy file in static directory to media folder
     """
-    abspath = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                           static_dir,
-                           filename)
+    src_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), static_dir, filename)
     dest = new_filename if new_filename else filename
-    print(f'Copy "{abspath}" -> "{dest}"')
-    shutil.copy(abspath, dest)
+    print(f'Copy "{src_path}" -> "{dest}"')
+    shutil.copyfile(src_path, dest)
 
 
 from aqt.theme import theme_manager
@@ -201,15 +201,19 @@ def with_styles(**styles):
                 styles.get('css_file', None), \
                 styles.get('do_wrap', False), \
                 styles.get('wrap_class', '')
+            
+            class_wrapper = re.sub(r'^\.?', '.', class_wrapper) if class_wrapper else ''
 
-            def _wrap(html, css_obj, is_file, class_wrapper, add_wrapper = True):
+            def _wrap_html_css(html, css_obj, is_file, class_wrapper, add_html_wrapper = True):
                 # wrap css and html
                 if do_wrap or class_wrapper:
-                    if add_wrapper:
+                    if add_html_wrapper:
                         html = f'<div class="{class_wrapper}">{html}</div>'
                     # get_canional_name=lambda val: get_canonical_name(cls.media_prefix
                     css_obj_new, _ = wrap_css(css_obj, is_file=is_file, class_wrapper=class_wrapper)
                     return html, css_obj_new
+                elif is_file:
+                    shutil.copyfile(css_obj, os.path.basename(css_obj))
                 return html, css_obj
 
             new_res = res
@@ -223,31 +227,35 @@ def with_styles(**styles):
                 #     else u'_' + css_file
                 css_file_light = css_file['light']
                 # copy the css file to media folder
-                copy_static_file(css_file_light, css_file_light)
+                # if not class_wrapper:
+                #     copy_static_file(css_file_light, css_file_light)
+                # else:
+                css_file_light = get_static_file_abspath(css_file_light)
                 # wrap the css file
-                new_res, css_file_light = _wrap(res, css_file_light, is_file=True, class_wrapper=class_wrapper)
+                new_res, css_file_light = _wrap_html_css(res, css_file_light, is_file=True, class_wrapper=class_wrapper)
                 new_css_files.append(css_file_light)
 
                 if 'dark' in css_file:
                     css_file_dark = css_file['dark']
-                    copy_static_file(css_file_dark, css_file_dark)
+                    # copy_static_file(css_file_dark, css_file_dark)
+                    css_file_dark = get_static_file_abspath(css_file_dark)
 
-                    new_res, css_file_dark = _wrap(new_res, css_file_dark, is_file=True, 
-                                                   class_wrapper=f'.nightMode {re.sub(r'^\.?', '.', class_wrapper) if class_wrapper else ''}', 
-                                                   add_wrapper=False)
+                    new_res, css_file_dark = _wrap_html_css(new_res, css_file_dark, is_file=True, 
+                                                   class_wrapper=f".nightMode {class_wrapper}", 
+                                                   add_html_wrapper=False)
                     new_css_files.append(css_file_dark)
 
             if css:
-                new_res, css = _wrap(res, css, is_file=False, class_wrapper=class_wrapper)
-            css=[css] if css else []
+                new_res, css = _wrap_html_css(res, css, is_file=False, class_wrapper=class_wrapper)
+            css_list=[css] if css else []
 
             print(f'with_styles css {css} new_css_file {new_css_files}')
 
             if not isinstance(res, QueryResult):
-                res = QueryResult(result=new_res, css=css, css_files=new_css_files)
+                res = QueryResult(result=new_res, css_list=css_list, css_files=new_css_files)
             else:
                 res.result = new_res
-                res.css = css
+                res.css_list = css_list
                 res.css_files = new_css_files
 
             return res
@@ -267,6 +275,8 @@ def with_scripts(js_list=[], js_files=[]):
         @wraps(fld_func)
         def _deco(cls, *args, **kwargs):
             res = fld_func(cls, *args, **kwargs)
+            for f in js_files:
+                copy_static_file(f, f)
             
             if not isinstance(res, QueryResult):
                 res = QueryResult(result=res, js_list=js_list, js_files=js_files)
@@ -281,18 +291,20 @@ def with_scripts(js_list=[], js_files=[]):
     return _with
 
 
-_BS_LOCKS = [_threading.Lock(), _threading.Lock()]  # bs4 threading lock, overload protection
-
-
 def parse_html(html):
     '''
     use bs4 lib parse HTML, run only 2 BS at the same time
     '''
-    lock = _BS_LOCKS[random.randrange(0, len(_BS_LOCKS) - 1, 1)]
-    lock.acquire()
     soup = BeautifulSoup(html, 'html.parser')
-    lock.release()
     return soup
+
+from dataclasses import dataclass
+
+@dataclass
+class PathMap:
+    src_path: str
+    dest_path: str
+    dest_ok: bool
 
 class Service(object):
     '''
@@ -676,10 +688,10 @@ class MdxService(LocalService):
     def __init__(self, dict_path):
         super(MdxService, self).__init__(dict_path)
         self._local = threading.local()
-        self.media_cache = defaultdict(set)
+        self.media_cache = defaultdict(dict)
         self.cache = defaultdict(str)
         self.html_cache = defaultdict(str)
-        self.parse_html = True
+        self.do_parse_html = True
         self.query_interval = 0.01
         self.styles = []
         self.media_prefix = f'_mdx-{self.unique.lower()}-'
@@ -770,14 +782,14 @@ class MdxService(LocalService):
             #     if word != word_base_form:
             #         html = self._get_definition_mdx(word_base_form)
             if html:
-                if self.parse_html:
+                if self.do_parse_html:
                     self.html_cache[word] = BeautifulSoup(html, 'html.parser')
                 else:
                     self.html_cache[word] = html
 
         return self.html_cache[word]
 
-    def save_file(self, filepath_in_mdx, dest_path):
+    def save_file_from_mdd(self, filepath_in_mdx, dest_path):
         """according to filepath_in_mdx to get media file and save it to savepath"""
         try:
             blob = self._get_definition_mdd(filepath_in_mdx)
@@ -821,31 +833,40 @@ class MdxService(LocalService):
         
         # mcss = re.findall(r'href=[\',"](\S+?\.css)[\',"]', html)
         css_files_tags = html.select('link[rel="stylesheet"][href]')
-        mcss_files = set( tag['href'] for tag in css_files_tags )
-        media_files_set.update(mcss_files)
+        css_files = set( tag['href'] for tag in css_files_tags )
+        media_files_set.update(css_files)
 
         js_tags = html.select('script:not([src])')
         js_list = [ str(js) for js in js_tags ]
 
         # mjs = re.findall(r'src="([\w\./]\S+?\.js)"', html)
         js_files_tags = html.select('script[src$=".js"]')
-        mjs_files = set( tag['src'] for tag in js_files_tags )
-        media_files_set.update(mjs_files)
+        js_files = set( tag['src'] for tag in js_files_tags )
+        media_files_set.update(js_files)
 
         # msrc = re.findall(r'<img.*?src="([\w\./]\S+?)".*?>', html)
         img_tags = html.select('img')
-        mimg = set( tag['src'] for tag in img_tags )
-        media_files_set.update(mimg)
+        img_files = set( tag['src'] for tag in img_tags )
+
         # msound = re.findall(r'href="sound:(.*?\.(?:mp3|wav|aac))"', html)
         sound_tags = html.select('a[href^="sound:"]')
-        msound = set( tag['href'].removeprefix('sound:/') for tag in sound_tags )
+        sound_files = set( tag['href'].removeprefix('sound:/') for tag in sound_tags )
 
-        print(f'mcss {mcss_files}')
-        print(f'mjs {mjs_files}')
-        print(f'mimg {mimg}')
+        print(f'css_list {css_list}')
+        print(f'css_files {css_files}')
+        print(f'js_list {js_list}')
+        print(f'js_files {js_files}')
+        print(f'img_files {img_files}')
+        print(f'sound_files {sound_files}')
 
         print(f'media_files_set {media_files_set}')
-        print(f'msound {msound}')
+
+        for tag in img_tags:
+            self._save_image(tag, do_html_deepcopy=False)
+        if config.export_media:
+            for tag in sound_tags:
+                self._save_audio(tag, do_html_deepcopy=False, anki_label=False)
+
         # TODO
         """
         for import css, add to `Note Type -> Cards -> Styling`
@@ -856,16 +877,15 @@ class MdxService(LocalService):
             <style>@import url(style.css);
                    @import "style.css";</style>
         """
-        css_style = ''
-        if len(mcss_files) != 0:
-            css_list = [f"@import url(_{css});" for css in mcss_files]
-            css_style = "\n".join(css_list)
-            css_style = f"<style> {css_style} </style>"
-        if config.export_media:
-            media_files_set.update(msound)
+        # css_style = ''
+        # if len(css_files) != 0:
+        #     css_list = [f"@import url(_{css});" for css in css_files]
+        #     css_style = "\n".join(css_list)
+        #     css_style = f"<style> {css_style} </style>"
+        # if config.export_media:
+        #     media_files_set.update(msound)
         # for each in media_files_set:
         #     html = html.replace(each, u'_' + each.split('/')[-1])
-        print(f'TODO: parse css files')
         # if html != '' and css_style != '':
         #     html = css_style + html
         # find sounds
@@ -873,108 +893,200 @@ class MdxService(LocalService):
         # p = re.compile(r'<a[^>]+?href=\"sound:_(.*?\.(?:mp3|wav|aac))\"[^>]*?>(.*?)</a>')
         # html = p.sub("[sound:mdx-" + self.title + "-" + u"\\1]\\2", html)
 
-        # save media files
-        path_map, errors = self.save_media_files(media_files_set)
+        # save css and js files, to target dir by canonical name: e.g. _mdx-{dict_name}-{path}.{ext}
+        path_map = self.save_media_files(media_files_set)
         print(f'path_map {path_map}')
-        print(f'errors {errors}')
 
-        ### css and js are not allow in field html anymore
+        ### css and js are not allow in field html any more
         for tag in css_files_tags:
             tag.decompose()
         for tag in js_files_tags:
             tag.decompose()
-        for tag in img_tags:
-            mdd_path = MdxService.to_mdd_path(tag['src'])
-            tag['src'] = path_map[mdd_path]
-        if config.export_media:
-            for tag in sound_tags:
-                mdd_path = MdxService.to_mdd_path(tag['href'].removeprefix('sound:/'))
-                tag['href'] = f'sound:{path_map[mdd_path]}'
 
-        wrap_class_names = set()
-        for src_css_file in mcss_files:
-            target_css_file = path_map[MdxService.to_mdd_path(src_css_file)]
+        # for tag in img_tags:
+        #     mdd_path = MdxService.to_mdd_path(tag['src'])
+        #     tag['src'] = path_map[mdd_path]
+        # if config.export_media:
+        #     for tag in sound_tags:
+        #         mdd_path = MdxService.to_mdd_path(tag['href'].removeprefix('sound:/'))
+        #         tag['href'] = f'sound:{path_map[mdd_path]}'
+
+        wrap_class_name_list = set()
+        new_css_files = set()
+        for src_file in css_files:
+            target_file = path_map[src_file]
             # if not exists the css file, the user can place the file to media
             # folder first, and it will also execute the wrap process to generate
             # the desired file.
-            if not os.path.exists(target_css_file):
-                self.missed_css.add(target_css_file)
-            new_css_file, wrap_class_name = wrap_css(target_css_file)
-            wrap_class_names.add(wrap_class_name)
-            self.css_files.add(new_css_file)
+            # if not os.path.exists(src_css_file):
+            if not target_file.dest_ok:
+                print(f'***Warning: {src_file} not copied.')
+                self.missed_css.add(src_file)
+                new_css_files.add(src_file)
+                continue
+            new_css_file, wrap_class_name = wrap_css(target_file.dest_path)  # NOTE: CSS files are copied in wrap_css()
+            wrap_class_name_list.add(wrap_class_name)
+            new_css_files.add(new_css_file)
+            # self.css_files.add(new_css_file)
             # html = html.replace(css_file, new_css_file)
             # add global div to the result html
-            
-        html = f'''<div class="{' '.join(wrap_class_names)}">{str(html)}</div>'''
 
-        return QueryResult(result=html, js_list = js_list, js_files = mjs_files, css_list = css_list, css_files = self.css_files)
+        new_js_files = set()
+        for src_file in js_files:
+            target_file = path_map[src_file]
+            if not target_file.dest_ok:
+                new_js_files.add(src_file)
+                continue
+            new_js_files.add(target_file.dest_path)
+
+        html = f'''<div class="{' '.join(wrap_class_name_list)}">{str(html)}</div>'''
+
+        return QueryResult(result=html, js_list = js_list, js_files = new_js_files, css_list = css_list, css_files = new_css_files)
 
 
-    def save_default_file(self, src_path, savepath=None):
-        '''
-        default save file interface
-        '''
-        filename = src_path.replace('\\', os.path.sep)
-        basename = os.path.basename(filename)
-        if not savepath:
-            savepath = get_canonical_name(self.media_prefix, filename)
-        if os.path.exists(savepath):
-            return savepath
+    # def save_default_file(self, src_path, savepath=None):
+    #     '''
+    #     default save file interface
+    #     '''
+    #     filename = src_path.replace('\\', os.path.sep)
+    #     basename = os.path.basename(filename)
+
+    #     if not savepath:
+    #         savepath = get_canonical_name(self.media_prefix, filename)
+
+    #     if os.path.exists(savepath):
+    #         return savepath, True
         
-        try:
-            print('TODO: save_default_file basename or filename')
+    #     try:
+    #         print('TODO: save_default_file basename or filename')
 
-            src_fn = os.path.join(os.path.dirname(self.dict_path), basename)
-            if os.path.exists(src_fn):
-                shutil.copy(src_fn, savepath)
-                return savepath
+    #         src_fn = os.path.join(os.path.dirname(self.dict_path), basename)
+    #         if os.path.exists(src_fn):
+    #             shutil.copy(src_fn, savepath)
+    #             return savepath, True
 
-            ignorecase = config.ignore_mdx_wordcase and (
-                            src_path != src_path.lower() or src_path != src_path.upper()
-                        )
-            blob = self.backend.mdd_lookup(src_path, ignorecase=ignorecase)
-            if blob:
-                with open(savepath, 'wb') as f:
-                    f.write(blob[0])
-            else:
-                print(f'*** Error {src_path} not found in file system and mdd')
-                
-        except sqlite3.OperationalError as e:
-            traceback.print_exc()
-            print('save default file error', e)
+    #         ignorecase = config.ignore_mdx_wordcase and (
+    #                         src_path != src_path.lower() or src_path != src_path.upper()
+    #                     )
+    #         blob = self.backend.mdd_lookup(src_path, ignorecase=ignorecase)
+    #         if blob:
+    #             with open(savepath, 'wb') as f:
+    #                 f.write(blob[0])
+    #             return savepath, True
+    #         else:
+    #             print(f'*** Error {src_path} not found in file system and mdd')
+    #     except sqlite3.OperationalError as e:
+    #         traceback.print_exc()
+    #         print('save default file error', e)
 
-        return savepath
+    #     return savepath, False
 
-    def save_media_files(self, data):
-        """
-        get the necessary static files from local mdx dictionary
-        ** kwargs: data = list
-        """
-        new_files = data - self.media_cache['files']
-        self.media_cache['files'].update(new_files)
+    # def save_media_files(self, data):
+    #     """
+    #     get the necessary static files from local mdx dictionary
+    #     ** kwargs: data = list
+    #     """
+    #     new_files = data - self.media_cache['files']
+    #     self.media_cache['files'].update(new_files)
 
-        mdd_keys, errors = list(), list()
+
+    #     mdd_keys, errors = list(), list()
+    #     path_map = {}
+    #     mdd_keys_wild = [] #[ '*' + MdxService.to_mdd_path(f) for f in new_files ]
+
+    #     for f in new_files:
+    #         savepath, dest_ok = self.save_default_file(f)
+    #         if dest_ok:
+    #             path_map[f] = savepath
+    #         else:
+    #             mdd_keys_wild.append('*' + MdxService.to_mdd_path(f))
+
+    #     try:
+    #         for i, mdd_key in enumerate(mdd_keys_wild):
+    #             keys = self.backend.get_mdd_keys(mdd_key)
+    #             # print(f'keys {keys}')
+    #             if not keys:
+    #                 mdd_keys.append(new_files[i])
+    #             else:
+    #                 mdd_keys.extend(keys)
+    #         # lookup and save files
+    #         for mdd_key in mdd_keys:
+    #             savepath, dest_ok = self.save_default_file(mdd_key)
+    #             if not dest_ok:
+    #                 errors.append(mdd_key)
+    #             path_map[mdd_key] = savepath
+    #     except AttributeError:
+    #         traceback.print_exc()
+    #         pass
+
+    #     return path_map, errors
+
+    
+    def _save_audio(self, audio, do_html_deepcopy = True, anki_label=True):
+        audio_path = audio['href']
+        print(f'TODO: sound:// or sound: in mdx?')
+        audio_path = audio_path.removeprefix('sound:/')
+        dest_name = get_canonical_name(self.media_prefix, audio_path)
+        dest_name = self.save_file_from_mdd(audio_path, dest_name)
+
+        if not dest_name:
+            print(f'*** Eror: _save_audio: No audio found for {audio}')
+            return audio
+        
+        if anki_label: 
+            return self.get_anki_label(dest_name, 'audio')
+
+        if do_html_deepcopy:
+            audio = deepcopy(audio)
+        audio['href']=f'sound:{dest_name}'
+
+        return audio
+        
+    def _save_image(self, img, do_html_deepcopy = True):
+        val = '/' + img['src']
+        # file extension isn't always jpg
+        file_extension = os.path.splitext(img['src'])[1][1:].strip().lower()
+        dest_name = get_canonical_name(self.media_prefix, val)
+        dest_name = self.save_file_from_mdd(val, dest_name)
+
+        if not dest_name:
+            print(f'*** Error: _save_image: No image found for {img}')
+            return img
+        
+        if do_html_deepcopy:
+            img = deepcopy(img)
+        img['src'] = dest_name
+
+        return img
+    
+    def save_file(self, src, dest):
+        dict_dir = Path(self.dict_path).parent
+        src_path = Path(src)
+        src_path_tmp = dict_dir / src_path
+
+        if src_path_tmp.exists():
+            if not Path(dest).exists():
+                shutil.copyfile(src_path_tmp, dest)
+            return dest
+        
+        src_path_tmp = MdxService.to_mdd_path(src)
+        ret = self.save_file_from_mdd(src_path_tmp, dest)
+        return ret
+    
+    # should be used with css and js files.
+    # img and audio should use save_image and save_audio
+    def save_media_files(self, files) -> dict[str, PathMap]:
         path_map = {}
-        wild = [ '*' + MdxService.to_mdd_path(f) for f in new_files ]
-        try:
-            for mdd_key in wild:
-                keys = self.backend.get_mdd_keys(mdd_key)
-                # print(f'keys {keys}')
-                if not keys:
-                    errors.append(mdd_key)
-                    mdd_keys.append(mdd_key[1:])
-                else:
-                    mdd_keys.extend(keys)
-            # lookup and save files
-            for mdd_key in mdd_keys:
-                savepath = self.save_default_file(mdd_key)
-                path_map[mdd_key] = savepath
+        for f in files:
+            if f in self.media_cache:
+                path_map[f] = self.media_cache[f]
+                continue
+            dest = get_canonical_name(self.media_prefix, f)
+            ret = self.save_file(f, dest)
+            path_map[f] = PathMap(src_path=f, dest_path = dest, dest_ok = ret==dest)
+            self.media_cache[f] = path_map[f]
+        return path_map
 
-        except AttributeError:
-            traceback.print_exc()
-            pass
-
-        return path_map, errors
 
 
 class StardictService(LocalService):

@@ -59,7 +59,7 @@ class Ldoce6(MdxService):
         if not tag:
             return ''
 
-        return self._fld_audio(tag['href'])
+        return str(self._save_audio(tag))
 
     region_to_audio_img = {
         "uk": "spkr_r.png",
@@ -74,20 +74,6 @@ class Ldoce6(MdxService):
     def fld_voiceame(self):
         return self._fld_voice(self.get_html(), Ldoce6.region_to_audio_img['us'])
 
-    def _fld_image(self, img, do_copy = True):
-        val = '/' + img['src']
-        # file extension isn't always jpg
-        file_extension = os.path.splitext(img['src'])[1][1:].strip().lower()
-        dest_name = get_canonical_name(self.media_prefix, val)
-        dest_name = self.save_file(val, dest_name)
-        if not dest_name:
-            print(f'*** Eror: _fld_image: No image found for {img}')
-            return img
-        if do_copy:
-            img = deepcopy(img)
-        img['src'] = dest_name
-        return img
-
     @export('IMAGE')
     def fld_image(self):
         html = self.get_html()
@@ -96,23 +82,13 @@ class Ldoce6(MdxService):
         if not tags:
             return ''
 
-        html_imgs = ''.join([str(self._fld_image(tag)) for tag in tags])
+        html_imgs = ''.join([str(self._save_image(tag)) for tag in tags])
         return html_imgs
 
     @export('EXAMPLE')
     def fld_sentence(self):
         return self._range_sentence_audio('all', with_audio=False)
 
-    def _fld_audio(self, audio, anki_label=True):
-        audio = audio.removeprefix('sound:/')
-        dest_name = get_canonical_name(self.media_prefix, audio)
-        dest_name = self.save_file(audio, dest_name)
-        if not dest_name:
-            return ''
-        if anki_label: 
-            return self.get_anki_label(dest_name, 'audio')
-        else:
-            return dest_name
 
     @export([u'例句加音频', u'Examples with audios'])
     def fld_sentence_audio(self):
@@ -177,12 +153,10 @@ class Ldoce6(MdxService):
 
             if with_audio:
                 tag = example.select_one(f'a[href^="sound:"]')
-                audio = tag['href']
-                mp3 = self._fld_audio(audio, False)
-                tag['href'] = f'sound:{mp3}'
+                mp3 = self._save_audio(tag, do_html_deepcopy=False, anki_label=False)
                 
             for img in example.select(f'img'):
-                self._fld_image(img, do_copy=False)
+                self._save_image(img, do_html_deepcopy=False)
 
             examples.append(str(example))
         return self._css('\n'.join(examples))

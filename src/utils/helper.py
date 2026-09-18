@@ -1,6 +1,7 @@
 #-*- coding:utf-8 -*-
 import re
 import os
+import shutil
 import traceback
 from aqt.utils import showInfo
 
@@ -60,20 +61,22 @@ def wrap_css_selectors(css_text: str, class_wrapper: str) -> str:
 
 def wrap_css(orig_css, is_file=True, class_wrapper=None, get_canional_name=lambda x: x, new_css_file_suffix=u'wrapped'):
     if is_file:
-        css_basename, ext = os.path.splitext(os.path.basename(orig_css))
+        css_basename = os.path.basename(orig_css)
+        css_rootname, ext = os.path.splitext(css_basename)
 
         if not class_wrapper:
-            class_wrapper = re.sub(r'^_+', '', css_basename)
-        new_css_file = get_canional_name(f'{css_basename}_{new_css_file_suffix}.css')
+            class_wrapper = re.sub(r'^_+', '', css_rootname)
+        new_css_file = get_canional_name(f'{css_rootname}_{new_css_file_suffix}.css')
         # if new css file exists, not process
         # if input original css file doesn't exist, return the new css filename and class wrapper
         # to make the subsequent process easy.
-        if os.path.exists(new_css_file):
-            return new_css_file, class_wrapper
         if not os.path.exists(orig_css):
             print(f"*** Error: {orig_css} does not exist, can't wrap!")
             return new_css_file, class_wrapper
-        
+
+        if os.path.exists(new_css_file):
+            return new_css_file, class_wrapper
+
         result = ''
         with open(orig_css, 'r', encoding='utf-8-sig') as f:
             try:
@@ -90,4 +93,4 @@ def wrap_css(orig_css, is_file=True, class_wrapper=None, get_canional_name=lambd
         # class_wrapper must be valid.
         assert class_wrapper
         return wrap_css_selectors(orig_css, class_wrapper), class_wrapper
-    
+

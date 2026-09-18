@@ -138,7 +138,7 @@ def promot_choose_css(missed_css):
                     caption=u'Choose css file',
                     filter=u'CSS (*.css)')
                 if filepath:
-                    shutil.copy(filepath, dest_name)
+                    shutil.copyfile(filepath, dest_name)
                     wrap_css(dest_name)
 
             except KeyError:
@@ -206,7 +206,7 @@ def add_to_tmpl(note, js_list=[], js_files=[], css_list=[], css_files=[]):
 
     if js_files:
         for file in js_files:
-            print(f"### warning {file} not copied yet")
+            # print(f"### warning {file} not copied yet")
             src = f'''\n<script src="{file}" type="text/javascript"></script>'''
             if src not in note_afmt:
                 note_afmt += src
@@ -230,8 +230,6 @@ def add_to_tmpl(note, js_list=[], js_files=[], css_list=[], css_files=[]):
     if css_files:
         if '@import' not in note_css:
             note_css = f'\n{note_css}'
-
-        css_files = css_files if isinstance(css_files, list) else [css_files]
 
         for file in css_files:
             src = f'@import url("{file}");'

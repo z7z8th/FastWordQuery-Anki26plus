@@ -46,7 +46,7 @@ class Ldoce5plus(MdxService):
             if match:
                 val = '/' + match.group(1)
                 name = get_hex_name('mdx-'+self.unique.lower(), val, 'mp3')
-                name = self.save_file(val, name)
+                name = self.save_file_from_mdd(val, name)
                 if name:
                     return self.get_anki_label(name, 'audio')
         return ''
@@ -75,9 +75,9 @@ class Ldoce5plus(MdxService):
     def fld_first2_sentence_audio(self):
         return self._range_sentence_audio([0, 1])
 
-    def _fld_audio(self, audio):
+    def _save_audio(self, audio):
         name = get_hex_name('mdx-'+self.unique.lower(), audio, 'mp3')
-        name = self.save_file(audio, name)
+        name = self.save_file_from_mdd(audio, name)
         if name:
             return self.get_anki_label(name, 'audio')
         return ''
@@ -102,7 +102,7 @@ class Ldoce5plus(MdxService):
                 if i in range_arr:
                     i_str = e[1]
                     sound = e[0]
-                    mp3 = self._fld_audio(sound.groups()[0])
+                    mp3 = self._save_audio(sound.groups()[0])
                     i_str = re.sub('<[^<]+?>', '', i_str)
                     i_str = re.sub('\xa0', '', i_str)
                     # i_str = re.sub(r'<a[^>]+?href=\"sound\:\/.*?\.mp3\".*<\/a>', '', i_str).strip()
