@@ -780,15 +780,14 @@ class MdxService(LocalService):
     def save_file(self, filepath_in_mdx, dest_path):
         """according to filepath_in_mdx to get media file and save it to savepath"""
         try:
-            bytes_list = self._get_definition_mdd(filepath_in_mdx)
-            if bytes_list:
+            blob = self._get_definition_mdd(filepath_in_mdx)
+            if blob:
                 if not os.path.exists(dest_path):
                     with open(dest_path, 'wb') as f:
-                        f.write(bytes_list[0])
+                        f.write(blob[0])
                 return dest_path
-        except sqlite3.OperationalError as e:
-            print(e)
-            pass
+        except Exception as e:
+            traceback.print_exc()
         return ''
 
     def get_default_html(self):
