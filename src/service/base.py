@@ -816,11 +816,17 @@ class MdxService(LocalService):
         html = deepcopy(html)
         # convert media path, save media files
         media_files_set = set()
+
+        css_tags = html.select('style')
+        css_list = [ str(css) for css in css_tags ]
         
         # mcss = re.findall(r'href=[\',"](\S+?\.css)[\',"]', html)
         css_files_tags = html.select('link[rel="stylesheet"][href]')
         mcss_files = set( tag['href'] for tag in css_files_tags )
         media_files_set.update(mcss_files)
+
+        js_tags = html.select('script:not([src])')
+        js_list = [ str(js) for js in js_tags ]
 
         # mjs = re.findall(r'src="([\w\./]\S+?\.js)"', html)
         js_files_tags = html.select('script[src$=".js"]')
@@ -900,11 +906,10 @@ class MdxService(LocalService):
             # html = html.replace(css_file, new_css_file)
             # add global div to the result html
             
-        mcss = [ str(tag) for tag in html.select('style') ]
-        mjs = [ str(tag) for tag in html.select('script:not([src])') ]
         html = f'''<div class="{' '.join(wrap_class_names)}">{str(html)}</div>'''
 
-        return QueryResult(result=html, js_files = mjs_files, css_files = self.css_files)
+        return QueryResult(result=html, js_list = js_list, js_files = mjs_files, css_list = css_list, css_files = self.css_files)
+
 
     def save_default_file(self, src_path, savepath=None):
         '''
