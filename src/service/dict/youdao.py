@@ -88,7 +88,7 @@ class Youdao(WebService):
     def fld_explains(self):
         return self._get_field('explains')
 
-    @with_scripts(js=js)
+    @with_scripts(js_list=[js])
     @with_styles(css_file='_youdao.css', wrap_class='youdao')
     def _get_singledict(self, single_dict, lang='eng'):
         url = u"http://m.youdao.com/singledict?q={0}&dict={1}&le={2}&more=false".format(

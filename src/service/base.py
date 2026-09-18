@@ -257,7 +257,7 @@ def with_styles(**styles):
     return _with
 
 
-def with_scripts(js='', js_files=[]):
+def with_scripts(js_list=[], js_files=[]):
     """
     js: js strings
     js_files: js files list
@@ -269,9 +269,9 @@ def with_scripts(js='', js_files=[]):
             res = fld_func(cls, *args, **kwargs)
             
             if not isinstance(res, QueryResult):
-                res = QueryResult(result=res, js=js, js_files=js_files)
+                res = QueryResult(result=res, js_list=js_list, js_files=js_files)
             else:
-                res.js = js
+                res.js_list = js_list
                 res.js_files = js_files
 
             return res
