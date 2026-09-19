@@ -179,7 +179,12 @@ def copy_static_file(filename, new_filename=None, static_dir='static'):
     copy file in static directory to media folder
     """
     src_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), static_dir, filename)
+    if not os.path.exists(src_path):
+        print(f'*** Error: input file `{src_path}` does not exist.')
+        return
     dest = new_filename if new_filename else filename
+    if os.path.exists(dest):
+        return
     print(f'Copy "{src_path}" -> "{dest}"')
     shutil.copyfile(src_path, dest)
 
@@ -213,7 +218,10 @@ def with_styles(**styles):
                     css_obj_new, _ = wrap_css(css_obj, is_file=is_file, class_wrapper=class_wrapper)
                     return html, css_obj_new
                 elif is_file:
-                    shutil.copyfile(css_obj, os.path.basename(css_obj))
+                    new_css_file = os.path.basename(css_obj)
+                    if not os.path.exists(new_css_file):
+                        shutil.copyfile(css_obj, new_css_file)
+                    return html, new_css_file
                 return html, css_obj
 
             new_res = res
@@ -971,7 +979,7 @@ class MdxService(LocalService):
         if src_path_tmp.exists():
             if not Path(dest).exists():
                 shutil.copyfile(src_path_tmp, dest)
-            return src_path_tmp, dest
+            return dest
         
         src_path_tmp = MdxService.to_mdd_path(src)
         ret = self.save_file_from_mdd(src_path_tmp, dest)
@@ -987,6 +995,8 @@ class MdxService(LocalService):
                 continue
             dest = get_canonical_name(self.media_prefix, f)
             ret = self.save_file(f, dest)
+            # print(f'dest {dest}')
+            # print(f'ret {ret}')
             path_map[f] = PathMap(src_path=f, dest_path = dest, dest_ok = ret==dest)
             self.media_cache[f] = path_map[f]
         return path_map
