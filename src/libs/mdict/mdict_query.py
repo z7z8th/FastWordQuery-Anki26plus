@@ -266,11 +266,11 @@ class IndexBuilder(object):
     
     def mdx_lookup(self, keyword, ignorecase=None):
         conn = self.get_connection(self._tlocal_mdx_db_conn, self._mdx_db_path)
-        return self.md_lookup(conn, self._mdx_file, keyword, True)
+        return self.md_lookup(conn, self._mdx_file, keyword, decode=True, ignorecase=ignorecase)
 
     def mdd_lookup(self, keyword, ignorecase=None):
         conn = self.get_connection(self._tlocal_mdd_db_conn, self._mdd_db_path)
-        return self.md_lookup(conn, self._mdd_file, keyword, False)
+        return self.md_lookup(conn, self._mdd_file, keyword, decode=False, ignorecase=ignorecase)
 
     @staticmethod
     def get_keys(conn, query=''):

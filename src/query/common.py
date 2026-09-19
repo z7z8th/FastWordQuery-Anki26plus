@@ -128,8 +128,9 @@ def promot_choose_css(missed_css):
         dest_name = u'_' + css['file']
         if not os.path.exists(dest_name) and not css['file'] in checked:
             checked.add(css['file'])
-            showInfo(
-                Template.miss_css.format(dict=css['title'], css=css['file']))
+            msg = Template.miss_css.format(dict=css['title'], css=css['file'])
+            print(msg)
+            showInfo(msg)
             try:
                 filepath = css['dict_path'][:css['dict_path'].rindex(os.path.
                                                                      sep) + 1]

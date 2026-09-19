@@ -755,8 +755,7 @@ class MdxService(LocalService):
     def _get_definition_mdd(self, word):
         """according to the keyword(param word) return the media file contents"""
         word = word.replace('/', '\\')
-        ignorecase = config.ignore_mdx_wordcase and (word != word.lower() or word != word.upper())
-        content = self.backend.mdd_lookup(word, ignorecase=ignorecase)
+        content = self.backend.mdd_lookup(word, ignorecase=config.ignore_mdx_wordcase)
         if len(content) > 0:
             return [content[0]]
         else:
@@ -882,16 +881,6 @@ class MdxService(LocalService):
         #     css_list = [f"@import url(_{css});" for css in css_files]
         #     css_style = "\n".join(css_list)
         #     css_style = f"<style> {css_style} </style>"
-        # if config.export_media:
-        #     media_files_set.update(msound)
-        # for each in media_files_set:
-        #     html = html.replace(each, u'_' + each.split('/')[-1])
-        # if html != '' and css_style != '':
-        #     html = css_style + html
-        # find sounds
-        # in css ".replay-button" can config play-button
-        # p = re.compile(r'<a[^>]+?href=\"sound:_(.*?\.(?:mp3|wav|aac))\"[^>]*?>(.*?)</a>')
-        # html = p.sub("[sound:mdx-" + self.title + "-" + u"\\1]\\2", html)
 
         # save css and js files, to target dir by canonical name: e.g. _mdx-{dict_name}-{path}.{ext}
         path_map = self.save_media_files(media_files_set)
@@ -902,14 +891,6 @@ class MdxService(LocalService):
             tag.decompose()
         for tag in js_files_tags:
             tag.decompose()
-
-        # for tag in img_tags:
-        #     mdd_path = MdxService.to_mdd_path(tag['src'])
-        #     tag['src'] = path_map[mdd_path]
-        # if config.export_media:
-        #     for tag in sound_tags:
-        #         mdd_path = MdxService.to_mdd_path(tag['href'].removeprefix('sound:/'))
-        #         tag['href'] = f'sound:{path_map[mdd_path]}'
 
         wrap_class_name_list = set()
         new_css_files = set()
@@ -927,99 +908,22 @@ class MdxService(LocalService):
             new_css_file, wrap_class_name = wrap_css(target_file.dest_path)  # NOTE: CSS files are copied in wrap_css()
             wrap_class_name_list.add(wrap_class_name)
             new_css_files.add(new_css_file)
-            # self.css_files.add(new_css_file)
-            # html = html.replace(css_file, new_css_file)
-            # add global div to the result html
 
         new_js_files = set()
         for src_file in js_files:
             target_file = path_map[src_file]
             if not target_file.dest_ok:
+                print(f'***Warning: {src_file} not copied.')
                 new_js_files.add(src_file)
                 continue
             new_js_files.add(target_file.dest_path)
 
         html = f'''<div class="{' '.join(wrap_class_name_list)}">{str(html)}</div>'''
 
+        print(f'new_css_files {new_css_files}')
+        print(f'new_js_files {new_js_files}')
+
         return QueryResult(result=html, js_list = js_list, js_files = new_js_files, css_list = css_list, css_files = new_css_files)
-
-
-    # def save_default_file(self, src_path, savepath=None):
-    #     '''
-    #     default save file interface
-    #     '''
-    #     filename = src_path.replace('\\', os.path.sep)
-    #     basename = os.path.basename(filename)
-
-    #     if not savepath:
-    #         savepath = get_canonical_name(self.media_prefix, filename)
-
-    #     if os.path.exists(savepath):
-    #         return savepath, True
-        
-    #     try:
-    #         print('TODO: save_default_file basename or filename')
-
-    #         src_fn = os.path.join(os.path.dirname(self.dict_path), basename)
-    #         if os.path.exists(src_fn):
-    #             shutil.copy(src_fn, savepath)
-    #             return savepath, True
-
-    #         ignorecase = config.ignore_mdx_wordcase and (
-    #                         src_path != src_path.lower() or src_path != src_path.upper()
-    #                     )
-    #         blob = self.backend.mdd_lookup(src_path, ignorecase=ignorecase)
-    #         if blob:
-    #             with open(savepath, 'wb') as f:
-    #                 f.write(blob[0])
-    #             return savepath, True
-    #         else:
-    #             print(f'*** Error {src_path} not found in file system and mdd')
-    #     except sqlite3.OperationalError as e:
-    #         traceback.print_exc()
-    #         print('save default file error', e)
-
-    #     return savepath, False
-
-    # def save_media_files(self, data):
-    #     """
-    #     get the necessary static files from local mdx dictionary
-    #     ** kwargs: data = list
-    #     """
-    #     new_files = data - self.media_cache['files']
-    #     self.media_cache['files'].update(new_files)
-
-
-    #     mdd_keys, errors = list(), list()
-    #     path_map = {}
-    #     mdd_keys_wild = [] #[ '*' + MdxService.to_mdd_path(f) for f in new_files ]
-
-    #     for f in new_files:
-    #         savepath, dest_ok = self.save_default_file(f)
-    #         if dest_ok:
-    #             path_map[f] = savepath
-    #         else:
-    #             mdd_keys_wild.append('*' + MdxService.to_mdd_path(f))
-
-    #     try:
-    #         for i, mdd_key in enumerate(mdd_keys_wild):
-    #             keys = self.backend.get_mdd_keys(mdd_key)
-    #             # print(f'keys {keys}')
-    #             if not keys:
-    #                 mdd_keys.append(new_files[i])
-    #             else:
-    #                 mdd_keys.extend(keys)
-    #         # lookup and save files
-    #         for mdd_key in mdd_keys:
-    #             savepath, dest_ok = self.save_default_file(mdd_key)
-    #             if not dest_ok:
-    #                 errors.append(mdd_key)
-    #             path_map[mdd_key] = savepath
-    #     except AttributeError:
-    #         traceback.print_exc()
-    #         pass
-
-    #     return path_map, errors
 
     
     def _save_audio(self, audio, do_html_deepcopy = True, anki_label=True):
@@ -1067,7 +971,7 @@ class MdxService(LocalService):
         if src_path_tmp.exists():
             if not Path(dest).exists():
                 shutil.copyfile(src_path_tmp, dest)
-            return dest
+            return src_path_tmp, dest
         
         src_path_tmp = MdxService.to_mdd_path(src)
         ret = self.save_file_from_mdd(src_path_tmp, dest)
