@@ -111,7 +111,6 @@ class ProgressWindow(object):
         self._win.setValue(0)
         bar = self._win.findChild(QProgressBar)
         if bar:
-            print(f"--- Found QProgressBar in QProgressDialog")
             # Enable center-aligned text inside the progress bar
             bar.setAlignment(Qt.AlignmentFlag.AlignCenter)
             # Set custom text format (%p% = percentage, %v% = current value, %m% = total)

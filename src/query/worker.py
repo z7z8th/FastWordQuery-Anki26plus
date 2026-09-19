@@ -63,9 +63,9 @@ class QueryThread(QThread):
                 continue
 
             try:
-                results, qstat, missed_css = query_flds(note, self.manager.query_fields)
+                results, qstat, missed_css_info_list = query_flds(note, self.manager.query_fields)
                 if not self.exit and self.manager:
-                    if self.manager.update(note, results, qstat, missed_css):
+                    if self.manager.update(note, results, qstat, missed_css_info_list):
                         self.note_flush.emit(note)
             except InvalidWordException:
                 # only show error info on single query
@@ -140,7 +140,7 @@ class QueryWorkerManager(object):
             worker.run()
             self.update_progress()
 
-    def update(self, note, results: defaultdict[int, QueryResult], qstat: QueryStat, missed_css:list):
+    def update(self, note, results: defaultdict[int, QueryResult], qstat: QueryStat, missed_css_info_list:list):
         with QMutexLocker(self.mutex):
             # if success_count > 0:
             #     self.counter += 1
@@ -151,7 +151,7 @@ class QueryWorkerManager(object):
             self.qstat += qstat
             val = update_note_fields(note, results)
             self.qstat.field_updated_count += val
-            self.missed_css_info_list += missed_css
+            self.missed_css_info_list += missed_css_info_list
             # self.mutex.unlock()
         if self.total > 1:
             return val > 0

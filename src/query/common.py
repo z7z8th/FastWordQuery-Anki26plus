@@ -123,29 +123,30 @@ def update_note_field(note, fld_ord: int, fld_result: QueryResult):
     return 0
 
 
-def promot_choose_css(missed_css):
+def promot_choose_css(missed_css_info_list):
     """
     Choose missed css file and copy to user folder
     """
     checked = set()
-    for css in missed_css:
-        dest_name = css['file']
-        if not os.path.exists(dest_name) and not css['file'] in checked:
+    for css in missed_css_info_list:
+        css_file = css['file']
+        if not os.path.exists(css_file) and not css['file'] in checked:
             checked.add(css['file'])
             msg = Template.miss_css.format(dict=css['title'], css=css['file'])
             print(msg)
             showInfo(msg)
             try:
-                filepath = css['dict_path'][:css['dict_path'].rindex(os.path.
-                                                                     sep) + 1]
-                filepath = QFileDialog.getOpenFileName(
-                    directory=filepath,
-                    caption=u'Choose css file',
-                    filter=u'CSS (*.css)')
+                dir = os.path.dirname(css['dict_path'])
+                filepath, filter = QFileDialog.getOpenFileName(
+                                            directory=dir,
+                                            caption=u'Choose css file',
+                                            filter=u'CSS (*.css)')
+                # print(f"---promot_choose_css {filepath} {css_file}")
                 if filepath:
-                    shutil.copyfile(filepath, dest_name)
-                    wrap_css(dest_name)
-
+                    shutil.copyfile(filepath, css_file)
+                    wrap_css(css_file)
+                else:
+                    print(f'*** No css file for {css_file} choosed.')
             except KeyError:
                 traceback.print_exc()
                 pass
@@ -317,6 +318,8 @@ def query_flds(note, qfields=None) -> tuple[defaultdict[int, QueryResult], int, 
     if not tasks:
         print(f"*** Error: No tasks generated for word `{word}`")
 
+    missed_css_info_list = list()
+
     result = defaultdict(int)
     for task in tasks:
         try:
@@ -324,6 +327,14 @@ def query_flds(note, qfields=None) -> tuple[defaultdict[int, QueryResult], int, 
             qr = service.active(task['dict_fld_ord'], task['word'])
             # print(f"--- qr {str(qr)[:100]}")
             if qr:
+                if isinstance(service, LocalService):
+                    print(f'--- {service}.missed_css {service.missed_css}')
+                    for css in service.missed_css:
+                        missed_css_info_list.append({
+                            'dict_path': service.dict_path,
+                            'title': service.title,
+                            'file': css
+                        })
                 if task['cloze']:
                     qr['result'] = cloze_deletion(qr['result'], word)
                 result.update({task['fld_ord']: qr})
@@ -336,20 +347,10 @@ def query_flds(note, qfields=None) -> tuple[defaultdict[int, QueryResult], int, 
             qstat.field_error_count += 1
             print(traceback.format_exc())
             print(_("NO_QUERY_WORD"), e)
-            pass
+        finally:
+            service_pool.put(service)
 
-    missed_css = list()
-    for service in services.values():
-        if isinstance(service, LocalService):
-            for css in service.missed_css:
-                missed_css.append({
-                    'dict_path': service.dict_path,
-                    'title': service.title,
-                    'file': css
-                })
-        service_pool.put(service)
-
-    return result, qstat, missed_css
+    return result, qstat, missed_css_info_list
 
 
 def cloze_deletion(text, cloze):
