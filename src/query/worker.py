@@ -31,7 +31,7 @@ from ..lang import _
 from ..gui import ProgressWindow
 from ..utils import Empty, MapDict, Queue
 
-from .common import InvalidWordException, query_flds, update_note_fields
+from .common import InvalidWordException, query_flds, QueryStat, update_note_fields
 from ..service import Service, QueryResult
 
 __all__ = ['QueryWorkerManager']
@@ -63,9 +63,9 @@ class QueryThread(QThread):
                 continue
 
             try:
-                results, success_num, missed_css = query_flds(note, self.manager.query_fields)
+                results, qstat, missed_css = query_flds(note, self.manager.query_fields)
                 if not self.exit and self.manager:
-                    if self.manager.update(note, results, success_num, missed_css):
+                    if self.manager.update(note, results, qstat, missed_css):
                         self.note_flush.emit(note)
             except InvalidWordException:
                 # only show error info on single query
@@ -91,11 +91,14 @@ class QueryWorkerManager(object):
         self.mutex = QMutex()
         self.progress = ProgressWindow(mw)
         self.total = 0
-        self.counter = 0
-        self.fails = 0
-        self.fields = 0
-        self.skips = 0
-        self.missed_css = list()
+
+        self.qstat = QueryStat()
+        # self.counter = 0
+        # self.fails = 0
+        # self.fields = 0
+        # self.skips = 0
+
+        self.missed_css_info_list = list()
         self.flush = True
         self.query_fields = None
 
@@ -107,7 +110,7 @@ class QueryWorkerManager(object):
 
     def start(self):
         self.total = self.queue.qsize()
-        self.progress.start(max=self.total, min=0)
+        self.progress.start(min=0, max=self.total)
         self.update_progress()
         if self.total > 1:
             # raise Number of open files limit, otherwise open sqlite db error,
@@ -126,28 +129,29 @@ class QueryWorkerManager(object):
                 print(traceback.format_exc())
 
             for _ in range(0, min(config.thread_number, self.total)):
-                print(f"get_worker {_} of {min(config.thread_number, self.total)}")
+                # print(f"get_worker {_} of {min(config.thread_number, self.total)}")
                 self.get_worker()
 
             for worker in self.workers:
-                print(f"start worker {worker}")
+                # print(f"start worker {worker}")
                 worker.start()
         else:
             worker = self.get_worker()
             worker.run()
             self.update_progress()
 
-    def update(self, note, results: defaultdict[int, QueryResult], success_num: int, missed_css:list):
+    def update(self, note, results: defaultdict[int, QueryResult], qstat: QueryStat, missed_css:list):
         with QMutexLocker(self.mutex):
-            if success_num > 0:
-                self.counter += 1
-            elif success_num == 0:
-                self.fails += 1
-            else:
-                self.skips += 1
+            # if success_count > 0:
+            #     self.counter += 1
+            # elif success_count == 0:
+            #     self.fails += 1
+            # else:
+            #     self.skips += 1
+            self.qstat += qstat
             val = update_note_fields(note, results)
-            self.fields += val
-            self.missed_css += missed_css
+            self.qstat.field_updated_count += val
+            self.missed_css_info_list += missed_css
             # self.mutex.unlock()
         if self.total > 1:
             return val > 0
@@ -156,13 +160,14 @@ class QueryWorkerManager(object):
             return False
 
     def update_progress(self):
-        self.progress.update_labels(MapDict(
-            type='count',
-            words_number=self.counter,
-            skips_number=self.skips,
-            fails_number=self.fails,
-            fields_number=self.fields
-        ))
+        # self.progress.update_labels(MapDict(
+        #     type='count',
+        #     words_number=self.counter,
+        #     skips_number=self.skips,
+        #     fails_number=self.fails,
+        #     fields_number=self.fields
+        # ))
+        self.progress.update_labels(self.qstat)
         mw.app.processEvents()
 
     def join(self):
@@ -183,7 +188,7 @@ class QueryWorkerManager(object):
             if self.progress.abort():
                 break
 
-        self.progress.finish()
+        self.progress.set_finished()
     
     def handle_flush(self, note: anki.notes.Note):
         if self.flush and note:

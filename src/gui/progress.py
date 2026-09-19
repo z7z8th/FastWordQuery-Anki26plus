@@ -24,16 +24,18 @@ from aqt.qt import *
 
 from ..context import APP_ICON
 from ..lang import _
+from ..utils import QueryStat
 
 __all__ = ['ProgressWindow']
 
 _INFO_TEMPLATE = u''.join([
     u'<strong>' + _('QUERIED') + u'</strong>',
     u'<p>' + 45 * u'-' + u'</p>',
-    u'<p>' + _('SUCCESS') + u' <b>{}</b> ' + _('WORDS') + u'</p>',
-    u'<p>' + _('SKIPED') + u' <b>{}</b> ' + _('WORDS') + u'</p>',
+    u'<p>' + _('CARDS') + u' <b>{}</b> ' + _('WORDS') + u'</p>',
+    u'<p>' + _('SUCCESS') + u' <b>{}</b> ' + _('FIELDS') + u'</p>',
+    u'<p>' + _('SKIPED') + u' <b>{}</b> ' + _('FIELDS') + u'</p>',
     u'<p>' + _('UPDATE') + u' <b>{}</b> ' + _('FIELDS') + u'</p>',
-    u'<p>' + _('FAILURE') + u' <b>{}</b> ' + _('WORDS') + u'</p>',
+    u'<p>' + _('FAILURE') + u' <b>{}</b> ' + _('FIELDS') + u'</p>',
 ])
 
 
@@ -46,30 +48,32 @@ class ProgressWindow(object):
         self.mw = mw
         self.app = QApplication.instance()
         self._win = None
-        self._msg_count = defaultdict(int)
+        self._msg_count = QueryStat()
         self._last_update = 0
         self._first_time = 0
         self._disabled = False
 
-    def update_labels(self, data):
+    def update_labels(self, qstat:QueryStat):
         if self.abort():
             return
 
-        if data.type == 'count':
-            self._msg_count.update(data)
-        else:
-            return
+        # if data.type == 'count':
+        #     self._msg_count.update(data)
+        # else:
+        #     return
+        self._msg_count = qstat
 
-        words_number, fields_number, fails_number, skips_number = (
-            self._msg_count.get('words_number', 0),
-            self._msg_count.get('fields_number', 0),
-            self._msg_count.get('fails_number', 0),
-            self._msg_count.get('skips_number', 0))
-        number_info = _INFO_TEMPLATE.format(words_number, skips_number,
-                                            fields_number, fails_number)
+        # words_number, fields_number, fails_number, skips_number = (
+        #     self._msg_count.get('words_number', 0),
+        #     self._msg_count.get('fields_number', 0),
+        #     self._msg_count.get('fails_number', 0),
+        #     self._msg_count.get('skips_number', 0))
+        query_stat_info = _INFO_TEMPLATE.format(qstat.note_count, 
+                                            qstat.field_success_count, qstat.field_skip_count,
+                                            qstat.field_updated_count, qstat.field_error_count)
         self._update(
-            label=number_info,
-            value=words_number + skips_number + fails_number)
+            label=query_stat_info,
+            value=qstat.note_count)
         self._win.adjustSize()
         self.app.processEvents()
 
@@ -79,7 +83,7 @@ class ProgressWindow(object):
         self._win.setWindowTitle(title)
 
     def start(self, max=0, min=0, label=None, parent=None):
-        self._msg_count.clear()
+        self._msg_count.reset()
         # setup window
         label = label or _("Processing...")
         parent = parent or self.app.activeWindow() or self.mw
@@ -93,8 +97,8 @@ class ProgressWindow(object):
         self._win.setWindowFlags(
             self._win.windowFlags() & ~Qt.WindowType.WindowContextHelpButtonHint)
         self._win.setWindowIcon(APP_ICON)
-        self._win.setAutoReset(True)
-        self._win.setAutoClose(True)
+        self._win.setAutoReset(False)
+        self._win.setAutoClose(False)
         self._win.setMinimum(0)
         self._win.setMaximum(max)
         # we need to manually manage minimum time to show, as qt gets confused
@@ -105,11 +109,26 @@ class ProgressWindow(object):
         self._disabled = False
         self._win.show()
         self._win.setValue(0)
+        bar = self._win.findChild(QProgressBar)
+        if bar:
+            print(f"--- Found QProgressBar in QProgressDialog")
+            # Enable center-aligned text inside the progress bar
+            bar.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            # Set custom text format (%p% = percentage, %v% = current value, %m% = total)
+            bar.setFormat(r"Completed %v of %m files (%p%)")
+            self._bar = bar
+        else:
+            print(f"*** Error: can't find QProgressBar in QProgressDialog")
         self.app.processEvents()
 
     def abort(self):
         # self.aborted = True
         return self._win.wasCanceled()
+
+    def set_finished(self):
+        self._win.setWindowTitle('FastWQ - Finished')
+        self._win.setValue(self._win.maximum())
+        # self._win.setLabelText("Done")
 
     def finish(self):
         self._win.hide()

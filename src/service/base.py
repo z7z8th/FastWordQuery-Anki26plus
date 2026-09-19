@@ -137,7 +137,7 @@ def export(labels):
         @wraps(fld_func)
         def _deco(self, *args, **kwargs):
             res = fld_func(self, *args, **kwargs)
-            print(f'--- {fld_func} ret {res}')
+            # print(f'--- fld_func {fld_func} ret {res}')
             return QueryResult(result=res) if not isinstance(res, QueryResult) else res
 
         _deco._export_attrs_ = [_cl(labels), -1]
@@ -230,7 +230,7 @@ def with_styles(**styles):
                 css_file = { 'light': css_file }
 
             if css_file:
-                print(f'--- night mode: {theme_manager.night_mode}')
+                # print(f'--- night mode: {theme_manager.night_mode}')
                 # new_css_file = css_file if css_file.startswith('_') \
                 #     else u'_' + css_file
                 css_file_light = css_file['light']
@@ -257,7 +257,7 @@ def with_styles(**styles):
                 new_res, css = _wrap_html_css(res, css, is_file=False, class_wrapper=class_wrapper)
             css_list=[css] if css else []
 
-            print(f'with_styles css {css} new_css_file {new_css_files}')
+            # print(f'with_styles css {css} new_css_file {new_css_files}')
 
             if not isinstance(res, QueryResult):
                 res = QueryResult(result=new_res, css_list=css_list, css_files=new_css_files)
@@ -688,6 +688,16 @@ class LocalService(Service):
 
 from typing import cast
 
+class WordNotFoundError(Exception):
+    """Raised when a requested resource is not found."""
+
+    def __init__(self, word: str, dict_name: str, message: str = None):
+        self.word = word
+        self.dict_name = dict_name
+        if message is None:
+            message = f"Word '{word}' was not found in dict {dict_name}."
+        super().__init__(message)
+
 class MdxService(LocalService):
     """
     MDX Local Dictionary Service
@@ -698,8 +708,7 @@ class MdxService(LocalService):
         self._local = threading.local()
         self.media_cache = defaultdict(dict)
         self.cache = defaultdict(str)
-        self.html_cache = defaultdict(str)
-        self.do_parse_html = True
+        self.html_cache = defaultdict(BeautifulSoup)  #("", "html.parser")
         self.query_interval = 0.01
         self.styles = []
         self.media_prefix = f'_mdx-{self.unique.lower()}-'
@@ -779,8 +788,10 @@ class MdxService(LocalService):
         """get self.word's html page from MDX"""
         if word is None:
             word = self.word
+        if not word:
+            raise Exception('get_html: word not specified.')
         word_lower = word.lower()
-        if not self.html_cache[word]:
+        if word not in self.html_cache:
             html = self._get_definition_mdx(word)
             if not html and word != word_lower:
                 html = self._get_definition_mdx(word_lower)
@@ -789,10 +800,9 @@ class MdxService(LocalService):
             #     if word != word_base_form:
             #         html = self._get_definition_mdx(word_base_form)
             if html:
-                if self.do_parse_html:
-                    self.html_cache[word] = BeautifulSoup(html, 'html.parser')
-                else:
-                    self.html_cache[word] = html
+                self.html_cache[word] = BeautifulSoup(html, 'html.parser')
+            else:
+                raise WordNotFoundError(word, self.title)
 
         return self.html_cache[word]
 
@@ -859,14 +869,14 @@ class MdxService(LocalService):
         sound_tags = html.select('a[href^="sound:"]')
         sound_files = set( tag['href'].removeprefix('sound:/') for tag in sound_tags )
 
-        print(f'css_list {css_list}')
-        print(f'css_files {css_files}')
-        print(f'js_list {js_list}')
-        print(f'js_files {js_files}')
-        print(f'img_files {img_files}')
-        print(f'sound_files {sound_files}')
+        # print(f'css_list {css_list}')
+        # print(f'css_files {css_files}')
+        # print(f'js_list {js_list}')
+        # print(f'js_files {js_files}')
+        # print(f'img_files {img_files}')
+        # print(f'sound_files {sound_files}')
 
-        print(f'media_files_set {media_files_set}')
+        # print(f'media_files_set {media_files_set}')
 
         for tag in img_tags:
             self._save_image(tag, do_html_deepcopy=False)
@@ -892,7 +902,7 @@ class MdxService(LocalService):
 
         # save css and js files, to target dir by canonical name: e.g. _mdx-{dict_name}-{path}.{ext}
         path_map = self.save_media_files(media_files_set)
-        print(f'path_map {path_map}')
+        # print(f'path_map {path_map}')
 
         ### css and js are not allow in field html any more
         for tag in css_files_tags:
@@ -928,15 +938,15 @@ class MdxService(LocalService):
 
         html = f'''<div class="{' '.join(wrap_class_name_list)}">{str(html)}</div>'''
 
-        print(f'new_css_files {new_css_files}')
-        print(f'new_js_files {new_js_files}')
+        # print(f'new_css_files {new_css_files}')
+        # print(f'new_js_files {new_js_files}')
 
         return QueryResult(result=html, js_list = js_list, js_files = new_js_files, css_list = css_list, css_files = new_css_files)
 
     
     def _save_audio(self, audio, do_html_deepcopy = True, anki_label=True):
         audio_path = audio['href']
-        print(f'TODO: sound:// or sound: in mdx?')
+        # print(f'TODO: sound:// or sound: in mdx?')
         audio_path = audio_path.removeprefix('sound:/')
         dest_name = get_canonical_name(self.media_prefix, audio_path)
         dest_name = self.save_file_from_mdd(audio_path, dest_name)

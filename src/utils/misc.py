@@ -43,7 +43,9 @@ def print_import_chain():
 
 
 import os
+from dataclasses import dataclass, fields as dataclass_fields
 from functools import wraps
+
 from aqt.utils import showInfo
 from aqt.qt import QIcon
 
@@ -51,7 +53,9 @@ __all__ = ['ignore_exception',
            'get_model_byId',
            'get_icon',
            'get_ord_from_fldname',
-           'MapDict']
+           'MapDict',
+           'QueryStat'
+           ]
 
 
 def ignore_exception(func):
@@ -129,6 +133,44 @@ class MapDict(dict):
     def __delitem__(self, key):
         super(MapDict, self).__delitem__(key)
         del self.__dict__[key]
+
+
+@dataclass
+class QueryStat:
+    note_count: int = 0
+    field_skip_count:int = 0
+    field_success_count:int = 0
+    field_no_result_count:int = 0
+    field_error_count:int = 0
+    field_updated_count: int = 0
+
+    def reset(self) -> None:
+        """Reset all dataclass fields to their default values defined in class type annotations."""
+        for f in dataclass_fields(self):
+            # Restores default value (or default_factory if defined)
+            default = (
+                f.default_factory()
+                if callable(f.default_factory)
+                else f.default
+            )
+            setattr(self, f.name, default)
+            
+    def __add__(self, other: "QueryStat") -> "QueryStat":
+        if not isinstance(other, QueryStat):
+            return NotImplemented
+        return QueryStat(
+            **{
+                f.name: getattr(self, f.name) + getattr(other, f.name)
+                for f in dataclass_fields(self)
+            }
+        )
+
+    def __iadd__(self, other: "QueryStat") -> "QueryStat":
+        if not isinstance(other, QueryStat):
+            return NotImplemented
+        for f in dataclass_fields(self):
+            setattr(self, f.name, getattr(self, f.name) + getattr(other, f.name))
+        return self
 
 
 ### sys level

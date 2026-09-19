@@ -33,9 +33,10 @@ from ..constants import Template
 from ..context import config
 from ..libs.snowballstemmer import stemmer
 from ..service import Service, QueryResult, copy_static_file, service_pool
-from ..service.base import LocalService
-from ..utils import wrap_css
+from ..service.base import LocalService, WordNotFoundError
+from ..utils import wrap_css, QueryStat
 from ..lang import _
+
 
 __all__ = [
     'InvalidWordException', 'update_note_fields', 'update_note_field',
@@ -91,8 +92,11 @@ def update_note_fields(note, results: defaultdict[int, QueryResult]):
         return 0
     count = 0
     for ord, fld in results.items():
+        # print(f"--- update_note_fields `{ord}` `{fld}`")
         if isinstance(fld, QueryResult) and ord < len(note.fields):
             count += update_note_field(note, ord, fld)
+        else:
+            print(f"*** Error: update_note_fields note `{note}` fld type {fld} or ord {ord} max_ord {len(note.fields)}")
 
     return count
 
@@ -125,7 +129,7 @@ def promot_choose_css(missed_css):
     """
     checked = set()
     for css in missed_css:
-        dest_name = u'_' + css['file']
+        dest_name = css['file']
         if not os.path.exists(dest_name) and not css['file'] in checked:
             checked.add(css['file'])
             msg = Template.miss_css.format(dict=css['title'], css=css['file'])
@@ -190,7 +194,7 @@ def add_to_tmpl(note, js_list=[], js_files=[], css_list=[], css_files=[]):
     }]
     """
 
-    print(f"--- add_to_tmpl js_list {js_list} js_files {js_files} css_list {css_list} css_files {css_files}")
+    # print(f"--- add_to_tmpl js_list {js_list} js_files {js_files} css_list {css_list} css_files {css_files}")
     model = note.note_type()
 
 
@@ -246,7 +250,7 @@ def add_to_tmpl(note, js_list=[], js_files=[], css_list=[], css_files=[]):
     # QTimer.singleShot(1000*10, lambda: mw.col.models.save(model))
     save_timer.schedule(1000*5, _save_model)
 
-
+    
 def query_flds(note, qfields=None) -> tuple[defaultdict[int, QueryResult], int, list]:
     """
     Query fields of single note
@@ -266,11 +270,13 @@ def query_flds(note, qfields=None) -> tuple[defaultdict[int, QueryResult], int, 
 
     services: dict[str, Service] = {}
     tasks = []
+    qstat = QueryStat()
+    qstat.note_count = 1
 
     for i, field in enumerate(fields):
         if i == word_ord:
             continue
-        if i == len(note.fields):
+        if i >= len(note.fields):
             break
         # ignore field
         ignore = field.get('ignore', False)
@@ -279,6 +285,7 @@ def query_flds(note, qfields=None) -> tuple[defaultdict[int, QueryResult], int, 
         # skip valued
         skip = field.get('skip_valued', False)
         if skip and len(note.fields[i]) != 0:
+            qstat.field_skip_count += 1
             continue
         # cloze
         cloze = field.get('cloze_word', False)
@@ -310,7 +317,6 @@ def query_flds(note, qfields=None) -> tuple[defaultdict[int, QueryResult], int, 
     if not tasks:
         print(f"*** Error: No tasks generated for word `{word}`")
 
-    success_num = 0
     result = defaultdict(int)
     for task in tasks:
         try:
@@ -321,8 +327,13 @@ def query_flds(note, qfields=None) -> tuple[defaultdict[int, QueryResult], int, 
                 if task['cloze']:
                     qr['result'] = cloze_deletion(qr['result'], word)
                 result.update({task['fld_ord']: qr})
-                success_num += 1
+                qstat.field_success_count += 1
+            else:
+                qstat.field_no_result_count += 1
+        except WordNotFoundError as e:
+            print(f'{e}')
         except Exception as e:
+            qstat.field_error_count += 1
             print(traceback.format_exc())
             print(_("NO_QUERY_WORD"), e)
             pass
@@ -338,7 +349,7 @@ def query_flds(note, qfields=None) -> tuple[defaultdict[int, QueryResult], int, 
                 })
         service_pool.put(service)
 
-    return result, -1 if len(tasks) == 0 else success_num, missed_css
+    return result, qstat, missed_css
 
 
 def cloze_deletion(text, cloze):

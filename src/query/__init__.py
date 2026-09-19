@@ -26,7 +26,7 @@ from aqt import mw
 from aqt.utils import showInfo, showText, tooltip
 
 from .worker import QueryWorkerManager
-from .common import promot_choose_css, inspect_note
+from .common import promot_choose_css, inspect_note, QueryStat
 
 from ..constants import Endpoint, Template
 from ..context import config
@@ -37,7 +37,7 @@ from ..service.base import LocalService
 from ..utils import Empty, MapDict, Queue, wrap_css
 
 
-__all__ = ['query_from_browser', 'query_from_editor_fields']
+__all__ = ['query_from_browser', 'query_from_editor_fields', 'QueryStat']
 
 
 def query_from_browser(browser):
@@ -112,10 +112,11 @@ def query_all(notes, flush=True, fields=None):
 
     work_manager.start()
     work_manager.join()
-
+    
+    qstat = work_manager.qstat
     #progress.finish()
-    promot_choose_css(work_manager.missed_css)
-    tooltip(u'{0} {1} {2}, {3} {4}'.format(_('UPDATED'), work_manager.counter, _(
-        'CARDS'), work_manager.fields, _('FIELDS')))
+    promot_choose_css(work_manager.missed_css_info_list)
+    tooltip(f'{_('UPDATED')} {qstat.note_count} {_('CARDS')}, {qstat.field_updated_count} {_('FIELDS')}',
+            period=5000)
     #work_manager.clean()
     service_pool.clean()

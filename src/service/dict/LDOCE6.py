@@ -47,6 +47,7 @@ class Ldoce6(MdxService):
         html = self.get_html()
         # m = re.search(r'<span class="pron">(.*?)</span>', html)
         tag = html.select_one('.entry .pron')
+        # print(f'fld_phonetic html {type(html)} tag {tag}')
         # print(f'fld_phonetic {tag}')
         if tag:
             return str(tag)
@@ -130,6 +131,7 @@ class Ldoce6(MdxService):
     def _range_sentence_audio(self, range_arr: list | str | range = 'all', with_audio=True):
         # m = re.findall(r'<span class="example"\s*.*>\s*.*<\/span>', self.get_html())
         html: BeautifulSoup = self.get_html()
+
         if with_audio:
             tags = html.select(f'.entry .sense .example:has(a[href^="sound:"]), .entry .tail .collocate .example:has(a[href^="sound:"])')
         else:
