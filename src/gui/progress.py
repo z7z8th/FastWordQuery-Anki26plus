@@ -52,9 +52,10 @@ class ProgressWindow(object):
         self._last_update = 0
         self._first_time = 0
         self._disabled = False
+        self._aborted = False
 
     def update_labels(self, qstat:QueryStat):
-        if self.abort():
+        if self.is_aborted():
             return
 
         # if data.type == 'count':
@@ -78,7 +79,7 @@ class ProgressWindow(object):
         self.app.processEvents()
 
     def update_title(self, title):
-        if self.abort():
+        if self.is_aborted():
             return
         self._win.setWindowTitle(title)
 
@@ -115,14 +116,17 @@ class ProgressWindow(object):
             bar.setAlignment(Qt.AlignmentFlag.AlignCenter)
             # Set custom text format (%p% = percentage, %v% = current value, %m% = total)
             bar.setFormat(r"Completed %v of %m files (%p%)")
-            self._bar = bar
+            # self._bar = bar
         else:
             print(f"*** Error: can't find QProgressBar in QProgressDialog")
         self.app.processEvents()
 
-    def abort(self):
+    def is_aborted(self):
         # self.aborted = True
-        return self._win.wasCanceled()
+        # if processEvents.processEvents() is not called, wasCanceled() NEVER returns True.
+        # Calling progress.reset() or progress.setValue(progress.maximum()) will reset wasCanceled() back to False
+        # self._win.wasCanceled() or 
+        return self._aborted
 
     def set_finished(self):
         self._win.setWindowTitle('FastWQ - Finished')
@@ -130,6 +134,7 @@ class ProgressWindow(object):
         # self._win.setLabelText("Done")
 
     def finish(self):
+        self._aborted = True
         self._win.hide()
         self._unset_busy()
         self._win.destroy()

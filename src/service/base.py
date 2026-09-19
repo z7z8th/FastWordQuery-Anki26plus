@@ -921,7 +921,7 @@ class MdxService(LocalService):
             if not target_file.dest_ok:
                 print(f'***Warning: {src_file} not copied.')
                 self.missed_css.add(src_file)
-                print(f'service self {self} missed css {self.missed_css}')
+                # print(f'service self {self} missed css {self.missed_css}')
                 new_css_files.add(src_file)
                 continue
             new_css_file, wrap_class_name = wrap_css(target_file.dest_path)  # NOTE: CSS files are copied in wrap_css()

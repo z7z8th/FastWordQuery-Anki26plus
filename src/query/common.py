@@ -304,6 +304,8 @@ def query_flds(note, qfields=None) -> tuple[defaultdict[int, QueryResult], int, 
                     svc = service_pool.get(dict_unique)
                     if svc and svc.support:
                         services[dict_unique] = svc
+                    else:
+                        print(f'*** Error: service `{dict_unique}` `{svc}` is not supported')
 
                 # print(f"---service {svc} for {dict_unique}")
                 if svc and svc.support:
@@ -328,7 +330,7 @@ def query_flds(note, qfields=None) -> tuple[defaultdict[int, QueryResult], int, 
             # print(f"--- qr {str(qr)[:100]}")
             if qr:
                 if isinstance(service, LocalService):
-                    print(f'--- {service}.missed_css {service.missed_css}')
+                    # print(f'--- {service}.missed_css {service.missed_css}')
                     for css in service.missed_css:
                         missed_css_info_list.append({
                             'dict_path': service.dict_path,

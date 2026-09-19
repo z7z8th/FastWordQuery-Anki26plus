@@ -56,6 +56,7 @@ class QueryThread(QThread):
         while True:
             if self.exit or not self.manager:
                 break
+
             try:
                 note = self.manager.queue.get(True, timeout=0.1)
             except Empty:
@@ -142,17 +143,10 @@ class QueryWorkerManager(object):
 
     def update(self, note, results: defaultdict[int, QueryResult], qstat: QueryStat, missed_css_info_list:list):
         with QMutexLocker(self.mutex):
-            # if success_count > 0:
-            #     self.counter += 1
-            # elif success_count == 0:
-            #     self.fails += 1
-            # else:
-            #     self.skips += 1
             self.qstat += qstat
             val = update_note_fields(note, results)
             self.qstat.field_updated_count += val
             self.missed_css_info_list += missed_css_info_list
-            # self.mutex.unlock()
         if self.total > 1:
             return val > 0
         else:
@@ -160,13 +154,6 @@ class QueryWorkerManager(object):
             return False
 
     def update_progress(self):
-        # self.progress.update_labels(MapDict(
-        #     type='count',
-        #     words_number=self.counter,
-        #     skips_number=self.skips,
-        #     fails_number=self.fails,
-        #     fields_number=self.fields
-        # ))
         self.progress.update_labels(self.qstat)
         mw.app.processEvents()
 
@@ -179,13 +166,13 @@ class QueryWorkerManager(object):
                 else:
                     mw.app.processEvents()
                     worker.wait(100)
-                if self.progress.abort():
+                if self.progress.is_aborted():
                     worker.exit = True
                     break
                 self.update_progress()
             if finished_worker >= len(self.workers):
                 break
-            if self.progress.abort():
+            if self.progress.is_aborted():
                 break
 
         self.progress.set_finished()
