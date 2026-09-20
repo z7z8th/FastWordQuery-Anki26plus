@@ -49,14 +49,14 @@ def _process_worker_loop(task_queue: mp.Queue, result_queue: mp.Queue, query_fie
         if payload is None:  # Poison pill to gracefully shut down worker
             break
 
-        note_id, note_fields, word_ord, word, cfg_qfields = payload
+        note_id, note_fields_len_list, word_ord, word, cfg_qfields = payload
         # note = col.get_note(note_id)
         print(f'--- note_id {note_id} payload {payload}')
 
         try:
             # Reconstruction or dummy encapsulation if query_flds needs field data
             # Adjust query_flds call depending on whether it works with dict or Note
-            results, qstat, missed_css_info_list = query_flds(note_fields, word_ord, word, cfg_qfields, query_fields)
+            results, qstat, missed_css_info_list = query_flds(note_fields_len_list, word_ord, word, cfg_qfields, query_fields)
             # result_queue.put(('success', (note_id, results, qstat, missed_css_info_list)))
             result_queue.put(('success', (note_id, pickle.dumps(results), pickle.dumps(qstat), missed_css_info_list)))
         except InvalidWordException:
@@ -95,8 +95,9 @@ class QueryWorkerManager(object):
         self.note_map[note.id] = note
         # Send lightweight primitive data instead of SWIG/C++ dependent Note objects
         # note_id, note_fields, word_ord, word, cfg_qfields = payload
+        note_fields_len_list = [ len(f) for f in note.fields ]
         word_ord, word, cfg_qfields = inspect_note(note)
-        payload = (note.id, note.fields, word_ord, word, cfg_qfields)
+        payload = (note.id, note_fields_len_list, word_ord, word, cfg_qfields)
 
         self.task_queue.put(payload)
 

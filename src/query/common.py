@@ -257,7 +257,7 @@ def query_flds_by_note(note, qfields:list[int]) -> tuple[defaultdict[int, QueryR
     return query_flds(note.fields, word_ord, word, cfg_qfields, qfields=qfields)
 
 
-def query_flds(note_fields, word_ord, word, cfg_qfields, qfields:list[int]) -> tuple[defaultdict[int, QueryResult], QueryStat, list]:
+def query_flds(note_fields_len_list, word_ord, word, cfg_qfields, qfields:list[int]) -> tuple[defaultdict[int, QueryResult], QueryStat, list]:
     """
     Query fields of single note
     """
@@ -281,7 +281,7 @@ def query_flds(note_fields, word_ord, word, cfg_qfields, qfields:list[int]) -> t
     for i, field in enumerate(cfg_qfields):
         if i == word_ord:
             continue
-        if i >= len(note_fields):
+        if i >= len(note_fields_len_list):
             break
         # ignore field
         ignore = field.get('ignore', False)
@@ -289,7 +289,7 @@ def query_flds(note_fields, word_ord, word, cfg_qfields, qfields:list[int]) -> t
             continue
         # skip valued
         skip = field.get('skip_valued', False)
-        if skip and len(note_fields[i]) != 0:
+        if skip and note_fields_len_list[i] != 0:
             qstat.field_skip_count += 1
             continue
         # cloze
@@ -309,16 +309,14 @@ def query_flds(note_fields, word_ord, word, cfg_qfields, qfields:list[int]) -> t
             continue
 
         svc = services.get(dict_unique, None)
-        print(f'---services.get {dict_unique} ret {svc}')
         if svc is None:
             svc = service_pool.get(dict_unique)
-            print(f'---service_pool.get {dict_unique} ret {svc}')
             if svc and svc.support:
                 services[dict_unique] = svc
             else:
                 print(f'*** Error: service `{dict_unique}` `{svc}` is not supported')
 
-        print(f"---service {svc} for {dict_unique}")
+        # print(f"---service {svc} for {dict_unique}")
         if svc and svc.support:
             tasks.append({
                 'dict_uniq': dict_unique,
