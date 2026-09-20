@@ -19,7 +19,7 @@ FORCE_DICT_PATH = u'' # u'E:\\BaiduYunDownload\\mdx\\L6mp3.mdx'
 
 from typing import cast
 
-### Deadlock when use multiprocessing instead of QThread in query/worker.py
+### Stuck in mw.app.processEvents() when use multiprocessing instead of QThread in query/worker.py
 '''
 $ uv pip install py-spy
 Resolved 1 package in 421ms
@@ -32,7 +32,7 @@ Process 152068: anki
 Python v3.13.13 (/home/bob/Education/Anki/anki-26.08.1-linux-x86_64/anki)
 
 Thread 152068 (idle): "MainThread"
-    _get_backend (FastWordQuery-Anki26plus/service/base.py:667)
+    _get_backend (FastWordQuery-Anki26plus/service/base.py:667) calling mw.app.processEvents() and stuck
     __init__ (FastWordQuery-Anki26plus/service/base.py:717)
     get_service (FastWordQuery-Anki26plus/service/manager.py:57)
     get (FastWordQuery-Anki26plus/service/pool.py:43)

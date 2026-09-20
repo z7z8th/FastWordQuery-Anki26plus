@@ -176,6 +176,9 @@ class QueryWorkerManager(object):
             # Brief sleep to prevent high CPU loop on the main thread
             QThread.msleep(50)
 
+        for p in self.processes:
+            p.join()
+
         # Final drain of any lingering queue messages
         self.process_results()
         self.progress.set_finished()
