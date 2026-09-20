@@ -49,11 +49,18 @@ class ServiceManager(object):
     def get_service(self, unique) -> Service:
         # webservice unique: class name
         # mdxservice unique: md5 of dict filepath
+        print(f'---ServiceManager.get_service {unique}')
         for svc in self.services:
+            print(f'---svc._unique__ {svc._unique_}')
             if svc._unique_ == unique:
+                print(f'---ServiceManager.get_service {unique} before new service')
                 service = svc()
+                print(f'---ServiceManager.get_service {unique} afater new service {service}')
+
                 service.unique = unique
                 return service
+        print(f'---ServiceManager.get_service {unique} NOT FOUND')
+        
         raise Exception(f"service of unique `{unique}` not found")
 
     def _get_services_from_files(self, *args):

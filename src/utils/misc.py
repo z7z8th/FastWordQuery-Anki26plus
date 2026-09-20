@@ -101,39 +101,37 @@ def format_multi_query_word(words: str):
 
 class MapDict(dict):
     """
-    Example:
-    m = Map({'first_name': 'Eduardo'},
-            last_name='Pool', age=24, sports=['Soccer'])
+    Dict subclass that enables attribute/dot-notation access.
+    Fully picklable across process boundaries.
     """
 
     def __init__(self, *args, **kwargs):
         super(MapDict, self).__init__(*args, **kwargs)
+        # Update self directly using dict methods (no self.__dict__ pollution)
         for arg in args:
             if isinstance(arg, dict):
-                for k, v in arg.items():
-                    self[k] = v
-
+                self.update(arg)
         if kwargs:
-            for k, v in kwargs.items():
-                self[k] = v
+            self.update(kwargs)
 
     def __getattr__(self, attr):
-        return self.get(attr)
+        try:
+            return self[attr]
+        except KeyError:
+            raise AttributeError(
+                f"'{self.__class__.__name__}' object has no attribute '{attr}'"
+            )
 
     def __setattr__(self, key, value):
-        self.__setitem__(key, value)
+        self[key] = value
 
-    def __setitem__(self, key, value):
-        super(MapDict, self).__setitem__(key, value)
-        self.__dict__.update({key: value})
-
-    def __delattr__(self, item):
-        self.__delitem__(item)
-
-    def __delitem__(self, key):
-        super(MapDict, self).__delitem__(key)
-        del self.__dict__[key]
-
+    def __delattr__(self, key):
+        try:
+            del self[key]
+        except KeyError:
+            raise AttributeError(
+                f"'{self.__class__.__name__}' object has no attribute '{key}'"
+            )
 
 @dataclass
 class QueryStat:

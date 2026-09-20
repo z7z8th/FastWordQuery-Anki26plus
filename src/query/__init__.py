@@ -58,7 +58,7 @@ def query_from_browser(browser):
         # browser.model.reset()
 
 
-def query_from_editor_fields(editor, fields=None):
+def query_from_editor_fields(editor, fields:list[int] = []):
     """
     Query word fileds from Editor
     """
@@ -92,7 +92,7 @@ def query_from_editor_fields(editor, fields=None):
         editor.saveNow(lambda: print("Saved"))
 
 
-def query_all(notes, flush=True, fields=None):
+def query_all(notes, flush=True, fields:list[int]=[]):
     """
     Query maps word fileds
     """
@@ -105,10 +105,11 @@ def query_all(notes, flush=True, fields=None):
     #progress.start(max=len(notes), min=0, immediate=True)
     work_manager.flush = flush
     work_manager.query_fields = fields
-    queue = work_manager.queue
+    # queue = work_manager.queue
 
     for note in notes:
-        queue.put(note)
+        # queue.put(note)
+        work_manager.add_note_task(note)
 
     work_manager.start()
     work_manager.join()

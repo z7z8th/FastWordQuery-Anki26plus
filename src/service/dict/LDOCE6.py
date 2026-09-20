@@ -19,6 +19,48 @@ FORCE_DICT_PATH = u'' # u'E:\\BaiduYunDownload\\mdx\\L6mp3.mdx'
 
 from typing import cast
 
+### Deadlock when use multiprocessing instead of QThread in query/worker.py
+'''
+$ uv pip install py-spy
+Resolved 1 package in 421ms
+Prepared 1 package in 404ms
+Installed 1 package in 7ms
+ + py-spy==0.4.2
+(FastWordQuery-Anki26plus) 0  ~/Education/Anki/FastWordQuery-Anki26plus  (master)
+$ py-spy dump --pid 152068
+Process 152068: anki
+Python v3.13.13 (/home/bob/Education/Anki/anki-26.08.1-linux-x86_64/anki)
+
+Thread 152068 (idle): "MainThread"
+    _get_backend (FastWordQuery-Anki26plus/service/base.py:667)
+    __init__ (FastWordQuery-Anki26plus/service/base.py:717)
+    get_service (FastWordQuery-Anki26plus/service/manager.py:57)
+    get (FastWordQuery-Anki26plus/service/pool.py:43)
+    __init__ (FastWordQuery-Anki26plus/service/dict/LDOCE6.py:73)
+    get_service (FastWordQuery-Anki26plus/service/manager.py:57)
+    get (FastWordQuery-Anki26plus/service/pool.py:43)
+    query_flds (FastWordQuery-Anki26plus/query/common.py:310)
+    _process_worker_loop (FastWordQuery-Anki26plus/query/worker.py:56)
+    run (multiprocessing/process.py:108)
+    _bootstrap (multiprocessing/process.py:313)
+    _launch (multiprocessing/popen_fork.py:74)
+    __init__ (multiprocessing/popen_fork.py:20)
+    _Popen (multiprocessing/context.py:288)
+    _Popen (multiprocessing/context.py:230)
+    start (multiprocessing/process.py:121)
+    start (FastWordQuery-Anki26plus/query/worker.py:107)
+    query_all (FastWordQuery-Anki26plus/query/__init__.py:114)
+    query_from_editor_fields (FastWordQuery-Anki26plus/query/__init__.py:90)
+    query_from_browser (FastWordQuery-Anki26plus/query/__init__.py:55)
+    <lambda> (FastWordQuery-Anki26plus/common.py:79)
+    _run (__init__.py:789)
+    run (__init__.py:582)
+    main (app.py:8)
+    <module> (__main__.py:21)
+    _run_code (<frozen runpy>:88)
+    _run_module_as_main (<frozen runpy>:199)
+'''
+
 @register([u'本地词典-朗文6', u'MDX-LDOCE6'], enabled = True)
 class Ldoce6(MdxService):
 

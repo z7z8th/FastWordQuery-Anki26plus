@@ -32,6 +32,7 @@ class ServicePool(object):
         self.manager = manager
         
     def get(self, unique) -> Service:
+        print(f'--- ServicePool.get {unique}')
         queue = self.pools.get(unique, None)
         if queue:
             try:

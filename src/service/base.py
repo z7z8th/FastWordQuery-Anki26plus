@@ -37,6 +37,7 @@ from functools import wraps
 from hashlib import md5, sha1
 from typing import Callable, Optional
 from copy import deepcopy
+import multiprocessing as mp
 
 import requests
 from bs4 import BeautifulSoup
@@ -73,6 +74,8 @@ __all__ = [
 _default_ua = 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 ' \
               '(KHTML, like Gecko) Chrome/70.0.3538.67 Safari/537.36'
 
+def is_main_process():
+    return mp.parent_process() is None
 
 def get_hex_name(prefix, val, suffix):
     ''' get sha1 hax name '''
@@ -664,7 +667,8 @@ class LocalService(Service):
                 worker = _DictBackendWorker(builder)
                 worker.start()
                 while not worker.isFinished():
-                    mw.app.processEvents()
+                    if is_main_process():
+                        mw.app.processEvents()
                     worker.wait(100)
                 LocalService._backends[key] = worker.backend
         LocalService._mutex_backends.unlock()
@@ -704,6 +708,7 @@ class MdxService(LocalService):
     """
 
     def __init__(self, dict_path):
+        print(f'MdxService.__init__ {dict_path}')
         super(MdxService, self).__init__(dict_path)
         self._local = threading.local()
         self.media_cache = defaultdict(dict)
@@ -1060,14 +1065,16 @@ class QueryResult(MapDict):
     """Query Result structure"""
 
     def __init__(self, *args, **kwargs):
-        self['result'] = ''
-        self['js'] = []
-        self['css'] = []
+        # Call super first so dict state is initialized properly
         super(QueryResult, self).__init__(*args, **kwargs)
-        # avoid return None
-        # if self['result'] is None:
-        #     self['result'] = ""
+        
+        # Set default values if not explicitly provided in args/kwargs
+        self.setdefault("result", "")
+        self.setdefault("js_list", [])
+        self.setdefault("js_files", [])
+        self.setdefault("css_list", [])
+        self.setdefault("css_files", [])
 
     @classmethod
     def default(cls):
-        return QueryResult(result="")
+        return QueryResult(result="", js_list=[], css_list=[])

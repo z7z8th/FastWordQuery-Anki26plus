@@ -107,8 +107,8 @@ def update_note_field(note, fld_ord: int, fld_result: QueryResult):
     """
 
     # js process: add to template of the note model
-    mw.taskman.run_on_main(lambda: add_to_tmpl(note, js_list=fld_result.js, js_files=fld_result.js_files, 
-                    css_list=fld_result.css, css_files=fld_result.css_files))
+    mw.taskman.run_on_main(lambda: add_to_tmpl(note, js_list=fld_result.js_list, js_files=fld_result.js_files, 
+                    css_list=fld_result.css_list, css_files=fld_result.css_files))
 
     result = fld_result.result
 
@@ -251,14 +251,18 @@ def add_to_tmpl(note, js_list=[], js_files=[], css_list=[], css_files=[]):
     # QTimer.singleShot(1000*10, lambda: mw.col.models.save(model))
     save_timer.schedule(1000*5, _save_model)
 
-    
-def query_flds(note, qfields=None) -> tuple[defaultdict[int, QueryResult], int, list]:
+
+def query_flds_by_note(note, qfields:list[int]) -> tuple[defaultdict[int, QueryResult], QueryStat, list]:
+    word_ord, word, cfg_qfields = inspect_note(note)
+    return query_flds(note.fields, word_ord, word, cfg_qfields, qfields=qfields)
+
+
+def query_flds(note_fields, word_ord, word, cfg_qfields, qfields:list[int]) -> tuple[defaultdict[int, QueryResult], QueryStat, list]:
     """
     Query fields of single note
     """
     # traceback.print_stack()
 
-    word_ord, word, fields = inspect_note(note)
     # print(f"qfields {qfields}")
     # print(f'query_flds {word_ord}, {word}, {fields}')
     if not word:
@@ -274,10 +278,10 @@ def query_flds(note, qfields=None) -> tuple[defaultdict[int, QueryResult], int, 
     qstat = QueryStat()
     qstat.note_count = 1
 
-    for i, field in enumerate(fields):
+    for i, field in enumerate(cfg_qfields):
         if i == word_ord:
             continue
-        if i >= len(note.fields):
+        if i >= len(note_fields):
             break
         # ignore field
         ignore = field.get('ignore', False)
@@ -285,7 +289,7 @@ def query_flds(note, qfields=None) -> tuple[defaultdict[int, QueryResult], int, 
             continue
         # skip valued
         skip = field.get('skip_valued', False)
-        if skip and len(note.fields[i]) != 0:
+        if skip and len(note_fields[i]) != 0:
             qstat.field_skip_count += 1
             continue
         # cloze
@@ -294,35 +298,43 @@ def query_flds(note, qfields=None) -> tuple[defaultdict[int, QueryResult], int, 
         dict_unique = field.get('dict_unique', '').strip()
         dict_fld_ord = field.get('dict_fld_ord', -1)
         fld_ord = field.get('fld_ord', -1)
-        # print(f"dict_unique {dict_unique} dict_fld_ord {dict_fld_ord} fld_ord {fld_ord}")
-        if dict_unique and dict_fld_ord != -1 and fld_ord != -1:
-            if qfields is None or \
-                fld_ord in qfields:
-                
-                svc = services.get(dict_unique, None)
-                if svc is None:
-                    svc = service_pool.get(dict_unique)
-                    if svc and svc.support:
-                        services[dict_unique] = svc
-                    else:
-                        print(f'*** Error: service `{dict_unique}` `{svc}` is not supported')
 
-                # print(f"---service {svc} for {dict_unique}")
-                if svc and svc.support:
-                    tasks.append({
-                        'dict_uniq': dict_unique,
-                        'word': word,
-                        'dict_fld_ord': dict_fld_ord,
-                        'fld_ord': fld_ord,
-                        'cloze': cloze,
-                    })
-    # print(f'---iter tasks {tasks}')
+        # print(f"---dict_unique {dict_unique} dict_fld_ord {dict_fld_ord} fld_ord {fld_ord}")
+        if not dict_unique or dict_fld_ord < 0 or fld_ord < 0:
+            print(f"---dict_unique {dict_unique} dict_fld_ord {dict_fld_ord} fld_ord {fld_ord}")
+            continue
+        # print(f"---qfields {qfields}")
+        if qfields and fld_ord not in qfields:
+            print(f'---word `{word}` fld_ord `{fld_ord}` not in qfields {qfields}')
+            continue
+
+        svc = services.get(dict_unique, None)
+        print(f'---services.get {dict_unique} ret {svc}')
+        if svc is None:
+            svc = service_pool.get(dict_unique)
+            print(f'---service_pool.get {dict_unique} ret {svc}')
+            if svc and svc.support:
+                services[dict_unique] = svc
+            else:
+                print(f'*** Error: service `{dict_unique}` `{svc}` is not supported')
+
+        print(f"---service {svc} for {dict_unique}")
+        if svc and svc.support:
+            tasks.append({
+                'dict_uniq': dict_unique,
+                'word': word,
+                'dict_fld_ord': dict_fld_ord,
+                'fld_ord': fld_ord,
+                'cloze': cloze,
+            })
+
+    print(f'---query_flds tasks {tasks}')
     if not tasks:
         print(f"*** Error: No tasks generated for word `{word}`")
 
     missed_css_info_list = list()
 
-    result = defaultdict(int)
+    result = defaultdict()
     for task in tasks:
         try:
             service = services.get(task['dict_uniq'], None)

@@ -8,15 +8,10 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # any later version; http://www.gnu.org/copyleft/gpl.html.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import multiprocessing as mp
+import queue
+import pickle
 import traceback
 from collections import defaultdict
 
@@ -25,162 +20,176 @@ from aqt import mw
 from aqt.qt import *
 from aqt.utils import showInfo
 from anki.notes import Note
+from anki.collection import Collection
 
 from ..context import config
 from ..lang import _
 from ..gui import ProgressWindow
-from ..utils import Empty, MapDict, Queue
 
-from .common import InvalidWordException, query_flds, QueryStat, update_note_fields
+from .common import InvalidWordException, inspect_note, query_flds, QueryStat, update_note_fields
 from ..service import Service, QueryResult
 
 __all__ = ['QueryWorkerManager']
 
 
-class QueryThread(QThread):
+def _process_worker_loop(task_queue: mp.Queue, result_queue: mp.Queue, query_fields):
     """
-    Query Worker Thread
+    Top-level worker function executed in isolated child processes.
+    Pulls lightweight note payload data, performs queries, and sends back results.
     """
+    # col = Collection(col_path)
+    # print(f'---_process_worker_loop col_path {col_path}')
+    while True:
+        try:
+            # Poll task queue
+            payload = task_queue.get(block=True, timeout=0.1)
+        except queue.Empty:
+            break
 
-    note_flush = pyqtSignal(Note)
+        if payload is None:  # Poison pill to gracefully shut down worker
+            break
 
-    def __init__(self, manager):
-        super(QueryThread, self).__init__()
-        self.index = 0
-        self.exit = False
-        self.finished = False
-        self.manager:QueryWorkerManager = manager
-        self.note_flush.connect(manager.handle_flush)
+        note_id, note_fields, word_ord, word, cfg_qfields = payload
+        # note = col.get_note(note_id)
+        print(f'--- note_id {note_id} payload {payload}')
 
-    def run(self):
-        while True:
-            if self.exit or not self.manager:
-                break
+        try:
+            # Reconstruction or dummy encapsulation if query_flds needs field data
+            # Adjust query_flds call depending on whether it works with dict or Note
+            results, qstat, missed_css_info_list = query_flds(note_fields, word_ord, word, cfg_qfields, query_fields)
+            # result_queue.put(('success', (note_id, results, qstat, missed_css_info_list)))
+            result_queue.put(('success', (note_id, pickle.dumps(results), pickle.dumps(qstat), missed_css_info_list)))
+        except InvalidWordException:
+            traceback.print_exc()
+            result_queue.put(('invalid_word', (note_id,)))
+        except Exception as e:
+            traceback.print_exc()
+            result_queue.put(('error', (note_id, str(e), traceback.format_exc())))
 
-            try:
-                note = self.manager.queue.get(True, timeout=0.1)
-            except Empty:
-                self.exit = True
-                continue
-
-            try:
-                results, qstat, missed_css_info_list = query_flds(note, self.manager.query_fields)
-                if not self.exit and self.manager:
-                    if self.manager.update(note, results, qstat, missed_css_info_list):
-                        self.note_flush.emit(note)
-            except InvalidWordException:
-                # only show error info on single query
-                print(traceback.format_exc())
-                self.manager.fails += 1
-                if self.manager.total == 1:
-                    showInfo(_("NO_QUERY_WORD"))
-
-            if self.manager:
-                self.manager.queue.task_done()
-
-        self.finished = True
+    print(f'--- worker {mp.current_process()} exit')
+    # col.close()
 
 
 class QueryWorkerManager(object):
     """
-    Query Worker Thread Manager
+    Query Worker Process Manager using multiprocessing.Process and Queues
     """
 
     def __init__(self):
-        self.workers = []
-        self.queue = Queue()
-        self.mutex = QMutex()
+        self.processes = []
+        self.task_queue = mp.Queue()
+        self.result_queue = mp.Queue()
+        
         self.progress = ProgressWindow(mw)
         self.total = 0
 
         self.qstat = QueryStat()
-        # self.counter = 0
-        # self.fails = 0
-        # self.fields = 0
-        # self.skips = 0
-
         self.missed_css_info_list = list()
         self.flush = True
-        self.query_fields = None
+        self.query_fields:list[int] = []
+        self.note_map = {}  # Keep track of Note instances by ID on the main process
+        self.fails = 0
 
-    def get_worker(self):
-        worker = QueryThread(self)
-        worker.index = len(self.workers) + 1
-        self.workers.append(worker)
-        return worker
+    def add_note_task(self, note: Note):
+        """Prepares note data for multiprocessing serialization."""
+        self.note_map[note.id] = note
+        # Send lightweight primitive data instead of SWIG/C++ dependent Note objects
+        # note_id, note_fields, word_ord, word, cfg_qfields = payload
+        word_ord, word, cfg_qfields = inspect_note(note)
+        payload = (note.id, note.fields, word_ord, word, cfg_qfields)
+
+        self.task_queue.put(payload)
 
     def start(self):
-        self.total = self.queue.qsize()
+        self.total = self.task_queue.qsize() if hasattr(self.task_queue, 'qsize') else len(self.note_map)
         self.progress.start(min=0, max=self.total)
         self.update_progress()
+
+        num_workers = min(config.thread_number, self.total) if self.total > 1 else 1
+
+        # Spawn worker processes
+        for _ in range(num_workers):
+            p = mp.Process(
+                target=_process_worker_loop,
+                args=(self.task_queue, self.result_queue, self.query_fields)
+            )
+            p.daemon = True
+            p.start()
+            self.processes.append(p)
+
+    def update(self, note, results: defaultdict[int, QueryResult], qstat: QueryStat, missed_css_info_list: list):
+        """Applies query results to notes on the main Qt thread."""
+        self.qstat += qstat
+        val = update_note_fields(note, results)
+        self.qstat.field_updated_count += val
+        self.missed_css_info_list += missed_css_info_list
+
         if self.total > 1:
-            # raise Number of open files limit, otherwise open sqlite db error,
-            # when query thousands of words in many threads:
-            # OSError: too many open files.
-            try:
-                import resource
-
-                soft, hard = resource.getrlimit(resource.RLIMIT_NOFILE)
-                print(f"Current open files limit: soft={soft}, hard={hard}")
-                # Raise soft up to hard (no root needed)
-                resource.setrlimit(resource.RLIMIT_NOFILE, (16384, hard))
-                soft, hard = resource.getrlimit(resource.RLIMIT_NOFILE)
-                print(f"Changed open files limit: soft={soft}, hard={hard}")
-            except Exception as e:
-                print(traceback.format_exc())
-
-            for _ in range(0, min(config.thread_number, self.total)):
-                # print(f"get_worker {_} of {min(config.thread_number, self.total)}")
-                self.get_worker()
-
-            for worker in self.workers:
-                # print(f"start worker {worker}")
-                worker.start()
-        else:
-            worker = self.get_worker()
-            worker.run()
-            self.update_progress()
-
-    def update(self, note, results: defaultdict[int, QueryResult], qstat: QueryStat, missed_css_info_list:list):
-        with QMutexLocker(self.mutex):
-            self.qstat += qstat
-            val = update_note_fields(note, results)
-            self.qstat.field_updated_count += val
-            self.missed_css_info_list += missed_css_info_list
-        if self.total > 1:
-            return val > 0
+            if val > 0:
+                self.handle_flush(note)
         else:
             self.handle_flush(note)
-            return False
 
     def update_progress(self):
         self.progress.update_labels(self.qstat)
         mw.app.processEvents()
 
-    def join(self):
-        while True:
-            finished_worker = 0
-            for worker in self.workers:
-                if worker.finished:
-                    finished_worker += 1
-                else:
-                    mw.app.processEvents()
-                    worker.wait(100)
-                if self.progress.is_aborted():
-                    worker.exit = True
-                    break
-                self.update_progress()
-            if finished_worker >= len(self.workers):
-                break
-            if self.progress.is_aborted():
+    def process_results(self):
+        """Drains the IPC result queue without blocking the main event loop."""
+        while not self.result_queue.empty():
+            try:
+                status, data = self.result_queue.get_nowait()
+                if status == 'success':
+                    note_id, results, qstat, missed_css_info_list = data
+                    results = pickle.loads(results)
+                    qstat = pickle.loads(qstat)
+                    note = self.note_map.get(note_id)
+                    if note:
+                        self.update(note, results, qstat, missed_css_info_list)
+                elif status == 'invalid_word':
+                    self.fails += 1
+                    if self.total == 1:
+                        showInfo(_("NO_QUERY_WORD"))
+                elif status == 'error':
+                    note_id, err_str, tb = data
+                    print(f"Error processing note {note_id}: {err_str}\n{tb}")
+            except queue.Empty:
                 break
 
+    def join(self):
+        """Waits for processes to complete while maintaining UI responsiveness."""
+        timer = QElapsedTimer()
+        timer.start()
+
+        while any(p.is_alive() for p in self.processes) or not self.result_queue.empty():
+            # Handle user cancellation
+            if self.progress.is_aborted():
+                self.terminate_processes()
+                break
+
+            # Drain IPC message queue
+            self.process_results()
+            self.update_progress()
+            mw.app.processEvents()
+
+            # Brief sleep to prevent high CPU loop on the main thread
+            QThread.msleep(50)
+
+        # Final drain of any lingering queue messages
+        self.process_results()
         self.progress.set_finished()
-    
+
+    def terminate_processes(self):
+        """Terminates active child processes immediately."""
+        for p in self.processes:
+            if p.is_alive():
+                p.terminate()
+                p.join()
+
     def handle_flush(self, note: anki.notes.Note):
         if self.flush and note:
             try:
                 note.col.update_note(note)
             except Exception:
-                # flush is deprecated
+                # Fallback if col.update_note is not present in older Anki versions
                 note.flush()
