@@ -5,7 +5,6 @@ try:
 except:
     import urllib.request as urllib2
 import json
-from aqt.utils import showInfo
 from ..base import WebService, export, register, with_styles
 
 oxford_download_mp3 = True

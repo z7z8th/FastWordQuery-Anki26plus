@@ -2,7 +2,6 @@
 import os
 import json
 from collections import defaultdict
-from aqt.utils import showInfo, showText
 
 from ..base import *
 from ...utils import ignore_exception

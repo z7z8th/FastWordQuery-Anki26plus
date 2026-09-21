@@ -23,7 +23,6 @@ import re
 import urllib
 from collections import defaultdict
 
-from aqt.utils import showInfo, showText
 from ..base import QueryResult, WebService, export, register, with_styles
 
 

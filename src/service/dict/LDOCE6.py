@@ -40,7 +40,7 @@ Thread 152068 (idle): "MainThread"
     get_service (FastWordQuery-Anki26plus/service/manager.py:57)
     get (FastWordQuery-Anki26plus/service/pool.py:43)
     query_flds (FastWordQuery-Anki26plus/query/common.py:310)
-    _process_worker_loop (FastWordQuery-Anki26plus/query/worker.py:56)
+    process_worker_loop (FastWordQuery-Anki26plus/query/worker.py:56)
     run (multiprocessing/process.py:108)
     _bootstrap (multiprocessing/process.py:313)
     _launch (multiprocessing/popen_fork.py:74)

@@ -46,16 +46,8 @@ import os
 from dataclasses import dataclass, fields as dataclass_fields
 from functools import wraps
 
-from aqt.utils import showInfo
-from aqt.qt import QIcon
-
-__all__ = ['ignore_exception',
-           'get_model_byId',
-           'get_icon',
-           'get_ord_from_fldname',
-           'MapDict',
-           'QueryStat',
-           'LRUCache'
+__all__ = ['ignore_exception', 'get_model_byId', 'get_icon', 'get_ord_from_fldname',
+           'MapDict', 'QueryStat', 'LRUCache'
            ]
 
 
@@ -71,7 +63,7 @@ def ignore_exception(func):
 
 def get_model_byId(models, id):
     for m in list(models.all()):
-        # showInfo(str(m['id']) + ', ' + m['name'])
+        # print(str(m['id']) + ', ' + m['name'])
         if m['id'] == id:
             return m
 
@@ -84,6 +76,8 @@ def get_ord_from_fldname(model, name):
 
 
 def get_icon(filename):
+    from aqt.qt import QIcon
+
     curdir = os.path.dirname(os.path.abspath(__file__))
     pardir = os.path.join(curdir, os.pardir)
     path = os.path.join(pardir, 'res', filename)
@@ -287,3 +281,4 @@ class LRUCache:
 
     def __repr__(self) -> str:
         return f"LRUCache(capacity={self.capacity}, items={dict(self._cache)})"
+    

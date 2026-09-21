@@ -17,18 +17,51 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-import json
 import os
+import sys
+import json
 import traceback
 import threading
 from packaging.version import Version
 
-from anki.hooks import runHook
-from aqt import mw
+import multiprocessing as mp
+
+def is_main_process():
+    for m in sys.modules:
+        if "Qt" in m or "aqt" in m:
+            return True
+    return False
+
+if is_main_process():
+    from aqt import mw
+    from anki.hooks import runHook
+else:
+    mw = None
+
+###################################################
+# spawned worker process has no mw
+ADDON_NAME = mw.addonManager.addonFromModule(__name__) if mw else os.path.basename(os.path.dirname(__file__))
+ADDON_DIR = mw.addonManager.addonsFolder(ADDON_NAME) if mw else os.path.dirname(__file__)
+# 1. Point Anki's Python environment to your bundled offline library
+for ldir in ["libs", "vendor"]:
+    vendor_dir = os.path.join(ADDON_DIR, ldir)
+    if vendor_dir not in sys.path:
+        sys.path.append(vendor_dir)
+
+sys.path.append(ADDON_DIR)
+
+print(f'sys.path {sys.path}')
+print(f"ADDON_NAME {ADDON_NAME}")
+print(f"ADDON_DIR {ADDON_DIR}")
+
+from .utils import misc
+# show current dir in open error message for easy debug
+misc.hook_builtins_open_exception()
+
 
 from .constants import VERSION
 
-__all__ = ['config', 'set_mdx_backend_lock', 'get_mdx_backend_lock']
+__all__ = ['config', 'set_mdx_backend_lock', 'get_mdx_backend_lock', 'ADDON_NAME']
 
 
 class Config(object):
@@ -42,7 +75,7 @@ class Config(object):
         self.data = {}
         self.path = u'_' + self._CONFIG_FILENAME
         self.window = window
-        self.version = '0'
+        # self.version = '0'
         self.profile_folder = None
         self.read()
 
@@ -67,12 +100,14 @@ class Config(object):
         """
         Load from config file
         """
+        print(f'---read mw {mw} self.data {self.data}')
         if self.data:
-            if mw and mw.pm.profileFolder() != self.profile_folder:
+            if mw and mw.pm and mw.pm.profileFolder() != self.profile_folder:
                 self.data = {}
         try:
             if not self.data:
                 path = self.path  # if os.path.exists(self.path) else u'.' + self._CONFIG_FILENAME
+                print(f'---reading config path {path}')
                 with open(path, 'r', encoding="utf-8") as f:
                     self.data = json.load(f)
                 # if not os.path.exists(self.path):

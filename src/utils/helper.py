@@ -3,7 +3,6 @@ import re
 import os
 import shutil
 import traceback
-from aqt.utils import showInfo
 
 __all__ = ['add_metaclass', 'wrap_css']
 
@@ -83,7 +82,7 @@ def wrap_css(orig_css, is_file=True, class_wrapper=None, get_canional_name=lambd
                 result = wrap_css_selectors(f.read().strip(), class_wrapper)
             except:
                 traceback.print_exc()
-                showInfo('Error wrapping: ' + orig_css)
+                print(f'Error wrapping: {orig_css}')
 
         if result:
             with open(new_css_file, 'w', encoding='utf-8') as f:

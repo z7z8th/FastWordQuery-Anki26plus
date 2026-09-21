@@ -37,13 +37,14 @@ from functools import wraps
 from hashlib import md5, sha1
 from typing import Callable, Optional
 from copy import deepcopy
-import multiprocessing as mp
+# import multiprocessing as mp
 
 import requests
 from bs4 import BeautifulSoup
 
-from aqt import mw
-from aqt.qt import QMutex, QThread
+# from aqt import mw
+# from aqt.qt import QMutex, QThread
+from threading import Lock, Thread
 
 from .. import context
 from ..context import config
@@ -75,8 +76,8 @@ __all__ = [
 _default_ua = 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 ' \
               '(KHTML, like Gecko) Chrome/70.0.3538.67 Safari/537.36'
 
-def is_main_process():
-    return mp.parent_process() is None
+# def is_main_process():
+#     return mp.parent_process() is None
 
 def get_hex_name(prefix, val, suffix):
     ''' get sha1 hax name '''
@@ -623,7 +624,7 @@ class WebService(Service):
             return False
 
 
-class _DictBackendWorker(QThread):
+class _DictBackendWorker(Thread):
     """Local Dictionary Builder"""
 
     def __init__(self, func):
@@ -647,21 +648,24 @@ class LocalService(Service):
     """
     Local Dictionary Service
     """
-
-    def __init__(self, dict_path):
+    _main_app = None
+    def __init__(self, dict_path, main_app = None):
+        # print(f'---LocalService.__init__ {dict_path}')
         super(LocalService, self).__init__()
         self.dict_path = dict_path
         # self.backend: Optional[object] = None
         self.missed_css = set()
         self.css_files = set()
         self.backend = None
+        LocalService._main_app = main_app
 
     # MdxBuilder instances map
     _backends: defaultdict[str, object] = defaultdict(dict)
-    _mutex_backends = QMutex()
+    # _mutex_backends = Lock()
 
     @staticmethod
     def _get_backend(key: str, builder: ObjectBuilder):
+        print('---TODO: remove _main_app')
         # LocalService._mutex_backends.lock()
         with context.get_mdx_backend_lock():
             key = md5(str(key).encode('utf-8')).hexdigest()
@@ -670,10 +674,10 @@ class LocalService(Service):
                 if not LocalService._backends[key]:
                     worker = _DictBackendWorker(builder)
                     worker.start()
-                    while not worker.isFinished():
-                        if is_main_process():
-                            mw.app.processEvents()
-                        worker.wait(100)
+                    while worker.is_alive():
+                        if LocalService._main_app:
+                            LocalService._main_app.processEvents()
+                        worker.join(timeout=0.1)
                     LocalService._backends[key] = worker.backend
         # LocalService._mutex_backends.unlock()
         return LocalService._backends[key]
@@ -696,22 +700,16 @@ class LocalService(Service):
 
 from typing import cast
 
-class WordNotFoundError(Exception):
-    """Raised when a requested resource is not found."""
-
-    def __init__(self, word: str, dict_name: str, message: str = None):
-        self.word = word
-        self.dict_name = dict_name
-        if message is None:
-            message = f"Word '{word}' was not found in dict {dict_name}."
-        super().__init__(message)
-
 class MdxService(LocalService):
     """
     MDX Local Dictionary Service
     """
 
     def __init__(self, dict_path):
+        # print(f'---MdxService.__init__ {dict_path}')
+        if not dict_path:
+            # raise Exception('MdxService.__init__ no dict_path specified')
+            print(f'*** {self} MdxService.__init__ no dict_path specified')
         super(MdxService, self).__init__(dict_path)
         self._local = threading.local()
         self.notfound_cache = dict()
@@ -725,10 +723,13 @@ class MdxService(LocalService):
 
     @staticmethod
     def check(dict_path):
-        return os.path.isfile(dict_path) and dict_path.lower().endswith('.mdx')
+        ret = os.path.isfile(dict_path) and dict_path.lower().endswith('.mdx')
+        # print(f'---check {dict_path} ret {ret}')
+        return ret
 
     @property
     def support(self):
+        # print(f'---support self.backend {self.backend}')
         return bool(self.backend and MdxService.check(self.dict_path))
 
     @property
@@ -1085,3 +1086,14 @@ class QueryResult(MapDict):
     @classmethod
     def default(cls):
         return QueryResult(result="", js_list=[], css_list=[])
+
+
+class WordNotFoundError(Exception):
+    """Raised when a requested resource is not found."""
+
+    def __init__(self, word: str, dict_name: str, message: str = None):
+        self.word = word
+        self.dict_name = dict_name
+        if message is None:
+            message = f"Word '{word}' was not found in dict {dict_name}."
+        super().__init__(message)

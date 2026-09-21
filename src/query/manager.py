@@ -19,24 +19,25 @@ import time
 import anki.notes
 from aqt import mw
 from aqt.qt import *
-from aqt.utils import showInfo
 from anki.notes import Note
 # from anki.collection import Collection
 
 from .. import context
-from ..context import config
+from ..context import config, ADDON_NAME
 from ..lang import _
 from ..gui import ProgressWindow
 
-from .common import InvalidWordException, inspect_note, query_flds, QueryStat, update_note_fields
+from .common import inspect_note, query_flds, QueryStat, update_note_fields
 from ..service import Service, QueryResult
+
+from ..service.worker import *
 
 # mp.set_start_method("spawn", force=True)
 
 __all__ = ['QueryWorkerManager']
 
 def get_anki_spawn_context():
-    ctx = mp.get_context()
+    ctx = mp.get_context("spawn")
     anki_dir = os.path.dirname(sys.executable)
     
     # Check for embedded python binaries inside Anki's install folder
@@ -53,78 +54,6 @@ def get_anki_spawn_context():
             break
             
     return ctx
-
-import os
-from pympler import asizeof, muppy, summary
-
-def print_mem_sumary():
-    # --- Profile memory footprint before worker exits ---
-    all_objects = muppy.get_objects()
-    sum_data = summary.summarize(all_objects)
-
-    print(f"=== Worker PID {os.getpid()} Memory Footprint ===")
-    summary.print_(sum_data, limit=10)
-
-def print_top_mem():
-    top_n = 10
-    top_objects = sorted(muppy.get_objects(), key=asizeof.asizeof, reverse=True)[:top_n]
-    print(f"[PID {os.getpid()}] Top {top_n} Objects by Size:")
-    for obj in top_objects:
-        size_mb = asizeof.asizeof(obj, limit=10) / (1024 * 1024)
-        print(f"  - {type(obj).__name__}: {size_mb:.2f} MB")
-
-def _init_worker(parent_sys_path):
-    """Runs inside the spawned child process before worker execution begins."""
-    # Restore parent sys.path entries that are missing in the spawned process
-    for path in parent_sys_path:
-        if path not in sys.path:
-            sys.path.insert(0, path)
-
-def _process_worker_loop(stop_event, task_queue: mp.Queue, result_queue: mp.Queue, query_fields, mdx_backend_lock):
-    """
-    Top-level worker function executed in isolated child processes.
-    Pulls lightweight note payload data, performs queries, and sends back results.
-    """
-    print(f"--- worker STARTED {mp.current_process()}")
-    context.set_mdx_backend_lock(mdx_backend_lock)
-    # print(f'---_process_worker_loop col_path {col_path}')
-    n = 0
-    while not stop_event.is_set():
-        # try:
-        #     n += 1
-        #     if n % 50 == 0:
-        #         print_top_mem()
-        # except:
-        #     traceback.print_exc()
-
-        try:
-            # Poll task queue
-            payload = task_queue.get(block=True, timeout=0.1)
-        except queue.Empty:
-            break
-
-        if payload is None:  # Poison pill to gracefully shut down worker
-            break
-
-        note_id, note_fields_len_list, word_ord, word, cfg_qfields = payload
-        # note = col.get_note(note_id)
-        # print(f'--- note_id {note_id} payload {payload}')
-
-        try:
-            # Reconstruction or dummy encapsulation if query_flds needs field data
-            # Adjust query_flds call depending on whether it works with dict or Note
-            results, qstat, missed_css_info_list = query_flds(note_fields_len_list, word_ord, word, cfg_qfields, query_fields)
-            result_queue.put(('success', (note_id, results, qstat, missed_css_info_list)))
-            # result_queue.put(('success', (note_id, pickle.dumps(results), pickle.dumps(qstat), missed_css_info_list)))
-        except InvalidWordException:
-            traceback.print_exc()
-            result_queue.put(('invalid_word', (note_id,)))
-        except Exception as e:
-            traceback.print_exc()
-            result_queue.put(('error', (note_id, str(e), traceback.format_exc())))
-
-    print(f'--- worker {mp.current_process()} exit')
-    # col.close()
 
 
 class QueryWorkerManager(object):
@@ -171,26 +100,46 @@ class QueryWorkerManager(object):
 
         num_workers = min(config.thread_number, self.total) if self.total > 1 else 1
 
-        print(f'--- worker _process_worker_loop.__module__ {_process_worker_loop.__module__}')
+        main_mod = sys.modules.get('__main__')
+        # Store original __name__ attribute
+        orig_name = getattr(main_mod, '__name__', None)
+        print(f'--- worker process_worker_loop.__module__ {process_worker_loop.__module__}')
         print(f"--- worker sys.modules['__main__'] {sys.modules['__main__']}")
+        main_module = sys.modules['__main__']
+        main_mod_name = getattr(main_module.__spec__, "name", None)
+        main_path = getattr(main_module, '__file__', None)
+        print(f'main_module {main_module} {dir(main_module)}')
+        print(f'main_mod_name {main_mod_name}')
+        print(f'main_path {main_path}')
 
-        # Spawn worker processes
-        for _ in range(num_workers):
-            p = self.ctx.Process(
-                target=_process_worker_loop,
-                args=(self.stop_event, self.task_queue, self.result_queue, self.query_fields, self.mdx_backend_lock),
-                # Pass the parent's full sys.path list to the initializer
-                # initializer=_init_worker,
-                # initargs=(list(sys.path),)
-            )
-            p.daemon = True
-            p.start()
-            self.processes.append(p)
+        try:
+            # Temporarily unset or override __name__ so get_preparation_data()
+            # does not set init_main_from_name to 'anki.__main__'
+            if main_mod:
+                setattr(main_mod.__spec__, 'name', f'{ADDON_NAME}.__init__')
+            print(f'getattr(main_module.__spec__, "name", None) {getattr(main_module.__spec__, "name", None)}')
 
-            time.sleep(1)
+            # Spawn worker processes
+            for _ in range(num_workers):
+                p = self.ctx.Process(
+                    target=process_worker_loop,
+                    args=(self.stop_event, self.task_queue, self.result_queue, self.query_fields, self.mdx_backend_lock),
+                    # Pass the parent's full sys.path list to the initializer
+                    # initializer=_init_worker,
+                    # initargs=(list(sys.path),)
+                )
+                p.daemon = True
+                p.start()
+                self.processes.append(p)
 
-            print(f"Is worker alive? {p.is_alive()}")
-            print(f"Worker exit code: {p.exitcode}")
+                # time.sleep(1)
+
+                # print(f"Is worker alive? {p.is_alive()}")
+                # print(f"Worker exit code: {p.exitcode}")
+        finally:
+            # Restore __main__.__name__ for Anki's main thread
+            if main_mod and orig_name is not None:
+                setattr(main_mod.__spec__, 'name', orig_name)
 
 
     def update(self, note, results: defaultdict[int, QueryResult], qstat: QueryStat, missed_css_info_list: list):
@@ -225,8 +174,8 @@ class QueryWorkerManager(object):
                         self.update(note, results, qstat, missed_css_info_list)
                 elif status == 'invalid_word':
                     self.fails += 1
-                    if self.total == 1:
-                        showInfo(_("NO_QUERY_WORD"))
+                    # if self.total == 1:
+                    #     showInfo(_("NO_QUERY_WORD"))
                 elif status == 'error':
                     note_id, err_str, tb = data
                     print(f"Error processing note {note_id}: {err_str}\n{tb}")

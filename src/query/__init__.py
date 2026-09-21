@@ -17,24 +17,23 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from collections import defaultdict
-import os
-import shutil
-import unicodedata
+# from collections import defaultdict
+# import os
+# import shutil
+# import unicodedata
 
-from aqt import mw
-from aqt.utils import showInfo, showText, tooltip
+# from aqt import mw
 
-from .worker import QueryWorkerManager
+from .manager import QueryWorkerManager
 from .common import promot_choose_css, inspect_note, QueryStat
 
-from ..constants import Endpoint, Template
+# from ..constants import Endpoint, Template
 from ..context import config
 from ..lang import _
-from ..gui import ProgressWindow
 from ..service import service_manager, service_pool, QueryResult, copy_static_file
-from ..service.base import LocalService
-from ..utils import Empty, MapDict, Queue, wrap_css
+# from ..service.base import LocalService
+# from ..utils import Empty, MapDict, Queue, wrap_css
+from aqt.utils import showInfo, showText, tooltip
 
 
 __all__ = ['query_from_browser', 'query_from_editor_fields', 'QueryStat']

@@ -115,8 +115,9 @@ class ServiceManager(object):
         '''
         mdx_services = list()
         star_dict_services = list()
+        print(f'config.dict_dirs: {config.dict_dirs}')
         for each in config.dict_dirs:
-            print(f'config.dict_dirs {each}')
+            print(f'config.dict_dirs > {each}')
             for dirpath, dirnames, filenames in os.walk(each):
                 for filename in filenames:
                     svc = None
