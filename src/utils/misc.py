@@ -54,7 +54,8 @@ __all__ = ['ignore_exception',
            'get_icon',
            'get_ord_from_fldname',
            'MapDict',
-           'QueryStat'
+           'QueryStat',
+           'LRUCache'
            ]
 
 
@@ -97,6 +98,52 @@ def format_multi_query_word(words: str):
         return words
 
     return words.lower().replace(_space, '-')
+
+### sys level
+
+def hook_builtins_open():
+    import builtins
+    import os
+    from pathlib import Path
+
+    # 1. Store a reference to the original built-in open function
+    original_open = builtins.open
+
+    # 2. Define the hook/wrapper function
+    def custom_open(file, mode='r', buffering=-1, encoding=None, errors=None, newline=None, closefd=True, opener=None):
+        # Perform custom action (e.g., logging or debugging path resolution)
+        abs_path = Path(file).resolve()
+        if str(file) != str(abs_path):
+            print(f"opening: `{file}` in dir `{os.getcwd()}`")
+
+        # Call the original open function
+        return original_open(file, mode, buffering, encoding, errors, newline, closefd, opener)
+
+    # 3. Replace builtins.open with the custom function
+    builtins.open = custom_open
+
+def hook_builtins_open_exception():
+    import builtins
+    import os
+    from pathlib import Path
+
+    original_open = builtins.open
+
+    def custom_open(file, *args, **kwargs):
+        try:
+            return original_open(file, *args, **kwargs)
+        except OSError as err: # Catches FileNotFoundError, PermissionError, etc.
+            cwd = os.getcwd()
+            raw_file = err.filename or file
+            abs_path = Path(raw_file).resolve() if raw_file else "Unknown"
+
+            # Mutate the strerror attribute directly
+            err.strerror = f"{err.strerror} in '{cwd}'"
+            raise err
+
+    builtins.open = custom_open
+
+    from collections import OrderedDict
 
 
 class MapDict(dict):
@@ -170,47 +217,73 @@ class QueryStat:
             setattr(self, f.name, getattr(self, f.name) + getattr(other, f.name))
         return self
 
+from collections import OrderedDict
+from typing import Any, Callable, Optional
 
-### sys level
 
-def hook_builtins_open():
-    import builtins
-    import os
-    from pathlib import Path
+class LRUCache:
 
-    # 1. Store a reference to the original built-in open function
-    original_open = builtins.open
+    def __init__(
+        self,
+        capacity: int,
+        default_factory: Optional[Callable[[], Any]] = None,
+    ):
+        """Parameters:
 
-    # 2. Define the hook/wrapper function
-    def custom_open(file, mode='r', buffering=-1, encoding=None, errors=None, newline=None, closefd=True, opener=None):
-        # Perform custom action (e.g., logging or debugging path resolution)
-        abs_path = Path(file).resolve()
-        if str(file) != str(abs_path):
-            print(f"opening: `{file}` in dir `{os.getcwd()}`")
+        - capacity: Maximum number of items the cache can hold.
+        - default_factory: Optional callable (e.g., list, dict, int). If
+        provided, accessing a missing key via `cache[key]` will invoke this
+        factory, insert the default value, and mark it as recently used.
+        """
+        if capacity <= 0:
+            raise ValueError("Capacity must be a positive integer.")
 
-        # Call the original open function
-        return original_open(file, mode, buffering, encoding, errors, newline, closefd, opener)
+        self.capacity = capacity
+        self.default_factory = default_factory
+        self._cache = OrderedDict()
 
-    # 3. Replace builtins.open with the custom function
-    builtins.open = custom_open
+    def __contains__(self, key: Any) -> bool:
+        """Supports: `key in cache` Check if key exists without modifying LRU
+        order."""
+        return key in self._cache
 
-def hook_builtins_open_exception():
-    import builtins
-    import os
-    from pathlib import Path
+    def __getitem__(self, key: Any) -> Any:
+        """Supports: `val = cache[key]` Fetches item and updates recency.
 
-    original_open = builtins.open
+        If missing and `default_factory` is set, populates default value like a
+        defaultdict.
+        """
+        if key in self._cache:
+            self._cache.move_to_end(key)
+            return self._cache[key]
 
-    def custom_open(file, *args, **kwargs):
-        try:
-            return original_open(file, *args, **kwargs)
-        except OSError as err: # Catches FileNotFoundError, PermissionError, etc.
-            cwd = os.getcwd()
-            raw_file = err.filename or file
-            abs_path = Path(raw_file).resolve() if raw_file else "Unknown"
+        # Handle defaultdict-like behavior
+        if self.default_factory is not None:
+            default_value = self.default_factory()
+            self[key] = default_value  # Uses __setitem__ to insert and manage capacity
+            return default_value
 
-            # Mutate the strerror attribute directly
-            err.strerror = f"{err.strerror} in '{cwd}'"
-            raise err
+        raise KeyError(key)
 
-    builtins.open = custom_open
+    def __setitem__(self, key: Any, value: Any) -> None:
+        """Supports: `cache[key] = val` Inserts or updates item, updates
+        recency, and evicts oldest if full."""
+        if key in self._cache:
+            self._cache.move_to_end(key)
+
+        self._cache[key] = value
+
+        # Evict least recently used (oldest) if over capacity
+        if len(self._cache) > self.capacity:
+            self._cache.popitem(last=False)
+
+    def __delitem__(self, key: Any) -> None:
+        """Supports: `del cache[key]` Removes key from cache."""
+        del self._cache[key]
+
+    def __len__(self) -> int:
+        """Supports: `len(cache)`"""
+        return len(self._cache)
+
+    def __repr__(self) -> str:
+        return f"LRUCache(capacity={self.capacity}, items={dict(self._cache)})"

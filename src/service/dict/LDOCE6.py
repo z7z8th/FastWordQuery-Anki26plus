@@ -89,7 +89,7 @@ class Ldoce6(MdxService):
         html = self.get_html()
         # m = re.search(r'<span class="pron">(.*?)</span>', html)
         tag = html.select_one('.entry .pron')
-        # print(f'fld_phonetic html {type(html)} tag {tag}')
+        print(f'fld_phonetic html {type(html)} tag {tag}')
         # print(f'fld_phonetic {tag}')
         if tag:
             return str(tag)

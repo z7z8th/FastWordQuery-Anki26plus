@@ -45,10 +45,11 @@ from bs4 import BeautifulSoup
 from aqt import mw
 from aqt.qt import QMutex, QThread
 
+from .. import context
 from ..context import config
 from ..lang import _cl
 from ..libs import MdxBuilder, StardictBuilder
-from ..utils import MapDict, wrap_css
+from ..utils import MapDict, wrap_css, LRUCache
 from ..libs.snowballstemmer import stemmer
 
 try:
@@ -317,13 +318,15 @@ class PathMap:
     dest_path: str
     dest_ok: bool
 
+SERVICE_INTERNAL_CACHE_SIZE = 100
+
 class Service(object):
     '''
     Dictionary Service Abstract Class
     '''
 
     def __init__(self):
-        self.cache = defaultdict(defaultdict)
+        self.cache = LRUCache(SERVICE_INTERNAL_CACHE_SIZE, defaultdict)
         self._unique = self.__class__.__name__
         self._exporters = self._get_exporters()  # [(label1, method1), (label2, method2)]
         # print(f'{self._unique} exports {self._exporters}')
@@ -408,7 +411,7 @@ class Service(object):
         if dict_fld_ord >= 0 and dict_fld_ord < len(self.actions):
             return self.actions[dict_fld_ord]()
         else:
-            print(f"*** Error: {self._unique} query {dict_fld_ord} not in range [0, {len(self.actions)})")
+            print(f"*** Error: {self._unique} query {dict_fld_ord} not in range [0, {len(self.actions)}) self.actions {self.actions}")
         return QueryResult.default()
 
     @staticmethod
@@ -659,20 +662,20 @@ class LocalService(Service):
 
     @staticmethod
     def _get_backend(key: str, builder: ObjectBuilder):
-        print(f"TODO: _get_backend change to cross process locking")
-        LocalService._mutex_backends.lock()
-        key = md5(str(key).encode('utf-8')).hexdigest()
-        # print(f'_get_builder key {key} {func} builders[key] {LocalService._mdx_builders[key]}')
-        if builder:
-            if not LocalService._backends[key]:
-                worker = _DictBackendWorker(builder)
-                worker.start()
-                while not worker.isFinished():
-                    if is_main_process():
-                        mw.app.processEvents()
-                    worker.wait(100)
-                LocalService._backends[key] = worker.backend
-        LocalService._mutex_backends.unlock()
+        # LocalService._mutex_backends.lock()
+        with context.get_mdx_backend_lock():
+            key = md5(str(key).encode('utf-8')).hexdigest()
+            # print(f'_get_builder key {key} {func} builders[key] {LocalService._mdx_builders[key]}')
+            if builder:
+                if not LocalService._backends[key]:
+                    worker = _DictBackendWorker(builder)
+                    worker.start()
+                    while not worker.isFinished():
+                        if is_main_process():
+                            mw.app.processEvents()
+                        worker.wait(100)
+                    LocalService._backends[key] = worker.backend
+        # LocalService._mutex_backends.unlock()
         return LocalService._backends[key]
 
     @property
@@ -709,12 +712,11 @@ class MdxService(LocalService):
     """
 
     def __init__(self, dict_path):
-        print(f'MdxService.__init__ {dict_path}')
         super(MdxService, self).__init__(dict_path)
         self._local = threading.local()
+        self.notfound_cache = dict()
         self.media_cache = defaultdict(dict)
-        self.cache = defaultdict(str)
-        self.html_cache = defaultdict(BeautifulSoup)  #("", "html.parser")
+        self.html_cache = LRUCache(SERVICE_INTERNAL_CACHE_SIZE, BeautifulSoup)  #("", "html.parser")
         self.query_interval = 0.01
         self.styles = []
         self.media_prefix = f'_mdx-{self.unique.lower()}-'
@@ -790,12 +792,15 @@ class MdxService(LocalService):
             self._local.stemmer = stemmer("english")
         return self._local.stemmer
 
-    def get_html(self, word: str | None = None) -> str | BeautifulSoup:
+    def get_html(self, word: str | None = None) -> BeautifulSoup:
         """get self.word's html page from MDX"""
         if word is None:
             word = self.word
         if not word:
-            raise Exception('get_html: word not specified.')
+            raise Exception(f'{self.title} get_html: word not specified.')
+        if word in self.notfound_cache:
+            raise WordNotFoundError(word, self.title)
+        
         word_lower = word.lower()
         if word not in self.html_cache:
             html = self._get_definition_mdx(word)
@@ -808,6 +813,7 @@ class MdxService(LocalService):
             if html:
                 self.html_cache[word] = BeautifulSoup(html, 'html.parser')
             else:
+                self.notfound_cache[word] = True
                 raise WordNotFoundError(word, self.title)
 
         return self.html_cache[word]
@@ -829,7 +835,7 @@ class MdxService(LocalService):
         '''
         default get html from mdx interface
         '''
-        if not self.cache[self.word]:
+        if self.word not in self.cache:
             html = self.get_html(self.word)
             if html:
                 self.cache[self.word] = self.adapt_to_anki(html)
@@ -959,7 +965,7 @@ class MdxService(LocalService):
         dest_name = self.save_file_from_mdd(audio_path, dest_name)
 
         if not dest_name:
-            print(f'*** Eror: _save_audio: No audio found for {audio}')
+            print(f'*** Error: `{self.word}` _save_audio: No audio found for `{audio}`')
             return audio
         
         if anki_label: 

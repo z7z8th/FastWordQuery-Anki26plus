@@ -22,7 +22,7 @@ from collections import defaultdict
 
 from aqt.qt import *
 
-from ..context import APP_ICON
+from .base import APP_ICON
 from ..lang import _
 from ..utils import QueryStat
 
@@ -134,6 +134,7 @@ class ProgressWindow(object):
         # self._win.setLabelText("Done")
 
     def finish(self):
+        print(f'---progressbar.finish called')
         self._aborted = True
         self._win.hide()
         self._unset_busy()

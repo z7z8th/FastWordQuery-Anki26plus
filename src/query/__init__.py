@@ -118,6 +118,6 @@ def query_all(notes, flush=True, fields:list[int]=[]):
     #progress.finish()
     promot_choose_css(work_manager.missed_css_info_list)
     tooltip(f'{_('UPDATED')} {qstat.note_count} {_('CARDS')}, {qstat.field_updated_count} {_('FIELDS')}',
-            period=5000)
+            period=3000)
     #work_manager.clean()
     service_pool.clean()

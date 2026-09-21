@@ -16,10 +16,28 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
+import os
 import sys
 sys.dont_write_bytecode = True
 
+print(f'---sys.argv {sys.argv}')
+import sys
 import os
+
+print(f"[PID {os.getpid()}] Starting worker module import...", flush=True)
+
+# Print loaded modules before any add-on imports
+print("Loaded Qt modules before add-on imports:", [m for m in sys.modules if "Qt" in m or "aqt" in m], flush=True)
+
+
+import multiprocessing as mp
+def is_main_process():
+    return mp.parent_process() is None
+if not is_main_process():
+    # Force Qt and display drivers to run in headless offscreen mode for spawned processes
+    os.environ["QT_QPA_PLATFORM"] = "offscreen"
+    os.environ["QT_LOGGING_RULES"] = "*=false"
+
 import ssl
 import sys
 
@@ -35,8 +53,9 @@ if is_mac:
 shortcut = ('Ctrl+Alt' if is_mac else 'Ctrl') + '+Q'
 
 ###################################################
-ADDON_NAME = mw.addonManager.addonFromModule(__name__)
-ADDON_DIR = mw.addonManager.addonsFolder(ADDON_NAME)
+# spawned worker process has no mw
+ADDON_NAME = mw.addonManager.addonFromModule(__name__) if mw else os.path.basename(os.path.dirname(__file__))
+ADDON_DIR = mw.addonManager.addonsFolder(ADDON_NAME) if mw else os.path.dirname(__file__)
 # 1. Point Anki's Python environment to your bundled offline library
 for ldir in ["libs", "vendor"]:
     vendor_dir = os.path.join(ADDON_DIR, ldir)
@@ -61,7 +80,7 @@ def start_here():
     os.chdir(mediaPath)
     print(f"CWD {os.getcwd()}")
 
-    from . import common as fastwq
+    from .gui import common as fastwq
     from .context import config
     # config is only imported once, we should call read every time profile changed
     config.read()
@@ -73,5 +92,8 @@ def start_here():
         fastwq.context_menu()
         fastwq.customize_addcards()
 
+if mw:
+    addHook("profileLoaded", start_here)
 
-addHook("profileLoaded", start_here)
+if not is_main_process():
+    from . import query

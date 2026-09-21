@@ -22,9 +22,11 @@ import sys
 from anki.utils import is_mac
 from aqt.qt import *
 
-from ..context import APP_ICON
+from ..utils import get_icon
 
-__all__ = ['Dialog', 'WIDGET_SIZE']
+__all__ = ['APP_ICON', 'Dialog', 'WIDGET_SIZE']
+
+APP_ICON = get_icon('wqicon.png')  # Addon Icon
 
 
 class Dialog(QDialog):

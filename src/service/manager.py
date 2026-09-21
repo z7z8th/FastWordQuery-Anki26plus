@@ -79,8 +79,8 @@ class ServiceManager(object):
             StardictService
         )
         for f in files:
-            if 'LDOCE6' not in f:
-                continue
+            # if 'LDOCE6' not in f:
+            #     continue
             #try:
             module = importlib.import_module( 
                 u'.%s.%s' % (service_dirname, os.path.splitext(f)[0]), 

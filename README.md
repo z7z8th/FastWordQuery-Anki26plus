@@ -3,9 +3,12 @@
 ## What's new
 
 * Support Anki 26+.
-* Upgraded to mdict-utils version 2025 Jan 2.
-* Support Querying 10K+ words in multi-thread.(File descriptor leak fixed.)
+* Support Querying 10K+ words in multi-process.(File descriptor leak fixed.)
+* Replaced QThread with Multi-process to achieve **TRUE** concurrent query.
 * Fixed LDOCE6 voice match. LDOCE6 add match MDX dict by file name in addition to dict title.
+* Replace some regex match with html parser to be more accurate.
+* Replace CSS regex wrapping with CSS parser wrapping to avoid corrupted output.
+* Upgraded to mdict-utils version 2025 Jan 2.
 
 ## Guides
 

@@ -20,17 +20,16 @@
 import json
 import os
 import traceback
+import threading
 from packaging.version import Version
 
 from anki.hooks import runHook
 from aqt import mw
 
 from .constants import VERSION
-from .utils import get_icon
 
-__all__ = ['APP_ICON', 'config']
+__all__ = ['config', 'set_mdx_backend_lock', 'get_mdx_backend_lock']
 
-APP_ICON = get_icon('wqicon.png')  # Addon Icon
 
 class Config(object):
     """
@@ -69,7 +68,7 @@ class Config(object):
         Load from config file
         """
         if self.data:
-            if mw.pm.profileFolder() != self.profile_folder:
+            if mw and mw.pm.profileFolder() != self.profile_folder:
                 self.data = {}
         try:
             if not self.data:
@@ -82,7 +81,8 @@ class Config(object):
                     print(f'Version {self.version} is less than required version {Version(VERSION)}')
                     print(f'Use empty config')
                     self.data = {}
-                self.profile_folder = mw.pm.profileFolder()
+                if mw:
+                    self.profile_folder = mw.pm.profileFolder()
         except Exception as e:
             print(f'*** Can not find config file:', e)
             # print(traceback.format_exc())
@@ -129,7 +129,7 @@ class Config(object):
         """
         Query Thread Number
         """
-        return self.data.get('thread_number', 16)
+        return self.data.get('thread_number', 8)
 
     @property
     def last_folder(self):
@@ -175,3 +175,16 @@ class Config(object):
 # the chdir logic at `__init__.py`
 
 config = Config(mw)
+
+
+
+_MDX_BACKEND_LOCK = threading.Lock()
+
+def set_mdx_backend_lock(lock):
+    global _MDX_BACKEND_LOCK
+    if _MDX_BACKEND_LOCK:
+        print(f'*** Warning: overriding _MDX_BACKEND_LOCK with new lock')
+    _MDX_BACKEND_LOCK = lock
+
+def get_mdx_backend_lock():
+    return _MDX_BACKEND_LOCK

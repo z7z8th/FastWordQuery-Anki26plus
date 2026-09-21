@@ -14,14 +14,16 @@ import queue
 import pickle
 import traceback
 from collections import defaultdict
+import time
 
 import anki.notes
 from aqt import mw
 from aqt.qt import *
 from aqt.utils import showInfo
 from anki.notes import Note
-from anki.collection import Collection
+# from anki.collection import Collection
 
+from .. import context
 from ..context import config
 from ..lang import _
 from ..gui import ProgressWindow
@@ -29,17 +31,72 @@ from ..gui import ProgressWindow
 from .common import InvalidWordException, inspect_note, query_flds, QueryStat, update_note_fields
 from ..service import Service, QueryResult
 
+# mp.set_start_method("spawn", force=True)
+
 __all__ = ['QueryWorkerManager']
 
+def get_anki_spawn_context():
+    ctx = mp.get_context()
+    anki_dir = os.path.dirname(sys.executable)
+    
+    # Check for embedded python binaries inside Anki's install folder
+    possible_pythons = [
+        os.path.join(anki_dir, "python", "bin", "python3"),
+        os.path.join(anki_dir, "python", "bin", "python"),
+        os.path.join(anki_dir, "lib", "python3"),
+    ]
+    
+    for py_bin in possible_pythons:
+        if os.path.isfile(py_bin) and os.access(py_bin, os.X_OK):
+            print(f"--- ctx.set_executable {py_bin}")
+            ctx.set_executable(py_bin)
+            break
+            
+    return ctx
 
-def _process_worker_loop(task_queue: mp.Queue, result_queue: mp.Queue, query_fields):
+import os
+from pympler import asizeof, muppy, summary
+
+def print_mem_sumary():
+    # --- Profile memory footprint before worker exits ---
+    all_objects = muppy.get_objects()
+    sum_data = summary.summarize(all_objects)
+
+    print(f"=== Worker PID {os.getpid()} Memory Footprint ===")
+    summary.print_(sum_data, limit=10)
+
+def print_top_mem():
+    top_n = 10
+    top_objects = sorted(muppy.get_objects(), key=asizeof.asizeof, reverse=True)[:top_n]
+    print(f"[PID {os.getpid()}] Top {top_n} Objects by Size:")
+    for obj in top_objects:
+        size_mb = asizeof.asizeof(obj, limit=10) / (1024 * 1024)
+        print(f"  - {type(obj).__name__}: {size_mb:.2f} MB")
+
+def _init_worker(parent_sys_path):
+    """Runs inside the spawned child process before worker execution begins."""
+    # Restore parent sys.path entries that are missing in the spawned process
+    for path in parent_sys_path:
+        if path not in sys.path:
+            sys.path.insert(0, path)
+
+def _process_worker_loop(stop_event, task_queue: mp.Queue, result_queue: mp.Queue, query_fields, mdx_backend_lock):
     """
     Top-level worker function executed in isolated child processes.
     Pulls lightweight note payload data, performs queries, and sends back results.
     """
-    # col = Collection(col_path)
+    print(f"--- worker STARTED {mp.current_process()}")
+    context.set_mdx_backend_lock(mdx_backend_lock)
     # print(f'---_process_worker_loop col_path {col_path}')
-    while True:
+    n = 0
+    while not stop_event.is_set():
+        # try:
+        #     n += 1
+        #     if n % 50 == 0:
+        #         print_top_mem()
+        # except:
+        #     traceback.print_exc()
+
         try:
             # Poll task queue
             payload = task_queue.get(block=True, timeout=0.1)
@@ -51,14 +108,14 @@ def _process_worker_loop(task_queue: mp.Queue, result_queue: mp.Queue, query_fie
 
         note_id, note_fields_len_list, word_ord, word, cfg_qfields = payload
         # note = col.get_note(note_id)
-        print(f'--- note_id {note_id} payload {payload}')
+        # print(f'--- note_id {note_id} payload {payload}')
 
         try:
             # Reconstruction or dummy encapsulation if query_flds needs field data
             # Adjust query_flds call depending on whether it works with dict or Note
             results, qstat, missed_css_info_list = query_flds(note_fields_len_list, word_ord, word, cfg_qfields, query_fields)
-            # result_queue.put(('success', (note_id, results, qstat, missed_css_info_list)))
-            result_queue.put(('success', (note_id, pickle.dumps(results), pickle.dumps(qstat), missed_css_info_list)))
+            result_queue.put(('success', (note_id, results, qstat, missed_css_info_list)))
+            # result_queue.put(('success', (note_id, pickle.dumps(results), pickle.dumps(qstat), missed_css_info_list)))
         except InvalidWordException:
             traceback.print_exc()
             result_queue.put(('invalid_word', (note_id,)))
@@ -77,8 +134,11 @@ class QueryWorkerManager(object):
 
     def __init__(self):
         self.processes = []
-        self.task_queue = mp.Queue()
-        self.result_queue = mp.Queue()
+        self.ctx = get_anki_spawn_context()
+
+        self.task_queue = self.ctx.Queue()
+        self.result_queue = self.ctx.Queue()
+        self.stop_event = self.ctx.Event()
         
         self.progress = ProgressWindow(mw)
         self.total = 0
@@ -89,6 +149,8 @@ class QueryWorkerManager(object):
         self.query_fields:list[int] = []
         self.note_map = {}  # Keep track of Note instances by ID on the main process
         self.fails = 0
+
+        self.mdx_backend_lock = self.ctx.Lock()
 
     def add_note_task(self, note: Note):
         """Prepares note data for multiprocessing serialization."""
@@ -101,6 +163,7 @@ class QueryWorkerManager(object):
 
         self.task_queue.put(payload)
 
+
     def start(self):
         self.total = self.task_queue.qsize() if hasattr(self.task_queue, 'qsize') else len(self.note_map)
         self.progress.start(min=0, max=self.total)
@@ -108,15 +171,27 @@ class QueryWorkerManager(object):
 
         num_workers = min(config.thread_number, self.total) if self.total > 1 else 1
 
+        print(f'--- worker _process_worker_loop.__module__ {_process_worker_loop.__module__}')
+        print(f"--- worker sys.modules['__main__'] {sys.modules['__main__']}")
+
         # Spawn worker processes
         for _ in range(num_workers):
-            p = mp.Process(
+            p = self.ctx.Process(
                 target=_process_worker_loop,
-                args=(self.task_queue, self.result_queue, self.query_fields)
+                args=(self.stop_event, self.task_queue, self.result_queue, self.query_fields, self.mdx_backend_lock),
+                # Pass the parent's full sys.path list to the initializer
+                # initializer=_init_worker,
+                # initargs=(list(sys.path),)
             )
             p.daemon = True
             p.start()
             self.processes.append(p)
+
+            time.sleep(1)
+
+            print(f"Is worker alive? {p.is_alive()}")
+            print(f"Worker exit code: {p.exitcode}")
+
 
     def update(self, note, results: defaultdict[int, QueryResult], qstat: QueryStat, missed_css_info_list: list):
         """Applies query results to notes on the main Qt thread."""
@@ -142,8 +217,9 @@ class QueryWorkerManager(object):
                 status, data = self.result_queue.get_nowait()
                 if status == 'success':
                     note_id, results, qstat, missed_css_info_list = data
-                    results = pickle.loads(results)
-                    qstat = pickle.loads(qstat)
+                    # for debug _ForkingPickler.loads: None is not callable.
+                    # results = pickle.loads(results)
+                    # qstat = pickle.loads(qstat)
                     note = self.note_map.get(note_id)
                     if note:
                         self.update(note, results, qstat, missed_css_info_list)
@@ -185,10 +261,15 @@ class QueryWorkerManager(object):
 
     def terminate_processes(self):
         """Terminates active child processes immediately."""
-        for p in self.processes:
-            if p.is_alive():
-                p.terminate()
-                p.join()
+        print(f'*** Try stop all active child processes.')
+        self.stop_event.set()
+        while any(p.is_alive() for p in self.processes):
+            for p in self.processes:
+                if p.is_alive():
+                    # p.terminate()
+                    p.join(timeout = 0.1)
+                    mw.app.processEvents()
+        print(f'*** All active child processes Exited.')
 
     def handle_flush(self, note: anki.notes.Note):
         if self.flush and note:

@@ -326,7 +326,7 @@ def query_flds(note_fields_len_list, word_ord, word, cfg_qfields, qfields:list[i
                 'cloze': cloze,
             })
 
-    print(f'---query_flds tasks {tasks}')
+    # print(f'---query_flds tasks {tasks}')
     if not tasks:
         print(f"*** Error: No tasks generated for word `{word}`")
 
@@ -354,7 +354,8 @@ def query_flds(note_fields_len_list, word_ord, word, cfg_qfields, qfields:list[i
             else:
                 qstat.field_no_result_count += 1
         except WordNotFoundError as e:
-            print(f'{e}')
+            # print(f'{e}')
+            pass
         except Exception as e:
             qstat.field_error_count += 1
             print(traceback.format_exc())

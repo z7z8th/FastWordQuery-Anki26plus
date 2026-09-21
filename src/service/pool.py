@@ -22,7 +22,6 @@ from .base import Service
 from .manager import ServiceManager
 
 
-
 class ServicePool(object):
     """
     Service instance pool
@@ -32,7 +31,7 @@ class ServicePool(object):
         self.manager = manager
         
     def get(self, unique) -> Service:
-        print(f'--- ServicePool.get {unique}')
+        # print(f'--- ServicePool.get {unique}')
         queue = self.pools.get(unique, None)
         if queue:
             try:

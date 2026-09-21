@@ -1,5 +1,6 @@
 #-*- coding:utf-8 -*-
 import os
+import traceback
 from ..base import *
 
 baidu_download_mp3 = True
@@ -12,11 +13,6 @@ class Baidu_Chinese(WebService):
 
     def _get_from_api(self):
         url = u"http://dict.baidu.com/s?wd={}&ptype=zici#basicmean".format(self.quote_word)
-        try:
-            html = self.get_response(url, timeout=10)
-            soup = parse_html(html)
-        except:
-            pass
         result = {
             'pinyin': '',
             'basicmean': '',
@@ -28,6 +24,14 @@ class Baidu_Chinese(WebService):
             'fanyi': '',
             'audio_url': '',
         }
+
+        try:
+            html = self.get_response(url, timeout=10)
+            soup = parse_html(html)
+        except:
+            traceback.print_exc()
+            return result
+
 
         #拼音
         element = soup.find('div', id='pinyin')
