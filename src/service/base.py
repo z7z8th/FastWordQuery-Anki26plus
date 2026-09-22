@@ -192,8 +192,6 @@ def copy_static_file(filename, new_filename=None, static_dir='static'):
     shutil.copyfile(src_path, dest)
 
 
-from aqt.theme import theme_manager
-
 def with_styles(**styles):
     """
     css: css strings

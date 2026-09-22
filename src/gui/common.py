@@ -36,8 +36,7 @@ from ..service import service_manager, service_pool
 from .dictmanager import DictManageDialog
 from .foldermanager import FoldersManageDialog
 from .options import OptionsDialog
-from .base import APP_ICON
-from ..utils import get_icon
+from .base import *
 
 
 __all__ = [

@@ -33,11 +33,23 @@ from ..constants import Endpoint
 from ..context import config
 from ..lang import _, _sl
 from ..service import service_manager, service_pool
-from ..utils import get_icon, get_model_byId
-from .base import WIDGET_SIZE, Dialog
 from .setting import SettingDialog
+from .base import *
 
 __all__ = ['OptionsDialog']
+
+
+def get_model_byId(models, id):
+    for m in list(models.all()):
+        # print(str(m['id']) + ', ' + m['name'])
+        if m['id'] == id:
+            return m
+
+def get_ord_from_fldname(model, name):
+    flds = model['flds']
+    for fld in flds:
+        if fld['name'] == name:
+            return fld['ord']
 
 
 class OptionsDialog(Dialog):

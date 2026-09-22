@@ -46,8 +46,7 @@ import os
 from dataclasses import dataclass, fields as dataclass_fields
 from functools import wraps
 
-__all__ = ['ignore_exception', 'get_model_byId', 'get_icon', 'get_ord_from_fldname',
-           'MapDict', 'QueryStat', 'LRUCache'
+__all__ = ['ignore_exception', 'MapDict', 'QueryStat', 'LRUCache'
            ]
 
 
@@ -59,29 +58,6 @@ def ignore_exception(func):
         except:
             return ''
     return wrap
-
-
-def get_model_byId(models, id):
-    for m in list(models.all()):
-        # print(str(m['id']) + ', ' + m['name'])
-        if m['id'] == id:
-            return m
-
-
-def get_ord_from_fldname(model, name):
-    flds = model['flds']
-    for fld in flds:
-        if fld['name'] == name:
-            return fld['ord']
-
-
-def get_icon(filename):
-    from aqt.qt import QIcon
-
-    curdir = os.path.dirname(os.path.abspath(__file__))
-    pardir = os.path.join(curdir, os.pardir)
-    path = os.path.join(pardir, 'res', filename)
-    return QIcon(path)
 
 
 # Some query words like 'Saudi Arabia' is comprised by two or more words that split by '%20'(space),
