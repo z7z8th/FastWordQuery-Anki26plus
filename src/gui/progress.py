@@ -58,6 +58,15 @@ class ProgressWindow(QProgressDialog):
         self._first_time = 0
         self._aborted = False
 
+    def keyPressEvent(self, event):
+        # print(f'---keyPressEvent {event.key()}')
+        if event.key() == Qt.Key.Key_Escape:
+            # Manually trigger cancel(), which emits canceled signal
+            self.finish()
+            event.accept()
+        else:
+            super().keyPressEvent(event)
+                
     def update_labels(self, qstat:QueryStat):
         if self.is_aborted():
             return

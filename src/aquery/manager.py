@@ -31,7 +31,7 @@ from ..gui import ProgressWindow
 from .common import inspect_note, query_flds, QueryStat, update_note_fields
 from ..service import Service, QueryResult
 
-from ..service.worker import *
+from ..service.query_worker import *
 
 # mp.set_start_method("spawn", force=True)
 

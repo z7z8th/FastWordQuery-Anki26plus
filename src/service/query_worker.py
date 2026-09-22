@@ -77,7 +77,7 @@ def query_flds(note_fields_len_list, word_ord, word, cfg_qfields, qfields:list[i
             else:
                 print(f'*** Error: service `{dict_unique}` `{svc}` is not supported')
 
-        # print(f"---service {svc} for {dict_unique}")
+        # print(f"---service {svc} support {svc.support} for {dict_unique}")
         if svc and svc.support:
             tasks.append({
                 'dict_uniq': dict_unique,
@@ -212,6 +212,7 @@ def process_worker_loop(stop_event, task_queue: mp.Queue, result_queue: mp.Queue
 
         if payload is None:  # Poison pill to gracefully shut down worker
             break
+
 
         note_id, note_fields_len_list, word_ord, word, cfg_qfields = payload
         # note = col.get_note(note_id)

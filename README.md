@@ -10,6 +10,12 @@
 * Replace CSS regex wrapping with CSS parser wrapping to avoid corrupted output.
 * Upgraded to mdict-utils version 2025 Jan 2.
 
+## TODO
+
+* worker cpu profile
+* worker mem usage analysis
+
+
 ## Guides
 
   [Supported Dictionaries](docs/services.md)

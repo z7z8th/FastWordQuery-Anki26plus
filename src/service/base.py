@@ -47,7 +47,7 @@ from bs4 import BeautifulSoup
 from threading import Lock, Thread
 
 from .. import context
-from ..context import config
+from ..context import config, gui_processEvents
 from ..lang import _cl
 from ..libs import MdxBuilder, StardictBuilder
 from ..utils import MapDict, wrap_css, LRUCache
@@ -648,7 +648,6 @@ class LocalService(Service):
     """
     Local Dictionary Service
     """
-    _main_app = None
     def __init__(self, dict_path, main_app = None):
         # print(f'---LocalService.__init__ {dict_path}')
         super().__init__()
@@ -657,16 +656,12 @@ class LocalService(Service):
         self.missed_css = set()
         self.css_files = set()
         self.backend = None
-        LocalService._main_app = main_app
 
     # MdxBuilder instances map
     _backends: defaultdict[str, object] = defaultdict(dict)
-    # _mutex_backends = Lock()
 
     @staticmethod
     def _get_backend(key: str, builder: ObjectBuilder):
-        print('---TODO: remove _main_app')
-        # LocalService._mutex_backends.lock()
         with context.get_mdx_backend_lock():
             key = md5(str(key).encode('utf-8')).hexdigest()
             # print(f'_get_builder key {key} {func} builders[key] {LocalService._mdx_builders[key]}')
@@ -675,11 +670,9 @@ class LocalService(Service):
                     worker = _DictBackendWorker(builder)
                     worker.start()
                     while worker.is_alive():
-                        if LocalService._main_app:
-                            LocalService._main_app.processEvents()
+                        gui_processEvents()
                         worker.join(timeout=0.1)
                     LocalService._backends[key] = worker.backend
-        # LocalService._mutex_backends.unlock()
         return LocalService._backends[key]
 
     @property

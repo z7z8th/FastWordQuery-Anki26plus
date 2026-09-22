@@ -57,6 +57,8 @@ class DictManageDialog(Dialog):
         # add dicts mapping
         self.dicts_layout = QGridLayout(self._scroll)
         self.scroll_area = QScrollArea()
+        self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setFrameShape(QFrame.Shape.NoFrame)
         self.scroll_area.setWidget(self._scroll)
         self.main_layout.addWidget(self.scroll_area)
         # self.main_layout.addLayout(self.dicts_layout)

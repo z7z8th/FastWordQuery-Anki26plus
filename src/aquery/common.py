@@ -36,7 +36,7 @@ from ..service.base import LocalService, WordNotFoundError
 from ..utils import wrap_css, QueryStat
 from ..lang import _
 
-from ..service.worker import *
+from ..service.query_worker import *
 
 __all__ = [
     'update_note_fields', 'update_note_field',
