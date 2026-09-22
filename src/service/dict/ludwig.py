@@ -8,7 +8,7 @@ oxford_download_mp3 = True
 class Ludwig(WebService):
 
     def __init__(self):
-        super(Ludwig, self).__init__()
+        super().__init__()
 
     def _get_from_api(self):
         data = self.get_response(u'https://ludwig.guru/s/{}'.format(self.quote_word))

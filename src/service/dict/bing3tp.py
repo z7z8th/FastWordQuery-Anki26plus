@@ -9,7 +9,7 @@ bing_download_mp3 = True
 class BingXtk(WebService):
 
     def __init__(self):
-        super(BingXtk, self).__init__()
+        super().__init__()
 
     def _get_from_api(self):
         result = {

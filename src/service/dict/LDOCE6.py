@@ -78,7 +78,7 @@ class Ldoce6(MdxService):
                     print(f"--- MDX-LDOCE6 Found dict_path: {service.dict_path}")
                     dict_path = service.dict_path
                     break
-        super(Ldoce6, self).__init__(dict_path)
+        super().__init__(dict_path)
 
     @property
     def title(self):

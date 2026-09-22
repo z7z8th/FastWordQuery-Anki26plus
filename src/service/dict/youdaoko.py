@@ -8,7 +8,7 @@ from ..base import *
 class Youdaoko(WebService):
 
     def __init__(self):
-        super(Youdaoko, self).__init__()
+        super().__init__()
 
     def _get_from_api(self, lang='ko'):
         url = (u'http://dict.youdao.com/fsearch?client=deskdict'

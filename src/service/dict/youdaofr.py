@@ -8,7 +8,7 @@ from ..base import WebService, export, register, with_styles
 class Youdaofr(WebService):
 
     def __init__(self):
-        super(Youdaofr, self).__init__()
+        super().__init__()
 
     def _get_from_api(self, lang='fr'):
         url = (u'http://dict.youdao.com/fsearch?client=deskdict'

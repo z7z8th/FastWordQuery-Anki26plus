@@ -13,7 +13,7 @@ souka_download_mp3 = True
 class Souka(WebService):
 
     def __init__(self):
-        super(Souka, self).__init__()
+        super().__init__()
 
     def _get_url(self):
         return u'https://soukaapp.com/dict/{}'.format(self.quote_word)

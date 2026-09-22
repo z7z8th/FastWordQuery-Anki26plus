@@ -36,7 +36,6 @@ from ..service.base import LocalService, WordNotFoundError
 from ..utils import wrap_css, QueryStat
 from ..lang import _
 
-from .base import *
 from ..service.worker import *
 
 __all__ = [

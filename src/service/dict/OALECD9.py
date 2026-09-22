@@ -32,7 +32,7 @@ class oalecd9_mdx(MdxService):
                 if title.startswith(u'牛津高阶英汉双解词典'):
                     dict_path = service.dict_path
                     break
-        super(oalecd9_mdx, self).__init__(dict_path)
+        super().__init__(dict_path)
 
     @property
     def title(self):

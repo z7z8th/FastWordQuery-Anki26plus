@@ -53,7 +53,7 @@ class OptionsDialog(Dialog):
     _OK_ICON = get_icon('ok.png')
 
     def __init__(self, parent, title=u'Options', model_id=-1):
-        super(OptionsDialog, self).__init__(parent, title)
+        super().__init__(parent, title)
         self._signal.connect(self._before_build)
         self._signal.connect(self._after_build)
         # initlizing info
@@ -210,7 +210,7 @@ class OptionsDialog(Dialog):
     def accept(self):
         """on button was clicked"""
         self.save()
-        super(OptionsDialog, self).accept()
+        super().accept()
 
     def btn_models_pressed(self):
         """on choose model button was clicker"""
@@ -339,7 +339,7 @@ class TabContent(QScrollArea):
     """Options tab content"""
 
     def __init__(self, model, conf, services):
-        super(TabContent, self).__init__()
+        super().__init__()
         self._conf = conf
         self._model = model
         self._services = services
@@ -662,7 +662,7 @@ class TabContent(QScrollArea):
 
 class CTabBar(QTabBar):
     def __init__(self, parent=None):
-        super(CTabBar, self).__init__(parent)
+        super().__init__(parent)
         # style
         self.setTabsClosable(True)
         self.setMovable(False)

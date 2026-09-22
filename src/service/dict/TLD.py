@@ -22,7 +22,7 @@ class TLD(MdxService):
                 if title.startswith(u'TLD'):
                     dict_path = service.dict_path
                     break
-        super(TLD, self).__init__(dict_path)
+        super().__init__(dict_path)
 
     @property
     def title(self):

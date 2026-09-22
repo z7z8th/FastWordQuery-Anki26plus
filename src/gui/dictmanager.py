@@ -40,7 +40,7 @@ class DictManageDialog(Dialog):
     """
 
     def __init__(self, parent, title=u'Dictionary Manager'):
-        super(DictManageDialog, self).__init__(parent, title)
+        super().__init__(parent, title)
         self.main_layout = QVBoxLayout()
         self.setLayout(self.main_layout)
         text_line = QLabel(_('EDITOR_NAME_NOTE'))
@@ -171,7 +171,7 @@ class DictManageDialog(Dialog):
     def accept(self):
         """ok button clicked"""
         self.save()
-        super(DictManageDialog, self).accept()
+        super().accept()
 
     def save(self):
         """save config to file"""

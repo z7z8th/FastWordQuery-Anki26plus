@@ -8,7 +8,8 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # any later version; http://www.gnu.org/copyleft/gpl.html.
-
+import os
+import sys
 import multiprocessing as mp
 import queue
 import pickle
@@ -18,7 +19,7 @@ import time
 
 import anki.notes
 from aqt import mw
-from aqt.qt import *
+from aqt.qt import QElapsedTimer, QThread
 from anki.notes import Note
 # from anki.collection import Collection
 
@@ -69,7 +70,7 @@ class QueryWorkerManager(object):
         self.result_queue = self.ctx.Queue()
         self.stop_event = self.ctx.Event()
         
-        self.progress = ProgressWindow(mw)
+        self.progress = ProgressWindow(mw.app.activeWindow())
         self.total = 0
 
         self.qstat = QueryStat()
@@ -116,7 +117,8 @@ class QueryWorkerManager(object):
             # Temporarily unset or override __name__ so get_preparation_data()
             # does not set init_main_from_name to 'anki.__main__'
             if main_mod:
-                setattr(main_mod.__spec__, 'name', f'{ADDON_NAME}.__init__')
+                setattr(main_mod.__spec__, 'name', f'{ADDON_NAME}.service.__init__')
+            print(f'__name__ {__name__}')
             print(f'getattr(main_module.__spec__, "name", None) {getattr(main_module.__spec__, "name", None)}')
 
             # Spawn worker processes

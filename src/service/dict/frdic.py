@@ -12,7 +12,7 @@ css = ''
 class Frdic(WebService):
 
     def __init__(self):
-        super(Frdic, self).__init__()
+        super().__init__()
 
     def _get_from_api(self):
         url = 'http://www.frdic.com/dicts/fr/{}'.format(self.quote_word)

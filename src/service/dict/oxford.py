@@ -15,7 +15,7 @@ oxford_download_mp3 = True
 class Oxford(WebService):
 
     def __init__(self):
-        super(Oxford, self).__init__()
+        super().__init__()
 
     def _get_from_api(self, lang='en'):
         # obsolute app id and key

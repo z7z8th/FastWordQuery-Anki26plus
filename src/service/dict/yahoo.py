@@ -9,7 +9,7 @@ yahoo_download_mp3 = True
 class Yahoo_Dict(WebService):
 
     def __init__(self):
-        super(Yahoo_Dict, self).__init__()
+        super().__init__()
 
     def _get_from_api(self):
         url = u"https://tw.dictionary.search.yahoo.com/search?p={}".format(

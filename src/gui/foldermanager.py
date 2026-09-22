@@ -32,7 +32,7 @@ class FoldersManageDialog(Dialog):
     '''
 
     def __init__(self, parent, title=u'Dictionary Folder Manager'):
-        super(FoldersManageDialog, self).__init__(parent, title)
+        super().__init__(parent, title)
         # self._dict_paths = []
         self.build()
 
@@ -86,7 +86,7 @@ class FoldersManageDialog(Dialog):
     def accept(self):
         '''ok button clicked'''
         self.save()
-        super(FoldersManageDialog, self).accept()
+        super().accept()
 
     def save(self):
         '''save config to file'''

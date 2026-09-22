@@ -22,7 +22,7 @@ class lgmcw_Sound(MdxService):
                 if title.startswith(u'SoundMobile'):
                     dict_path = service.dict_path
                     break
-        super(lgmcw_Sound, self).__init__(dict_path)
+        super().__init__(dict_path)
 
     @property
     def title(self):

@@ -26,29 +26,42 @@ from packaging.version import Version
 
 import multiprocessing as mp
 
+_IS_MAIN_PROCESS = 0
+
 def is_main_process():
+    global _IS_MAIN_PROCESS
+    if _IS_MAIN_PROCESS > 0:
+        return _IS_MAIN_PROCESS == 1
+    
     for m in sys.modules:
         if "Qt" in m or "aqt" in m:
-            return True
-    return False
+            _IS_MAIN_PROCESS = 1
+            break
+    else:
+        _IS_MAIN_PROCESS = 2
+
+    return _IS_MAIN_PROCESS == 1
 
 if is_main_process():
     from aqt import mw
     from anki.hooks import runHook
 else:
     mw = None
+    def runHook(*args, **kwargs): pass
+
 
 ###################################################
 # spawned worker process has no mw
 ADDON_NAME = mw.addonManager.addonFromModule(__name__) if mw else os.path.basename(os.path.dirname(__file__))
 ADDON_DIR = mw.addonManager.addonsFolder(ADDON_NAME) if mw else os.path.dirname(__file__)
+
 # 1. Point Anki's Python environment to your bundled offline library
-for ldir in ["libs", "vendor"]:
+for ldir in ["libs", "vendor", '.']:
     vendor_dir = os.path.join(ADDON_DIR, ldir)
     if vendor_dir not in sys.path:
         sys.path.append(vendor_dir)
 
-sys.path.append(ADDON_DIR)
+# sys.path.append(ADDON_DIR)
 
 print(f'sys.path {sys.path}')
 print(f"ADDON_NAME {ADDON_NAME}")
@@ -61,7 +74,7 @@ misc.hook_builtins_open_exception()
 
 from .constants import VERSION
 
-__all__ = ['config', 'set_mdx_backend_lock', 'get_mdx_backend_lock', 'ADDON_NAME']
+# __all__ = ['config', 'set_mdx_backend_lock', 'get_mdx_backend_lock', 'ADDON_NAME']
 
 
 class Config(object):
@@ -211,6 +224,10 @@ class Config(object):
 
 config = Config(mw)
 
+
+def gui_processEvents():
+    if mw:
+        return mw.app.processEvents()
 
 
 _MDX_BACKEND_LOCK = threading.Lock()

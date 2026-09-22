@@ -10,7 +10,7 @@ class Bing_Images(WebService):
     bing_download_img = True
 
     def __init__(self):
-        super(Bing_Images, self).__init__()
+        super().__init__()
 
     def _get_from_api(self):
         url = u"http://cn.bing.com/images/search?q={}".format(self.quote_word)

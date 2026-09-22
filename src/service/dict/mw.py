@@ -8,7 +8,7 @@ from ...utils.misc import format_multi_query_word
 class MerriamWebster(WebService):
 
     def __init__(self):
-        super(MerriamWebster, self).__init__()
+        super().__init__()
 
     def _get_from_api(self):
         url = 'https://www.merriam-webster.com/dictionary/{}'.format(format_multi_query_word(self.quote_word))

@@ -9,7 +9,7 @@ dreye_download_mp3 = True
 class Dreye(WebService):
 
     def __init__(self):
-        super(Dreye, self).__init__()
+        super().__init__()
 
     def _get_from_api(self):
         data = self.get_response(u"https://yun.dreye.com/dict_new/dict.php?w={}&hidden_codepage=01".format(self.quote_word))

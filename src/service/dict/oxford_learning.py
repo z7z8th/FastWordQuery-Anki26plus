@@ -32,7 +32,7 @@ class OxfordLearning(WebService):
     ]
 
     def __init__(self):
-        super(OxfordLearning, self).__init__()
+        super().__init__()
 
     def query(self, word: str):
         """Query Oxford Learner's Dictionary for target word."""

@@ -6,7 +6,7 @@ from .cambridge import Cambridge
 class CambridgeCS(Cambridge):
 
     def __init__(self):
-        super(CambridgeCS, self).__init__()
+        super().__init__()
 
     def _get_url(self):
         return u'https://dictionary.cambridge.org/us/dictionary/english-chinese-simplified/'

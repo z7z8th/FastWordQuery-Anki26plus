@@ -12,7 +12,7 @@ css = ''
 class Esdict(WebService):
 
     def __init__(self):
-        super(Esdict, self).__init__()
+        super().__init__()
 
     def _get_from_api(self):
         url = 'https://www.esdict.cn/mdicts/es/{}'.format(self.quote_word)

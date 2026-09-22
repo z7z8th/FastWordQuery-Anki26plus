@@ -11,7 +11,7 @@ import json
 class BaiduFy(WebService):
 
     def __init__(self):
-        super(BaiduFy, self).__init__()
+        super().__init__()
 
     def _get_from_api(self, lang='fr'):
         url = u'http://api.fanyi.baidu.com/api/trans/vip/translate'

@@ -147,7 +147,7 @@ class MapDict(dict):
     """
 
     def __init__(self, *args, **kwargs):
-        super(MapDict, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         # Update self directly using dict methods (no self.__dict__ pollution)
         for arg in args:
             if isinstance(arg, dict):

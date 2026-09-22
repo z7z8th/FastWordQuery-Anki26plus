@@ -7,7 +7,7 @@ from ..base import *
 class MiniDict(WebService):
 
     def __init__(self):
-        super(MiniDict, self).__init__()
+        super().__init__()
 
     def _get_from_api(self):
         data = self.get_response(u"http://apii.dict.cn/mini.php?q={}".format(self.quote_word))

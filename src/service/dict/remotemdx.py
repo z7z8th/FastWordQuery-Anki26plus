@@ -30,7 +30,7 @@ from ..base import QueryResult, WebService, export, register, with_styles
 class RemoteMdx(WebService):
 
     def __init__(self):
-        super(RemoteMdx, self).__init__()
+        super().__init__()
         self.cache = defaultdict(set)
 
     def active(self, dict_path, word):

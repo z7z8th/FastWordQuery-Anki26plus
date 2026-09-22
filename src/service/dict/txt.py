@@ -10,7 +10,7 @@ path = u'D:\\dicts\\LDOCE\\d.txt'
 class TxtTest(LocalService):
 
     def __init__(self):
-        super(TxtTest, self).__init__(path)
+        super().__init__(path)
         try:
             self.handle = open(path, 'rb')
         except:

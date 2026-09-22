@@ -9,7 +9,7 @@ class Bing(WebService):
     base_url = 'https://cn.bing.com'
 
     def __init__(self):
-        super(Bing, self).__init__()
+        super().__init__()
 
     def _get_from_api(self):
         data = self.get_response(u"https://cn.bing.com/dict/search?q={}&mkt=zh-cn".format(self.quote_word))

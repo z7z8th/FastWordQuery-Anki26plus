@@ -32,7 +32,7 @@ class SettingDialog(Dialog):
     '''
 
     def __init__(self, parent, title=u'Setting'):
-        super(SettingDialog, self).__init__(parent, title)
+        super().__init__(parent, title)
         self.setFixedWidth(400)
         self.check_force_update = None
         self.check_ignore_accents = None
@@ -115,7 +115,7 @@ class SettingDialog(Dialog):
 
     def accept(self):
         self.save()
-        super(SettingDialog, self).accept()
+        super().accept()
 
     def reset(self):
         data = {

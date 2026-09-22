@@ -42,7 +42,7 @@ class Dialog(QDialog):
 
         self._title = title if "FastWQ" in title else "FastWQ - " + title
         self._parent = parent
-        super(Dialog, self).__init__(parent)
+        super().__init__(parent)
 
         self.setModal(True)
         self.setWindowFlags(

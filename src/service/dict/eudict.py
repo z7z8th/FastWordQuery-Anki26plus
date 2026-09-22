@@ -14,7 +14,7 @@ eudict_download_mp3 = True
 @register([u'欧路词典', u'eudict'])
 class Eudict(WebService):
     def __init__(self):
-        super(Eudict, self).__init__()
+        super().__init__()
 
     def _get_from_api(self):
         url = 'http://dict.eudic.net/mdicts/en/{}'.format(self.quote_word)

@@ -13,7 +13,7 @@ iciba_download_mp3 = True
 class ICIBA(WebService):
 
     def __init__(self):
-        super(ICIBA, self).__init__()
+        super().__init__()
 
     def _get_from_api(self):
         resp = defaultdict(str)

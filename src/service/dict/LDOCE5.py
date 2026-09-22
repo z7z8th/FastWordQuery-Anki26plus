@@ -33,7 +33,7 @@ class Ldoce5plus(MdxService):
                 if title.startswith(u'LDOCE5++'):
                     dict_path = service.dict_path
                     break
-        super(Ldoce5plus, self).__init__(dict_path)
+        super().__init__(dict_path)
 
     @property
     def title(self):

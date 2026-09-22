@@ -28,7 +28,7 @@ youdao_download_mp3 = True
 class Youdao(WebService):
 
     def __init__(self):
-        super(Youdao, self).__init__()
+        super().__init__()
 
     def _get_from_api(self, lang='eng'):
         url = (u'http://dict.youdao.com/fsearch?client=deskdict'

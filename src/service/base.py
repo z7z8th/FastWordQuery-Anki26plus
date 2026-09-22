@@ -449,7 +449,7 @@ class WebService(Service):
     """
 
     def __init__(self):
-        super(WebService, self).__init__()
+        super().__init__()
         self._cookie = CookieJar()
         self._opener = urllib2.build_opener(
             urllib2.HTTPCookieProcessor(self._cookie))
@@ -628,7 +628,7 @@ class _DictBackendWorker(Thread):
     """Local Dictionary Builder"""
 
     def __init__(self, func):
-        super(_DictBackendWorker, self).__init__()
+        super().__init__()
         self._backend: Optional[object] = None
         self._func: ObjectBuilder = func
 
@@ -651,7 +651,7 @@ class LocalService(Service):
     _main_app = None
     def __init__(self, dict_path, main_app = None):
         # print(f'---LocalService.__init__ {dict_path}')
-        super(LocalService, self).__init__()
+        super().__init__()
         self.dict_path = dict_path
         # self.backend: Optional[object] = None
         self.missed_css = set()
@@ -696,7 +696,7 @@ class LocalService(Service):
 
     def active(self, fld_ord, word):
         self.missed_css.clear()
-        return super(LocalService, self).active(fld_ord, word)
+        return super().active(fld_ord, word)
 
 from typing import cast
 
@@ -710,7 +710,7 @@ class MdxService(LocalService):
         if not dict_path:
             # raise Exception('MdxService.__init__ no dict_path specified')
             print(f'*** {self} MdxService.__init__ no dict_path specified')
-        super(MdxService, self).__init__(dict_path)
+        super().__init__(dict_path)
         self._local = threading.local()
         self.notfound_cache = dict()
         self.media_cache = defaultdict(dict)
@@ -1033,7 +1033,7 @@ class StardictService(LocalService):
     '''
 
     def __init__(self, dict_path):
-        super(StardictService, self).__init__(dict_path)
+        super().__init__(dict_path)
         self.query_interval = 0.05
         if StardictService.check(self.dict_path):
             dict_path = dict_path[:-4]
@@ -1074,7 +1074,7 @@ class QueryResult(MapDict):
 
     def __init__(self, *args, **kwargs):
         # Call super first so dict state is initialized properly
-        super(QueryResult, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         
         # Set default values if not explicitly provided in args/kwargs
         self.setdefault("result", "")

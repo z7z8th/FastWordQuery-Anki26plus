@@ -14,7 +14,7 @@ longman_download_img = True
 class Longman(WebService):
 
     def __init__(self):
-        super(Longman, self).__init__()
+        super().__init__()
 
     def _get_from_api(self):
         url = 'https://www.ldoceonline.com/dictionary/{}'.format(
