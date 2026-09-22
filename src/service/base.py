@@ -355,7 +355,8 @@ class Service(object):
 
     @property
     def title(self):
-        return getattr(self, '_title_')
+        # return getattr(self, '_title_')
+        return self._title_
 
     @property
     def unique(self):
@@ -751,6 +752,9 @@ class MdxService(LocalService):
 
     @property
     def title(self):
+        if type(self) is not MdxService:
+            return super().title
+        
         if config.use_filename or not self.backend._title or self.backend._title.startswith('Title'):
             return self._filename
         else:

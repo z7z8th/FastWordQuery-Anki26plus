@@ -20,6 +20,17 @@
 from .manager import ServiceManager
 from .pool import ServicePool
 from .base import Service, LocalService, QueryResult, copy_static_file, WordNotFoundError
+from ..context import config
 
 service_manager = ServiceManager()                             # Service Manager
 service_pool = ServicePool(service_manager)                    # Service Instance Pool Manager
+
+# MDX-LDOEC6CE supersede LDOEC6CE, init once and disable
+def try_init_services():
+    dicts = config.dicts
+    for clazz in service_manager.local_services:
+        if dicts.get(clazz._unique_, {}).get('enabled', clazz._enabled_):
+            svc = service_pool.get(clazz._unique_)
+            service_pool.put(svc)
+
+try_init_services()

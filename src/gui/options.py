@@ -94,26 +94,29 @@ class OptionsDialog(Dialog):
             'local': [],  # 本地词典
             'web': []  # 网络词典
         }
+
         # local services
         for clazz in service_manager.local_services:
             if dicts.get(clazz._unique_, dict()).get('enabled', clazz._enabled_):
-                service = service_pool.get(clazz._unique_)
-                if service and service.support:
+                svc = service_pool.get(clazz._unique_)
+                if svc and svc.support:
                     self.dict_services['local'].append({
-                        'title': service.title,
-                        'unique': service.unique
+                        'title': svc.title,
+                        'unique': svc.unique
                     })
-                service_pool.put(service)
+                service_pool.put(svc)
+
         # web services
         for clazz in service_manager.web_services:
             if dicts.get(clazz._unique_, dict()).get('enabled', clazz._enabled_):
-                service = service_pool.get(clazz._unique_)
-                if service and service.support:
+                svc = service_pool.get(clazz._unique_)
+                if svc and svc.support:
                     self.dict_services['web'].append({
-                        'title': service.title,
-                        'unique': service.unique
+                        'title': svc.title,
+                        'unique': svc.unique
                     })
-                service_pool.put(service)
+                service_pool.put(svc)
+
         # emit finished
         self._signal.emit('after_build')
 
@@ -575,7 +578,7 @@ class TabContent(QScrollArea):
         """setup dict combo box"""
         dict_combo.clear()
 
-        # print(f'--- fill_dict_combo_options local {services["local"]} web {services["web"]}')
+        print(f'--- fill_dict_combo_options local {services["local"]} web {services["web"]}')
 
         # local dict service
         for service in services['local']:

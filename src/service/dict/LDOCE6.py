@@ -70,6 +70,7 @@ class Ldoce6(MdxService):
         if not dict_path:
             from ...service import service_manager, service_pool
             for clazz in service_manager.mdx_services:
+                print(f'Ldoce6.__init__ clazz title {clazz._title_} unique {clazz._unique_}')
                 service: MdxService = cast(MdxService, service_pool.get(clazz._unique_))
                 title = service.backend._title if service and service.support else u''
                 service_pool.put(service)

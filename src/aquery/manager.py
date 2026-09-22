@@ -26,7 +26,6 @@ from anki.notes import Note
 from .. import context
 from ..context import config, ADDON_NAME
 from ..lang import _
-from ..gui import ProgressWindow
 
 from .common import inspect_note, query_flds, QueryStat, update_note_fields
 from ..service import Service, QueryResult
@@ -53,7 +52,7 @@ def get_anki_spawn_context():
             print(f"--- ctx.set_executable {py_bin}")
             ctx.set_executable(py_bin)
             break
-            
+
     return ctx
 
 
@@ -63,6 +62,8 @@ class QueryWorkerManager(object):
     """
 
     def __init__(self):
+        from ..gui import ProgressWindow
+
         self.processes = []
         self.ctx = get_anki_spawn_context()
 

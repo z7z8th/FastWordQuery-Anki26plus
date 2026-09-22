@@ -36,7 +36,7 @@ class ServiceManager(object):
         self.update_services()
 
     @property
-    def services(self):
+    def services(self) -> list[object_builder]:
         return self.web_services + self.local_services
 
     def update_services(self):
@@ -49,13 +49,13 @@ class ServiceManager(object):
     def get_service(self, unique) -> Service:
         # webservice unique: class name
         # mdxservice unique: md5 of dict filepath
-        for svc in self.services:
-            if svc._unique_ == unique:
-                service = svc()
-                print(f'---get_service {service} dict {service.__dict__}')
+        for clazz in self.services:
+            if clazz._unique_ == unique:
+                svc = clazz()
+                print(f'---get_service {svc} clazz._title_ { clazz._title_} title {svc.title} unique {svc.unique}')
 
                 # service.unique = unique
-                return service
+                return svc
         
         raise Exception(f"service of unique `{unique}` not found")
 
@@ -80,9 +80,9 @@ class ServiceManager(object):
             StardictService
         )
         for f in files:
-            # if 'LDOCE6' not in f:
-            #     continue
-            #try:
+            if 'LDOCE6' not in f:
+                continue
+
             module = importlib.import_module( 
                 u'.%s.%s' % (service_dirname, os.path.splitext(f)[0]), 
                 __package__

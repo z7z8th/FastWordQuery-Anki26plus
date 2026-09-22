@@ -33,7 +33,7 @@ def is_main_process():
 print(f'---sys.argv {sys.argv}')
 print(f"[PID {os.getpid()}] Starting worker module import...", flush=True)
 # Print loaded modules before any add-on imports
-print("Loaded Qt modules before add-on imports:", [m for m in sys.modules if "Qt" in m or "aqt" in m], flush=True)
+# print("Loaded Qt modules before add-on imports:", [m for m in sys.modules if "Qt" in m or "aqt" in m], flush=True)
 
 if is_main_process():
     from aqt import mw
@@ -41,7 +41,7 @@ if is_main_process():
     from anki.utils import is_mac
 else:
     mw = None
-print("Loaded Qt modules before add-on imports:", [m for m in sys.modules if "Qt" in m or "aqt" in m], flush=True)
+# print("Loaded Qt modules before add-on imports:", [m for m in sys.modules if "Qt" in m or "aqt" in m], flush=True)
 
 print(f'===mw {mw}')
 

@@ -113,7 +113,7 @@ class Config(object):
         """
         Load from config file
         """
-        print(f'---read mw {mw} self.data {self.data}')
+        # print(f'---read mw {mw} self.data {self.data}')
         if self.data:
             if mw and mw.pm and mw.pm.profileFolder() != self.profile_folder:
                 self.data = {}
