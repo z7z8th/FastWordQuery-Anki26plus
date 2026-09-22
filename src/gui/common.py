@@ -119,7 +119,7 @@ def browser_menu():
     """
     _OK_ICON = get_icon('ok.png')
     _NULL_ICON = get_icon('null.png')
-    from ..query import query_from_browser, query_from_editor_fields
+    from ..aquery import query_from_browser, query_from_editor_fields
 
     def on_setup_menus(browser):
         """
@@ -195,7 +195,7 @@ def customize_addcards():
     """
     _OK_ICON = get_icon('ok.png')
     _NULL_ICON = get_icon('null.png')
-    from ..query import query_from_browser, query_from_editor_fields
+    from ..aquery import query_from_browser, query_from_editor_fields
 
     def add_query_button(self):
         '''
