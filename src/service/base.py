@@ -118,16 +118,14 @@ def register(labels, enabled = False):
             attrs = getattr(method, '_export_attrs_', None)
             if attrs and attrs[1] == -1:
                 # [(global _def_index_, method), (,)]
-                exports.append((
-                    getattr(method, '_def_index_', 0),
-                    method
-                ))
+                exports.append((getattr(method, '_def_index_', 0), method))
 
         exports = sorted(exports)
         # local sorted index
         for index, (_, method) in enumerate(exports):
             attrs = getattr(method, '_export_attrs_', None)
             attrs[1] = index
+            setattr(method, '_export_attrs_', attrs)
 
         return cls
 
@@ -328,7 +326,10 @@ class Service(object):
 
     def __init__(self):
         self.cache = LRUCache(SERVICE_INTERNAL_CACHE_SIZE, defaultdict)
-        self._unique = self.__class__.__name__
+        self._unique_ = self.__class__.__name__
+        self._title_ = 'Unspecified'
+        self._enabled_ = True
+
         self._exporters = self._get_exporters()  # [(label1, method1), (label2, method2)]
         # print(f'{self._unique} exports {self._exporters}')
         # (label1, label2), (method1, method2) = zip(("label1", "method1"), ("label2", "method2"))
@@ -355,12 +356,24 @@ class Service(object):
         return self.get_cache_by_field(key) if self.is_field_cached(key) else self._get_from_api().get(key, default)
 
     @property
+    def title(self):
+        return getattr(self, '_title_')
+
+    @property
     def unique(self):
-        return self._unique
+        return self._unique_
 
     @unique.setter
     def unique(self, value):
-        self._unique = value
+        self._unique_ = value
+
+    @property
+    def enabled(self):
+        return self._enabled_
+    
+    @enabled.setter
+    def enabled(self, value):
+        self._enabled_ = value
 
     @property
     def word(self):
@@ -412,7 +425,7 @@ class Service(object):
         if dict_fld_ord >= 0 and dict_fld_ord < len(self.actions):
             return self.actions[dict_fld_ord]()
         else:
-            print(f"*** Error: {self._unique} query {dict_fld_ord} not in range [0, {len(self.actions)}) self.actions {self.actions}")
+            print(f"*** Error: {self.unique} query {dict_fld_ord} not in range [0, {len(self.actions)}) self.actions {self.actions}")
         return QueryResult.default()
 
     @staticmethod
@@ -428,19 +441,40 @@ class Service(object):
 type ObjectBuilder = Callable[[], object]
 
 
-from functools import partial
-def object_builder(service, *args, **kwargs)-> ObjectBuilder:
-    return partial(service, *args, **kwargs)
+# from functools import partial
+# def object_builder(service, *args, **kwargs)-> ObjectBuilder:
+#     return partial(service, *args, **kwargs)
 
-# def object_builder(service, *args, **kwargs)-> Callable[[], Service]:
-#     """
-#     wrap the service class constructor
-#     """
+from typing import Any, Generic, TypeVar
 
-#     def _service() -> Service:
-#         return service(*args, **kwargs)
+T = TypeVar("T")
 
-#     return _service
+
+class object_builder(Generic[T]):
+
+    def __init__(self, service: type[T], *args: Any, **kwargs: Any):
+        # Store internal state in __dict__ directly to avoid triggering custom __setattr__
+        self.__dict__["service"] = service
+        self.__dict__["args"] = args
+        self.__dict__["kwargs"] = kwargs
+        self.__dict__["custom_attrs"] = {}
+
+    def __setattr__(self, key: str, value: Any) -> None:
+        """Collects attributes set on the builder object."""
+        self.custom_attrs[key] = value
+
+    def __getattr__(self, key: str) -> None:
+        """Get attributes on the builder object."""
+        if key in self.custom_attrs:
+            return self.custom_attrs[key]
+        raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{key}'")
+
+    def __call__(self) -> T:
+        """Instantiates the target class and applies collected attributes."""
+        obj = self.service(*self.args, **self.kwargs)
+        for k, v in self.custom_attrs.items():
+            setattr(obj, k, v)
+        return obj
 
 
 class WebService(Service):
@@ -454,10 +488,6 @@ class WebService(Service):
         self._opener = urllib2.build_opener(
             urllib2.HTTPCookieProcessor(self._cookie))
         self.query_interval = 1.0
-
-    @property
-    def title(self):
-        return getattr(self, '_register_label_', self.unique)
 
     def get_response(self, url, data=None, headers=None, timeout=10):
         default_headers = {
@@ -678,10 +708,6 @@ class LocalService(Service):
     @property
     def support(self):
         return os.path.isfile(self.dict_path)
-
-    @property
-    def title(self):
-        return getattr(self, '_register_label_', u'Unkown')
 
     @property
     def _filename(self):

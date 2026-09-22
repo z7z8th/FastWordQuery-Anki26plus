@@ -82,6 +82,7 @@ class OptionsDialog(Dialog):
             'local': [],  # 本地词典
             'web': []  # 网络词典
         }
+        # local services
         for clazz in service_manager.local_services:
             if dicts.get(clazz._unique_, dict()).get('enabled', clazz._enabled_):
                 service = service_pool.get(clazz._unique_)
@@ -91,6 +92,7 @@ class OptionsDialog(Dialog):
                         'unique': service.unique
                     })
                 service_pool.put(service)
+        # web services
         for clazz in service_manager.web_services:
             if dicts.get(clazz._unique_, dict()).get('enabled', clazz._enabled_):
                 service = service_pool.get(clazz._unique_)

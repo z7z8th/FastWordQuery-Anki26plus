@@ -24,10 +24,6 @@ class lgmcw_Sound(MdxService):
                     break
         super().__init__(dict_path)
 
-    @property
-    def title(self):
-        return getattr(self, '_register_label_', self.unique)
-
     def get_html_all(self):
         html = self.get_html()
         if not html:

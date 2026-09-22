@@ -41,7 +41,7 @@ class ServicePool(object):
         
         return self.manager.get_service(unique)
     
-    def put(self, service):
+    def put(self, service: Service):
         if service is None:
             return
         unique = service.unique

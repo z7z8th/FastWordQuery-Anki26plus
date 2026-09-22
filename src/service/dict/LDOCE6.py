@@ -77,12 +77,10 @@ class Ldoce6(MdxService):
                 if title.startswith(u'LDOCE6') or u'LDOCE6' in os.path.basename(service.dict_path):
                     print(f"--- MDX-LDOCE6 Found dict_path: {service.dict_path}")
                     dict_path = service.dict_path
+                    clazz._enabled_ = False
+                    service.enabled = False
                     break
         super().__init__(dict_path)
-
-    @property
-    def title(self):
-        return getattr(self, '_register_label_', self.unique)
 
     @export('PHON')
     def fld_phonetic(self):

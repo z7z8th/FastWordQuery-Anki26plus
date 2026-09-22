@@ -5,7 +5,7 @@ from ..base import *
 from ...utils.misc import format_multi_query_word
 
 
-@register([u'牛津学习词典', u'Oxford Learner'])
+@register([u'牛津学习词典', u'Oxford Learner'], enabled=True)
 @auto_bind_exports
 class OxfordLearning(WebService):
 

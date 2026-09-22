@@ -32,12 +32,10 @@ class Ldoce5plus(MdxService):
                 # print(f'Dict Service: {title} -- {service.dict_path}')
                 if title.startswith(u'LDOCE5++'):
                     dict_path = service.dict_path
+                    clazz._enabled_ = False
+                    service.enabled = False
                     break
         super().__init__(dict_path)
-
-    @property
-    def title(self):
-        return getattr(self, '_register_label_', self.unique)
 
     def _fld_voice(self, html, voice):
         """获取发音字段"""

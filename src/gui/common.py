@@ -281,13 +281,13 @@ def context_menu():
                     dict_fld_ord = each.get('dict_fld_ord', -1)
                     fld_ord = each.get('fld_ord', -1)
                     if dict_unique and dict_fld_ord != -1 and fld_ord != -1:
-                        s = service_pool.get(dict_unique)
-                        if s and s.support:
-                            name = s.title + ' :-> ' + s.fields[dict_fld_ord]
+                        svc = service_pool.get(dict_unique)
+                        if svc and svc.support:
+                            name = svc.title + ' :-> ' + svc.fields[dict_fld_ord]
                             if name not in names:
                                 names.append(name)
                                 curr_flds.append({'name': name, 'default': i})
-                        service_pool.put(s)
+                        service_pool.put(svc)
 
         submenu = menu.addMenu(_('QUERY'))
         submenu.addAction(

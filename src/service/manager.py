@@ -52,8 +52,9 @@ class ServiceManager(object):
         for svc in self.services:
             if svc._unique_ == unique:
                 service = svc()
+                print(f'---get_service {service} dict {service.__dict__}')
 
-                service.unique = unique
+                # service.unique = unique
                 return service
         
         raise Exception(f"service of unique `{unique}` not found")
@@ -86,16 +87,17 @@ class ServiceManager(object):
                 u'.%s.%s' % (service_dirname, os.path.splitext(f)[0]), 
                 __package__
             )
-            for name, clazz in inspect.getmembers(module, predicate=inspect.isclass):
+            for mod_name, clazz in inspect.getmembers(module, predicate=inspect.isclass):
                 if clazz in base_class:
                     continue
                 if not(issubclass(clazz, WebService) or issubclass(clazz, LocalService)):
                     continue
                 if getattr(clazz, '_register_label_', None) is None:
                     continue
+                print(f'---_get_services_from_files {mod_name} -> {clazz}')
                 svc = object_builder(clazz, *args)
-                svc._title_ = getattr(clazz, '_register_label_', name)
-                svc._unique_ = name
+                svc._title_ = getattr(clazz, '_register_label_', mod_name)
+                svc._unique_ = clazz.__name__
                 svc._src_path_ = os.path.join(svc_rootdir, f)
                 svc._enabled_ = clazz._enabled_
                 print(f"Found service: {vars(svc)}")
@@ -105,8 +107,8 @@ class ServiceManager(object):
                 # get the customized local services
                 if issubclass(clazz, LocalService):
                     local_custom_services.append(svc)
-        web_services = sorted(web_services, key=lambda service: service._title_)
-        local_custom_services = sorted(local_custom_services, key=lambda service: service._title_)
+        web_services = sorted(web_services, key=lambda clazz: clazz._title_)
+        local_custom_services = sorted(local_custom_services, key=lambda clazz: clazz._title_)
         return web_services, local_custom_services
 
     def _get_available_local_services(self):
@@ -120,20 +122,22 @@ class ServiceManager(object):
             print(f'config.dict_dirs > {each}')
             for dirpath, dirnames, filenames in os.walk(each):
                 for filename in filenames:
-                    svc = None
                     dict_path = os.path.join(dirpath, filename)
                     #MDX
+                    clazz = object_builder(MdxService, dict_path)
+                    rootname, _ = os.path.splitext(os.path.basename(dict_path))
                     if MdxService.check(dict_path):
                         print(f'config.dict_dirs > MdxService dict_path {dict_path}')
-                        svc = object_builder(MdxService, dict_path)
-                        svc._unique_ = md5(str(dict_path).encode('utf-8')).hexdigest()
-                        svc._enabled_ = True
-                        mdx_services.append(svc)
+                        clazz._title_ = rootname
+                        clazz._unique_ = md5(str(dict_path).encode('utf-8')).hexdigest()
+                        clazz._enabled_ = True
+                        mdx_services.append(clazz)
                     #Stardict    
                     if StardictService.check(dict_path):
-                        svc = object_builder(StardictService, dict_path)
-                        svc._unique_ = md5(str(dict_path).encode('utf-8')).hexdigest()
-                        svc._enabled_ = True
-                        star_dict_services.append(svc)
+                        clazz = object_builder(StardictService, dict_path)
+                        clazz._title_ = rootname
+                        clazz._unique_ = md5(str(dict_path).encode('utf-8')).hexdigest()
+                        clazz._enabled_ = True
+                        star_dict_services.append(clazz)
                 # support mdx dictionary and stardict format dictionary
         return mdx_services, star_dict_services

@@ -91,12 +91,12 @@ class DictManageDialog(Dialog):
         confs = config.dicts
         dicts = list()
         services = service_manager.local_custom_services + service_manager.web_services
-        for svc in services:
+        for clazz in services:
             d = {
-                'title':   svc._title_,
-                'unique':  svc._unique_,
-                'src_path':    svc._src_path_,
-                'enabled': confs.get(svc._unique_, dict()).get('enabled', svc._enabled_)
+                'title':     clazz._title_,
+                'unique':    clazz._unique_,
+                'src_path':  clazz._src_path_,
+                'enabled':   confs.get(clazz._unique_, dict()).get('enabled', clazz._enabled_)
             }
             print(f'Add Dict {d}')
             dicts.append(d)

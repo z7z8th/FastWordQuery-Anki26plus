@@ -34,10 +34,6 @@ class oalecd9_mdx(MdxService):
                     break
         super().__init__(dict_path)
 
-    @property
-    def title(self):
-        return getattr(self, '_register_label_', self.unique)
-
     def _fld_voice(self, html, voice):
         """获取发音字段"""
         for regexp in LANG_TO_REGEXPS[voice]:
