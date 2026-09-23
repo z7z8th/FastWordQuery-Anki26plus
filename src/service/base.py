@@ -117,17 +117,25 @@ def register(labels, enabled = False):
 
         methods = inspect.getmembers(cls, predicate=_is_method_or_func)
         exports: list[tuple[int, Callable]] = []
+        offset = -1
         for name, method in methods:
             attrs = getattr(method, '_export_attrs_', None)
-            if attrs and attrs[1] == -1:
+            if not attrs:
+                continue
+            _, index = attrs
+            if index > offset:
+                offset = index
+            if index == -1:
                 # [(global _def_index_, method), (,)]
+                # print(f'---register {cls._register_label_} attrs {attrs} _def_index_ {getattr(method, '_def_index_', 0)}')
                 exports.append((getattr(method, '_def_index_', 0), method))
 
         exports = sorted(exports)
+        offset += 1
         # local sorted index
         for index, (_, method) in enumerate(exports):
             attrs = getattr(method, '_export_attrs_', None)
-            attrs[1] = index
+            attrs[1] = index + offset
             setattr(method, '_export_attrs_', attrs)
 
         return cls
@@ -412,11 +420,13 @@ class Service(object):
         # print(f'_get_exporters methods {methods}')
         for name, method in methods:
             export_attrs = getattr(method, '_export_attrs_', None)
-            # print(f'_get_exporters export_attrs {export_attrs}')
             
             if export_attrs:
-                label, index = export_attrs[0], export_attrs[1]
-                flds.update({int(index): (label, method)})
+                # print(f'_get_exporters _export_attrs_ {export_attrs} of {name} {method}')
+                label, index = export_attrs
+                if index in flds:
+                    print(f'*** Error: _get_exporters {index} -> {flds[index]} already in map flds, overwriting with {index} -> {(label, method)}')
+                flds.update({index: (label, method)})
         sorted_flds = sorted(flds)
         # [(label, method), (label, method)]
         return [flds[key] for key in sorted_flds]
