@@ -124,9 +124,11 @@ class ProgressWindow(QProgressDialog):
         # if processEvents.processEvents() is not called, wasCanceled() NEVER returns True.
         # Calling progress.reset() or progress.setValue(progress.maximum()) will reset wasCanceled() back to False
         # self.wasCanceled() or 
-        return self._aborted
+        return self._aborted or sip.isdeleted(self)
 
     def set_finished(self):
+        if self.is_aborted():
+            return
         self.setWindowTitle('FastWQ - Finished')
         self.setValue(self.maximum())
         # self.setLabelText("Done")

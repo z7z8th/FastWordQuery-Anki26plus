@@ -70,7 +70,7 @@ class Ldoce6(MdxService):
         if not dict_path:
             from ...service import service_manager, service_pool
             for clazz in service_manager.mdx_services:
-                print(f'Ldoce6.__init__ clazz title {clazz._title_} unique {clazz._unique_}')
+                # print(f'Ldoce6.__init__ clazz title {clazz._title_} unique {clazz._unique_}')
                 service: MdxService = cast(MdxService, service_pool.get(clazz._unique_))
                 title = service.backend._title if service and service.support else u''
                 service_pool.put(service)
@@ -180,16 +180,17 @@ class Ldoce6(MdxService):
         # print(f"_range_sentence_audio {len(tags)}")
         if not tags:
             return ''
-
+        # print(f'_range_sentence_audio {self.word} {range_arr}, len(tags) {len(tags)}')
         if range_arr == 'rand':
             range_arr = [random.randrange(0, len(tags), 1)]
         elif range_arr == 'all':
             range_arr = range(0, len(tags))
+        # print(f'_range_sentence_audio {self.word} {range_arr}, len(tags) {len(tags)}')
 
         examples = []
         for i in range_arr:
             if i < 0 or i >= len(tags):
-                print(f'*** Error: _range_sentence_audio: {i} is out of range [0, {len(tags)})')
+                # print(f'*** Error: _range_sentence_audio: {i} is out of range [0, {len(tags)})')
                 continue
             # deepcopy before modify, so self.get_html() always return the same one
             example = deepcopy(tags[i])

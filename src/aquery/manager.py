@@ -18,7 +18,7 @@ from collections import defaultdict
 import time
 
 import anki.notes
-from aqt import mw
+from aqt import mw, gui_hooks
 from aqt.qt import QElapsedTimer, QThread
 from anki.notes import Note
 # from anki.collection import Collection
@@ -82,6 +82,7 @@ class QueryWorkerManager(object):
         self.fails = 0
 
         self.mdx_backend_lock = self.ctx.Lock()
+        gui_hooks.profile_will_close.append(self.terminate_processes)
 
     def add_note_task(self, note: Note):
         """Prepares note data for multiprocessing serialization."""
@@ -215,10 +216,15 @@ class QueryWorkerManager(object):
         """Terminates active child processes immediately."""
         print(f'*** Try stop all active child processes.')
         self.stop_event.set()
+        self.task_queue.close()
+        self.result_queue.close()
+        self.task_queue.cancel_join_thread()
+        self.result_queue.cancel_join_thread()
+
         while any(p.is_alive() for p in self.processes):
             for p in self.processes:
                 if p.is_alive():
-                    # p.terminate()
+                    p.terminate()
                     p.join(timeout = 0.1)
                     mw.app.processEvents()
         print(f'*** All active child processes Exited.')

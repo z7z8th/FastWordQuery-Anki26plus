@@ -23,7 +23,7 @@ from operator import itemgetter
 from aqt import mw
 from aqt.qt import *
 
-from anki.hooks import addHook, remHook, wrap
+from anki.hooks import wrap
 from aqt import gui_hooks, mw
 from aqt.addcards import AddCards
 from aqt.qt import *

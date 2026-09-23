@@ -578,7 +578,7 @@ class TabContent(QScrollArea):
         """setup dict combo box"""
         dict_combo.clear()
 
-        print(f'--- fill_dict_combo_options local {services["local"]} web {services["web"]}')
+        # print(f'--- fill_dict_combo_options local {services["local"]} web {services["web"]}')
 
         # local dict service
         for service in services['local']:

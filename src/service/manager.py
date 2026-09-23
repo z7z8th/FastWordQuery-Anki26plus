@@ -52,7 +52,7 @@ class ServiceManager(object):
         for clazz in self.services:
             if clazz._unique_ == unique:
                 svc = clazz()
-                print(f'---get_service {svc} clazz._title_ { clazz._title_} title {svc.title} unique {svc.unique}')
+                # print(f'---get_service {svc} clazz._title_ { clazz._title_} title {svc.title} unique {svc.unique}')
 
                 # service.unique = unique
                 return svc
@@ -80,8 +80,8 @@ class ServiceManager(object):
             StardictService
         )
         for f in files:
-            if 'LDOCE6' not in f:
-                continue
+            # if 'LDOCE6' not in f:
+            #     continue
 
             module = importlib.import_module( 
                 u'.%s.%s' % (service_dirname, os.path.splitext(f)[0]), 
@@ -94,13 +94,13 @@ class ServiceManager(object):
                     continue
                 if getattr(clazz, '_register_label_', None) is None:
                     continue
-                print(f'---_get_services_from_files {mod_name} -> {clazz}')
+                # print(f'---_get_services_from_files {mod_name} -> {clazz}')
                 svc = object_builder(clazz, *args)
                 svc._title_ = getattr(clazz, '_register_label_', mod_name)
                 svc._unique_ = clazz.__name__
                 svc._src_path_ = os.path.join(svc_rootdir, f)
                 svc._enabled_ = clazz._enabled_
-                print(f"Found service: {vars(svc)}")
+                # print(f"[Found] service: {vars(svc)}")
 
                 if issubclass(clazz, WebService):
                     web_services.append(svc)

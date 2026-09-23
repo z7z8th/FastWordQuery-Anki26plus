@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import hashlib
 import inspect
 import os
 from pathlib import Path
@@ -1000,6 +1001,14 @@ class MdxService(LocalService):
 
         return audio
 
+    def _compare_data_and_file(self, data: bytes, file_path: str | Path, chunk_size: int = 65536):
+        s1 = hashlib.sha1(data).digest()
+        hasher = hashlib.sha1()
+        with open(file_path, "rb") as f:
+            while chunk := f.read(chunk_size):
+                hasher.update(chunk)
+        return s1 == hasher.digest()
+
     def _save_img_data(self, src):
         # Extract media type, extension, and base64 payload
         match = re.match(
@@ -1035,6 +1044,9 @@ class MdxService(LocalService):
 
             counter = 2
             while os.path.exists(dest_path):
+                if self._compare_data_and_file(img_bytes, dest_path):
+                    print(f'[Found] Existing img file match embedded data for {entry} -> {dest_path}')
+                    return dest_path
                 filename = f"{safe_entry}{counter}.{ext}"
                 dest_path = get_canonical_name(self.media_prefix, filename)
                 counter += 1

@@ -36,8 +36,7 @@ print(f"[PID {os.getpid()}] Starting worker module import...", flush=True)
 # print("Loaded Qt modules before add-on imports:", [m for m in sys.modules if "Qt" in m or "aqt" in m], flush=True)
 
 if is_main_process():
-    from aqt import mw
-    from anki.hooks import addHook
+    from aqt import mw, gui_hooks
     from anki.utils import is_mac
 else:
     mw = None
@@ -75,4 +74,4 @@ def start_here():
         fastwq.customize_addcards()
 
 if mw:
-    addHook("profileLoaded", start_here)
+    gui_hooks.profile_did_open.append(start_here)
