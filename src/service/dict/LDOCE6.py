@@ -88,7 +88,7 @@ class Ldoce6(MdxService):
         html = self.get_html()
         # m = re.search(r'<span class="pron">(.*?)</span>', html)
         tag = html.select_one('.entry .pron')
-        print(f'fld_phonetic html {type(html)} tag {tag}')
+        print(f'---fld_phonetic html {type(html)} tag {tag}')
         # print(f'fld_phonetic {tag}')
         if tag:
             return str(tag)
@@ -142,16 +142,16 @@ class Ldoce6(MdxService):
         tags = html.select(sel)
         if not tags:
             return ''
-        html_defs = u''.join([ str(tag) for tag in tags])
+        html_defs = u''.join([ f'<li>{str(tag)}</li>' for tag in tags])
         return self._css(html_defs)
 
     @export('DEF')
     def fld_definition(self):
-        return self._fld_definition('.def')
+        return self._fld_definition('.entry .sense .def')
 
     @export('DEF_CN')
     def fld_definition_cn(self):
-        return self._fld_definition('.defcn')
+        return self._fld_definition('.entry .sense .defcn')
 
     @export([u'随机例句', u'Random example'])
     def fld_random_sentence(self):
