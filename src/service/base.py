@@ -37,6 +37,7 @@ from functools import wraps
 from hashlib import md5, sha1
 from typing import Callable, Optional
 from copy import deepcopy
+import base64
 # import multiprocessing as mp
 
 import requests
@@ -998,13 +999,71 @@ class MdxService(LocalService):
         audio['href']=f'sound:{dest_name}'
 
         return audio
+
+    def _save_img_data(self, src):
+        # Extract media type, extension, and base64 payload
+        match = re.match(
+            r"^data:image/([a-zA-Z0-9\+\-]+);base64,(.+)$",
+            src,
+            re.DOTALL,
+        )
+
+        if not match:
+            print(f"[Error] unrecognized img src data pattern {src}")
+            return ''
+        
+        ext = match.group(1).lower()
+        # Normalize common extension names
+        if ext == "jpeg":
+            ext = "jpg"
+        elif ext == "svg+xml":
+            ext = "svg"
+
+        b64_data = match.group(2)
+
+        entry = self.word
+
+        try:
+            img_bytes = base64.b64decode(b64_data)
+
+            # Sanitize entry to create a safe filename
+            safe_entry = re.sub(r'[\\/*?:"<>|]', "_", entry)
+
+            # Determine unique target file path without overwriting
+            filename = f"{safe_entry}.{ext}"
+            dest_path = get_canonical_name(self.media_prefix, filename)
+
+            counter = 2
+            while os.path.exists(dest_path):
+                filename = f"{safe_entry}{counter}.{ext}"
+                dest_path = get_canonical_name(self.media_prefix, filename)
+                counter += 1
+
+            # Save the image content
+            with open(dest_path, "wb") as f:
+                f.write(img_bytes)
+
+            # Update img src in the HTML
+            # img["src"] = filename
+            # modified = True
+            print(f"[Extracted] Saved image for entry '{entry}' -> '{filename}' -> '{dest_path}'")
+            return dest_path
+        except Exception as e:
+            traceback.print_exc()
+            print(f"[Error] Failed to decode image for entry '{entry}': {e}")
+
+        return ''
         
     def _save_image(self, img, do_html_deepcopy = True):
-        val = '/' + img['src']
-        # file extension isn't always jpg
-        file_extension = os.path.splitext(img['src'])[1][1:].strip().lower()
-        dest_name = get_canonical_name(self.media_prefix, val)
-        dest_name = self.save_file_from_mdd(val, dest_name)
+        src = img['src']
+        if src.startswith("data:"):
+            dest_name = self._save_img_data(src)
+        else:
+            val = '/' + src
+            # file extension isn't always jpg
+            file_extension = os.path.splitext(img['src'])[1][1:].strip().lower()
+            dest_name = get_canonical_name(self.media_prefix, val)
+            dest_name = self.save_file_from_mdd(val, dest_name)
 
         if not dest_name:
             print(f'*** Error: _save_image: No image found for {img}')
