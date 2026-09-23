@@ -64,6 +64,9 @@ class ServiceManager(object):
         get service from service packages, available type is
         WebService, LocalService
         """
+        import traceback
+        # traceback.format_stack()
+        traceback.print_stack()
         service_dirname = u'dict'
         web_services, local_custom_services = list(), list()
         svc_rootdir = os.path.join(os.path.dirname(os.path.realpath(__file__)), service_dirname)

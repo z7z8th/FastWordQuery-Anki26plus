@@ -731,6 +731,7 @@ class LocalService(Service):
 
 from typing import cast
 
+@register([u'本地词典', u'MDX'], enabled = True)
 class MdxService(LocalService):
     """
     MDX Local Dictionary Service
@@ -762,7 +763,7 @@ class MdxService(LocalService):
     @property
     def support(self):
         # print(f'---support self.backend {self.backend}')
-        return bool(self.backend and MdxService.check(self.dict_path))
+        return bool(self.enabled and self.backend and MdxService.check(self.dict_path))
 
     @property
     def title(self):

@@ -65,6 +65,10 @@ Thread 152068 (idle): "MainThread"
 class Ldoce6(MdxService):
 
     def __init__(self):
+        import traceback
+        # traceback.format_stack()
+        traceback.print_stack()
+        
         dict_path = FORCE_DICT_PATH
         # if FORCE_DICT_PATH is a path, stop auto detect
         if not dict_path:
