@@ -938,7 +938,7 @@ class MdxService(LocalService):
 
         # save css and js files, to target dir by canonical name: e.g. _mdx-{dict_name}-{path}.{ext}
         path_map = self.save_media_files(media_files_set)
-        # print(f'path_map {path_map}')
+        # print(f'[0] path_map {path_map}')
 
         ### css and js are not allow in field html any more
         for tag in css_files_tags:
@@ -964,6 +964,7 @@ class MdxService(LocalService):
             wrap_class_name_list.add(wrap_class_name)
             new_css_files.add(new_css_file)
 
+
         new_js_files = set()
         for src_file in js_files:
             target_file = path_map[src_file]
@@ -973,7 +974,30 @@ class MdxService(LocalService):
                 continue
             new_js_files.add(target_file.dest_path)
 
-        html = f'''<div class="{' '.join(wrap_class_name_list)}">{str(html)}</div>'''
+        wrap_class_name_str = ' '.join(wrap_class_name_list)
+        html = f'''<div class="{wrap_class_name_str}">{str(html)}</div>'''
+
+        dark_css_file_set = set()
+        for src_file in css_files:
+            root, ext = os.path.splitext(src_file)
+            css_file_dark = f'{root}_dark{ext}'
+            dark_css_file_set.add(css_file_dark)
+
+        path_map = self.save_media_files(dark_css_file_set)
+
+        # print(f'[1] path_map {path_map}')
+
+        for src_file in dark_css_file_set:
+            target_file = path_map[src_file]
+            # if not exists the css file, the user can place the file to media
+            # folder first, and it will also execute the wrap process to generate
+            # the desired file.
+            # if not os.path.exists(src_css_file):
+            if not target_file.dest_ok:
+                print(f'***Warning: {src_file} not copied.')
+                continue
+            new_css_file_dark, _ = wrap_css(target_file.dest_path, class_wrapper=f".nightMode {' '.join([ f'.{x}' for x in wrap_class_name_list])}")
+            new_css_files.add(new_css_file_dark)
 
         # print(f'new_css_files {new_css_files}')
         # print(f'new_js_files {new_js_files}')

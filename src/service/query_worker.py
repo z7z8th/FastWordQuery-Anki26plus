@@ -2,14 +2,15 @@ import traceback
 from collections import defaultdict
 import multiprocessing as mp
 import queue
+import unicodedata
+import re
 
 from ..libs.snowballstemmer import stemmer
 from .. import context
 from ..context import config
 from . import Service, LocalService, service_pool, QueryResult, WordNotFoundError
 from ..utils import QueryStat
-import unicodedata
-
+from ..lang import _
 
 def strip_combining(txt):
     """Return txt with all combining characters removed."""
