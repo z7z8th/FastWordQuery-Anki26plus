@@ -44,10 +44,8 @@ def is_main_process():
 
 if is_main_process():
     from aqt import mw
-    from anki.hooks import runHook
 else:
     mw = None
-    def runHook(*args, **kwargs): pass
 
 
 ###################################################
@@ -73,6 +71,7 @@ misc.hook_builtins_open_exception()
 
 
 from .constants import VERSION
+from .utils.events import events
 
 # __all__ = ['config', 'set_mdx_backend_lock', 'get_mdx_backend_lock', 'ADDON_NAME']
 
@@ -107,7 +106,7 @@ class Config(object):
             json.dump(
                 self.data, f, indent=4, ensure_ascii=False)
             f.close()
-        runHook('config.update')
+        events.trigger('config.update')
 
     def read(self):
         """

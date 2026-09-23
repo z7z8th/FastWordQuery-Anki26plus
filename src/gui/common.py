@@ -39,7 +39,7 @@ from .options import OptionsDialog
 from .base import *
 
 from ..aquery import query_from_browser, query_from_editor_fields
-
+from ..utils.events import events
 
 __all__ = [
     'browser_menu', 'customize_addcards', 'config_menu', 'context_menu',
@@ -133,7 +133,7 @@ def browser_menu():
             try:
                 menu.clear()
             except RuntimeError:
-                remHook('config.update', init_fastwq_menu)
+                events.off('config.update', init_fastwq_menu)
                 return
             # Query Selected
             action = QAction(_('QUERY_SELECTED'), browser)
@@ -184,7 +184,7 @@ def browser_menu():
 
         # end init_fastwq_menu
         init_fastwq_menu()
-        addHook('config.update', init_fastwq_menu)
+        events.on('config.update', init_fastwq_menu)
 
     gui_hooks.browser_menus_did_init.append(on_setup_menus)
 
