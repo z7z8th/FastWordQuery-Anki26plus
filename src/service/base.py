@@ -39,6 +39,7 @@ from hashlib import md5, sha1
 from typing import Callable, Optional
 from copy import deepcopy
 import base64
+import glob
 # import multiprocessing as mp
 
 import requests
@@ -735,6 +736,7 @@ class MdxService(LocalService):
         self.notfound_cache = dict()
         self.media_cache = defaultdict(dict)
         self.html_cache = LRUCache(SERVICE_INTERNAL_CACHE_SIZE, BeautifulSoup)  #("", "html.parser")
+        self.media_digest_cache: dict[str|Path, bytes] = dict()
         self.query_interval = 0.01
         self.styles = []
         self.media_prefix = f'_mdx-{self.unique.lower()}-'
@@ -1003,11 +1005,18 @@ class MdxService(LocalService):
 
     def _compare_data_and_file(self, data: bytes, file_path: str | Path, chunk_size: int = 65536):
         s1 = hashlib.sha1(data).digest()
-        hasher = hashlib.sha1()
-        with open(file_path, "rb") as f:
-            while chunk := f.read(chunk_size):
-                hasher.update(chunk)
-        return s1 == hasher.digest()
+
+        if file_path in self.media_digest_cache:
+            s2 = self.media_digest_cache[file_path]
+        else:
+            hasher = hashlib.sha1()
+            with open(file_path, "rb") as f:
+                while chunk := f.read(chunk_size):
+                    hasher.update(chunk)
+                s2 = hasher.digest()
+                self.media_digest_cache[file_path] = s2
+
+        return s1 == s2
 
     def _save_img_data(self, src):
         # Extract media type, extension, and base64 payload
@@ -1039,16 +1048,21 @@ class MdxService(LocalService):
             safe_entry = re.sub(r'[\\/*?:"<>|]', "_", entry)
 
             # Determine unique target file path without overwriting
-            filename = f"{safe_entry}.{ext}"
-            dest_path = get_canonical_name(self.media_prefix, filename)
+            safe_entry = get_canonical_name(self.media_prefix, safe_entry)
+            dest_path = f"{safe_entry}.{ext}"
+            safe_entry_base = re.sub(r"(\d+|'s|'|s|es|ies|ed|d|ied|ing|en|er|ier|est|iest|tion|sion|ment|ness|ity|hood|ship|ance|ence|able|ible|ful|less|ous|ive|al|ic|y|ly|wards?|wise|ify|ize|ise)$", '', safe_entry)
+            
+            for dest_path in glob.iglob(f"{safe_entry_base}*"):
+                if self._compare_data_and_file(img_bytes, dest_path):
+                    print(f'[Found] Existing img file by glob match embedded data for {entry} -> {dest_path}')
+                    return dest_path
 
             counter = 2
             while os.path.exists(dest_path):
                 if self._compare_data_and_file(img_bytes, dest_path):
-                    print(f'[Found] Existing img file match embedded data for {entry} -> {dest_path}')
+                    print(f'[Found] Existing img file by counter match embedded data for {entry} -> {dest_path}')
                     return dest_path
-                filename = f"{safe_entry}{counter}.{ext}"
-                dest_path = get_canonical_name(self.media_prefix, filename)
+                dest_path = f"{safe_entry}{counter}.{ext}"
                 counter += 1
 
             # Save the image content
@@ -1058,7 +1072,7 @@ class MdxService(LocalService):
             # Update img src in the HTML
             # img["src"] = filename
             # modified = True
-            print(f"[Extracted] Saved image for entry '{entry}' -> '{filename}' -> '{dest_path}'")
+            print(f"[Extracted] Saved image for entry '{entry}' -> '{dest_path}'")
             return dest_path
         except Exception as e:
             traceback.print_exc()
