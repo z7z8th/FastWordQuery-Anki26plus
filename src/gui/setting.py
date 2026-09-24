@@ -101,10 +101,8 @@ class SettingDialog(Dialog):
 
         hbox = QHBoxLayout()
         self.ollama_model_edit = QLineEdit()
-        self.ollama_model_edit.setText(config.ollama_model)
-
-        self.ollama_model_edit = QLineEdit()
         self.ollama_model_edit.setPlaceholderText(config.ollama_model)
+        self.ollama_model_edit.setText(config.ollama_model)
 
         self.ollama_menu = QMenu()
         for model in get_ollama_models():
