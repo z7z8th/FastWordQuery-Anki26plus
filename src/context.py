@@ -209,6 +209,14 @@ class Config(object):
         return tmpstr
 
     @property
+    def ollama_host(self):
+        return self.data.get('ollama_host', 'localhost')
+
+    @property
+    def ollama_model(self):
+        return self.data.get('ollama_model', 'gemma4:26b')
+
+    @property
     def version(self):
         return Version(self.data.get('version', '0'))
     
