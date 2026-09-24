@@ -5,6 +5,7 @@ import markdown
 
 from ..base import WebService, export, register
 from ... import context
+from ...context import config
 from ...utils.llm import *
 
 # OLLAMA_HOST="localhost"
@@ -63,6 +64,6 @@ class LLM_Chinese(WebService):
 
     @export (['LLM模型名', 'LLM Model Name'])
     def fld_model_name(self):
-        print(f'TODO: model name')
-        return OLLAMA_MODEL
+        # print(f'TODO: model name')
+        return config.ollama_model
     
