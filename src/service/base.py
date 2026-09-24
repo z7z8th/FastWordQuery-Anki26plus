@@ -367,7 +367,7 @@ class Service(object):
         return ret
     
     def _get_field(self, key, default=u''):
-        print(f'---self.cache {self.cache}')
+        # print(f'---self.cache {self.cache}')
         return self.get_cache_by_field(key) if self.is_field_cached(key) else self.get_from_api().get(key, default)
 
     @property
