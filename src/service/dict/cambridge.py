@@ -127,7 +127,7 @@ class Cambridge(WebService):
                                     result['image'] = cambridge_url_base + img.get('data-image')
                                     result['thumb'] = cambridge_url_base + img.get('src')
 
-        return self.cache_this(result)
+        return result
 
     @with_styles(do_wrap=True, css_file='_cambridge.css')
     def _css(self, val):

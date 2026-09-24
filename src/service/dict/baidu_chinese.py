@@ -93,7 +93,7 @@ class Baidu_Chinese(WebService):
             if tag:
                 result['fanyi'] = u'<br>'.join(x.get_text().strip() for x in tag)
 
-        return self.cache_this(result)
+        return result
 
     @with_styles(do_wrap=True, css_file='_baidu.css')
     def _css(self, val):

@@ -32,7 +32,7 @@ class Ludwig(WebService):
             for n in e_list:
                 e_arr.append(str(n.get_text()))
             result['examples'] = e_arr
-        return self.cache_this(result)
+        return result
     
     @export('DEF')
     def fld_definate(self):

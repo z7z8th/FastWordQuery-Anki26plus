@@ -31,7 +31,7 @@ class Baicizhan(WebService):
             result.update(json.loads(html))
         except:
             pass
-        return self.cache_this(result)
+        return result
 
     @export('PRON')
     def fld_phonetic(self):

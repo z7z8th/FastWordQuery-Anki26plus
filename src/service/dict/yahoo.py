@@ -48,7 +48,7 @@ class Yahoo_Dict(WebService):
                 str(tag.find('ul')) + u'</div>'
         
 
-        return self.cache_this(result)
+        return result
 
     @with_styles(do_wrap=True, css_file='_yahoo.css')
     def _css(self, val):

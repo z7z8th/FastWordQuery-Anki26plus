@@ -31,7 +31,7 @@ class Oxford(WebService):
             result.update(json.loads(res)['results'][0])
         except:
             pass
-        return self.cache_this(result)
+        return result
 
     @export('DEF')
     def fld_definition(self):

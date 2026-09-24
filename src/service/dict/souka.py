@@ -53,7 +53,7 @@ class Souka(WebService):
             result['examples'] = str(tag.find('ol'))
             tag.decompose()
 
-        return self.cache_this(result)
+        return result
     
 
     @export([u'释义', u'Definition'])

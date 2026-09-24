@@ -26,7 +26,7 @@ class BingXtk(WebService):
             result.update(json.loads(self.get_response(url, headers=headers, timeout=10)))
         except:
             pass
-        return self.cache_this(result)
+        return result
 
     @export('AME_PHON')
     def fld_phonetic_us(self):

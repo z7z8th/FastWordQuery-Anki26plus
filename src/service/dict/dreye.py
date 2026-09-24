@@ -40,7 +40,7 @@ class Dreye(WebService):
         if element:
             result['def'] = u'{}'.format(str(element))
 
-        return self.cache_this(result)
+        return result
 
     @with_styles(do_wrap=True, css_file='_dreye.css')
     def _css(self, val):

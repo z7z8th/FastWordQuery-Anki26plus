@@ -31,7 +31,7 @@ class Youdaofr(WebService):
             result.update({'explains': explains})
         except:
             pass
-        return self.cache_this(result)
+        return result
 
     @export([u'基本释义', 'Explanations'])
     def fld_explains(self):

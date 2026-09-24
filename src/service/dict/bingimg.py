@@ -29,7 +29,7 @@ class Bing_Images(WebService):
             except:
                 pass
 
-        return self.cache_this(result)
+        return result
 
     @export([u'图片', u'Image'])
     def fld_pinyin(self):

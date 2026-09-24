@@ -31,7 +31,7 @@ class Youdaoko(WebService):
             result.update({'explains': explains})
         except:
             pass
-        return self.cache_this(result)
+        return result
 
     @export([u'基本释义', u'Explanations'])
     def fld_explains(self):

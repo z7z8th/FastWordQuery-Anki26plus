@@ -76,7 +76,7 @@ class Eudict(WebService):
             result['oexample'] = _sentence_audio(
                 soup, 'div', class_='lj_item')  # 原声例句
 
-            return self.cache_this(result)
+            return result
         except Exception as e:
             return {}
 

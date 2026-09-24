@@ -27,7 +27,7 @@ class Vocabulary(WebService):
         if element:
             result['long'] = u''.join(str(e) for e in element.contents)
 
-        return self.cache_this(result)
+        return result
     
     @export([u'简短释义', u'Short definition'])
     def fld_definate(self):

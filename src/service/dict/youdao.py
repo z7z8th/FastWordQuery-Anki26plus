@@ -70,7 +70,7 @@ class Youdao(WebService):
             result.update({'phonetic': phonetics, 'us_phonetic': us_phonetics, 'uk_phonetic': uk_phonetics, 'explains': explains})
         except:
             pass
-        return self.cache_this(result)
+        return result
 
     @export('PHON')
     def fld_phonetic(self):

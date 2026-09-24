@@ -358,11 +358,17 @@ class Service(object):
     def get_cache_by_field(self, key):
         return self.cache[self.word].get(key, u'')
 
-    def _get_from_api(self):
+    def _get_from_api(self) -> dict:
         return {}
-
+    
+    def get_from_api(self) -> dict:
+        ret = self._get_from_api()
+        self.cache_this(ret)
+        return ret
+    
     def _get_field(self, key, default=u''):
-        return self.get_cache_by_field(key) if self.is_field_cached(key) else self._get_from_api().get(key, default)
+        print(f'---self.cache {self.cache}')
+        return self.get_cache_by_field(key) if self.is_field_cached(key) else self.get_from_api().get(key, default)
 
     @property
     def title(self):

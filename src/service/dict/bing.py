@@ -70,7 +70,7 @@ class Bing(WebService):
                 result['sams'][i]['chn'] = u''.join(tag.find_all(text=True))
 
         print(f'{self.quote_word} result {result}')
-        return self.cache_this(result)
+        return result
 
     @with_styles(css='.pos{font-weight:bold;margin-right:4px;}', wrap_class='bing')
     def _css(self, val):

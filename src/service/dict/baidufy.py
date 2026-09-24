@@ -41,7 +41,7 @@ class BaiduFy(WebService):
             result.update({'explains': explains})
         except:
             pass
-        return self.cache_this(result)
+        return result
 
     @export([u'翻译结果', 'translation'])
     def fld_explains(self):

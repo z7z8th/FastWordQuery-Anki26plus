@@ -51,7 +51,7 @@ class Esdict(WebService):
             result = _get_from_element(
                 result, 'fe', soup, 'div', id='FEChild')  # 西英词典
 
-            return self.cache_this(result)
+            return result
         except Exception as e:
             return {}
 

@@ -43,7 +43,7 @@ class MiniDict(WebService):
             result['variations'] = str(tag)
             tag.decompose()
 
-        return self.cache_this(result)
+        return result
 
     @export('PHON')
     def fld_phonetic(self):
