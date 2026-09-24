@@ -25,7 +25,7 @@ from typing import Callable
 from .base import Service, LocalService, MdxService, StardictService, WebService, object_builder
 from ..context import config
 from ..utils import importlib
-
+from ..utils import Empty, Queue
 
 class ServiceManager(object):
     """
@@ -33,7 +33,34 @@ class ServiceManager(object):
     """
 
     def __init__(self):
-        self.update_services()
+        self.pools = {}
+
+        # self.update_services()
+
+    def get(self, unique) -> Service:
+        # print(f'--- ServicePool.get {unique}')
+        queue = self.pools.get(unique, None)
+        if queue:
+            try:
+                return queue.get(True, timeout=0.1)
+            except Empty:
+                pass
+        
+        return self.get_service(unique)
+    
+    def put(self, service: Service):
+        if service is None:
+            return
+        unique = service.unique
+        queue = self.pools.get(unique, None)
+        if queue == None:
+            queue = Queue()
+            self.pools[unique] = queue
+            
+        queue.put(service)
+        
+    def clean(self):
+        self.pools = {}
 
     @property
     def services(self) -> list[object_builder]:
@@ -44,7 +71,14 @@ class ServiceManager(object):
         self.web_services, self.local_custom_services = self._get_services_from_files()
         # combine the customized local services into local services
         self.local_services = self.mdx_services + self.star_dict_services + self.local_custom_services
+
+        # try new customized services to disable associated parent
+        for sw in self.local_custom_services:
+            if sw._enabled_:
+                self.put(sw())
+
         # print(f"service local {self.mdx_services} {self.local_custom_services} web {self.web_services}")
+        # self.local_services = self.mdx_services + self.star_dict_services + self.local_custom_services
 
     def get_service(self, unique) -> Service:
         # webservice unique: class name
@@ -53,8 +87,6 @@ class ServiceManager(object):
             if clazz._unique_ == unique:
                 svc = clazz()
                 # print(f'---get_service {svc} clazz._title_ { clazz._title_} title {svc.title} unique {svc.unique}')
-
-                # service.unique = unique
                 return svc
         
         raise Exception(f"service of unique `{unique}` not found")
@@ -64,9 +96,6 @@ class ServiceManager(object):
         get service from service packages, available type is
         WebService, LocalService
         """
-        import traceback
-        # traceback.format_stack()
-        traceback.print_stack()
         service_dirname = u'dict'
         web_services, local_custom_services = list(), list()
         svc_rootdir = os.path.join(os.path.dirname(os.path.realpath(__file__)), service_dirname)
@@ -98,18 +127,19 @@ class ServiceManager(object):
                 if getattr(clazz, '_register_label_', None) is None:
                     continue
                 # print(f'---_get_services_from_files {mod_name} -> {clazz}')
-                svc = object_builder(clazz, *args)
-                svc._title_ = getattr(clazz, '_register_label_', mod_name)
-                svc._unique_ = clazz.__name__
-                svc._src_path_ = os.path.join(svc_rootdir, f)
-                svc._enabled_ = clazz._enabled_
+                svc_wrap = object_builder(clazz, *args)
+                svc_wrap._title_ = getattr(clazz, '_register_label_', mod_name)
+                svc_wrap._unique_ = clazz.__name__
+                svc_wrap._src_path_ = os.path.join(svc_rootdir, f)
+                svc_wrap._enabled_ = clazz._enabled_
+                # svc_wrap._class_ = clazz
                 # print(f"[Found] service: {vars(svc)}")
 
                 if issubclass(clazz, WebService):
-                    web_services.append(svc)
+                    web_services.append(svc_wrap)
                 # get the customized local services
                 if issubclass(clazz, LocalService):
-                    local_custom_services.append(svc)
+                    local_custom_services.append(svc_wrap)
         web_services = sorted(web_services, key=lambda clazz: clazz._title_)
         local_custom_services = sorted(local_custom_services, key=lambda clazz: clazz._title_)
         return web_services, local_custom_services
@@ -127,20 +157,35 @@ class ServiceManager(object):
                 for filename in filenames:
                     dict_path = os.path.join(dirpath, filename)
                     #MDX
-                    clazz = object_builder(MdxService, dict_path)
+                    svc_wrap = object_builder(MdxService, dict_path)
                     rootname, _ = os.path.splitext(os.path.basename(dict_path))
                     if MdxService.check(dict_path):
                         print(f'config.dict_dirs > MdxService dict_path {dict_path}')
-                        clazz._title_ = rootname
-                        clazz._unique_ = md5(str(dict_path).encode('utf-8')).hexdigest()
-                        clazz._enabled_ = True
-                        mdx_services.append(clazz)
+                        svc_wrap._title_ = rootname
+                        svc_wrap._unique_ = md5(str(dict_path).encode('utf-8')).hexdigest()
+                        svc_wrap._enabled_ = True
+                        # svc_wrap._class_ = MdxService
+
+                        mdx_services.append(svc_wrap)
                     #Stardict    
                     if StardictService.check(dict_path):
-                        clazz = object_builder(StardictService, dict_path)
-                        clazz._title_ = rootname
-                        clazz._unique_ = md5(str(dict_path).encode('utf-8')).hexdigest()
-                        clazz._enabled_ = True
-                        star_dict_services.append(clazz)
+                        svc_wrap = object_builder(StardictService, dict_path)
+                        svc_wrap._title_ = rootname
+                        svc_wrap._unique_ = md5(str(dict_path).encode('utf-8')).hexdigest()
+                        svc_wrap._enabled_ = True
+                        # svc_wrap._class_ = StardictService
+
+                        star_dict_services.append(svc_wrap)
                 # support mdx dictionary and stardict format dictionary
         return mdx_services, star_dict_services
+
+
+# # MDX-LDOEC6CE supersede LDOEC6CE, init once and disable
+# def try_init_services():
+#     dicts = config.dicts
+#     for clazz in service_manager.local_services:
+#         if dicts.get(clazz._unique_, {}).get('enabled', clazz._enabled_):
+#             svc = service_manager.get(clazz._unique_)
+#             service_manager.put(svc)
+
+# try_init_services()

@@ -8,7 +8,7 @@ import re
 from ..libs.snowballstemmer import stemmer
 from .. import context
 from ..context import config
-from . import Service, LocalService, service_pool, QueryResult, WordNotFoundError
+from . import Service, LocalService, service_manager, QueryResult, WordNotFoundError
 from ..utils import QueryStat
 from ..lang import _
 
@@ -72,7 +72,7 @@ def query_flds(note_fields_len_list, word_ord, word, cfg_qfields, qfields:list[i
 
         svc = services.get(dict_unique, None)
         if svc is None:
-            svc = service_pool.get(dict_unique)
+            svc = service_manager.get(dict_unique)
             if svc and svc.support:
                 services[dict_unique] = svc
             else:
@@ -123,7 +123,7 @@ def query_flds(note_fields_len_list, word_ord, word, cfg_qfields, qfields:list[i
             print(traceback.format_exc())
             print(_("NO_QUERY_WORD"), e)
         finally:
-            service_pool.put(service)
+            service_manager.put(service)
 
     return result, qstat, missed_css_info_list
 

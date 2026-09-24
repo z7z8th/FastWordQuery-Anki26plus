@@ -32,7 +32,7 @@ from aqt.utils import downArrow, shortcut, showInfo
 from ..constants import Template
 from ..context import config
 from ..lang import _
-from ..service import service_manager, service_pool
+from ..service import service_manager
 from .dictmanager import DictManageDialog
 from .foldermanager import FoldersManageDialog
 from .options import OptionsDialog
@@ -55,7 +55,7 @@ def show_fm_dialog(browser=None):
     fm_dialog.raise_()
     if fm_dialog.exec() == QDialog.DialogCode.Accepted:
         # update local services
-        service_pool.clean()
+        service_manager.clean()
         service_manager.update_services()
     fm_dialog.destroy()
     # reshow options window
@@ -69,7 +69,7 @@ def show_dm_dialog(browser=None):
     dm_dialog.raise_()
     if dm_dialog.exec() == QDialog.DialogCode.Accepted:
         # update local services
-        service_pool.clean()
+        service_manager.clean()
         service_manager.update_services()
     dm_dialog.destroy()
     # reshow options window
@@ -280,13 +280,13 @@ def context_menu():
                     dict_fld_ord = each.get('dict_fld_ord', -1)
                     fld_ord = each.get('fld_ord', -1)
                     if dict_unique and dict_fld_ord != -1 and fld_ord != -1:
-                        svc = service_pool.get(dict_unique)
+                        svc = service_manager.get(dict_unique)
                         if svc and svc.support:
                             name = svc.title + ' :-> ' + svc.fields[dict_fld_ord]
                             if name not in names:
                                 names.append(name)
                                 curr_flds.append({'name': name, 'default': i})
-                        service_pool.put(svc)
+                        service_manager.put(svc)
 
         submenu = menu.addMenu(_('QUERY'))
         submenu.addAction(

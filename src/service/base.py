@@ -990,6 +990,7 @@ class MdxService(LocalService):
         wrap_class_name_str = ' '.join(wrap_class_name_list)
         html = f'''<div class="{wrap_class_name_str}">{str(html)}</div>'''
 
+        # try dark theme css files
         dark_css_file_set = set()
         for src_file in css_files:
             root, ext = os.path.splitext(src_file)
@@ -999,7 +1000,6 @@ class MdxService(LocalService):
         path_map = self.save_media_files(dark_css_file_set)
 
         # print(f'[1] path_map {path_map}')
-
         for src_file in dark_css_file_set:
             target_file = path_map[src_file]
             # if not exists the css file, the user can place the file to media

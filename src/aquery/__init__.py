@@ -30,7 +30,7 @@ from .common import promot_choose_css, inspect_note, QueryStat
 # from ..constants import Endpoint, Template
 from ..context import config
 from ..lang import _
-from ..service import service_manager, service_pool, QueryResult, copy_static_file
+from ..service import service_manager, QueryResult, copy_static_file
 # from ..service.base import LocalService
 # from ..utils import Empty, MapDict, Queue, wrap_css
 from aqt.utils import showInfo, showText, tooltip
@@ -119,4 +119,4 @@ def query_all(notes, flush=True, fields:list[int]=[]):
     tooltip(f'{_('UPDATED')} {qstat.note_count} {_('CARDS')}, {qstat.field_updated_count} {_('FIELDS')}',
             period=3000)
     #work_manager.clean()
-    service_pool.clean()
+    service_manager.clean()

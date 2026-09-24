@@ -32,7 +32,7 @@ from aqt.studydeck import StudyDeck
 from ..constants import Endpoint
 from ..context import config
 from ..lang import _, _sl
-from ..service import service_manager, service_pool
+from ..service import service_manager
 from .setting import SettingDialog
 from .base import *
 
@@ -98,24 +98,24 @@ class OptionsDialog(Dialog):
         # local services
         for clazz in service_manager.local_services:
             if dicts.get(clazz._unique_, dict()).get('enabled', clazz._enabled_):
-                svc = service_pool.get(clazz._unique_)
+                svc = service_manager.get(clazz._unique_)
                 if svc and svc.support:
                     self.dict_services['local'].append({
                         'title': svc.title,
                         'unique': svc.unique
                     })
-                service_pool.put(svc)
+                service_manager.put(svc)
 
         # web services
         for clazz in service_manager.web_services:
             if dicts.get(clazz._unique_, dict()).get('enabled', clazz._enabled_):
-                svc = service_pool.get(clazz._unique_)
+                svc = service_manager.get(clazz._unique_)
                 if svc and svc.support:
                     self.dict_services['web'].append({
                         'title': svc.title,
                         'unique': svc.unique
                     })
-                service_pool.put(svc)
+                service_manager.put(svc)
 
         # emit finished
         self._signal.emit('after_build')
@@ -620,7 +620,7 @@ class TabContent(QScrollArea):
 
         else:
             unique = dict_combo_itemdata
-            service = service_pool.get(unique)
+            service = service_manager.get(unique)
             # problem
             field_combo.setCurrentIndex(0)
             if service and service.support and service.fields:
@@ -628,7 +628,7 @@ class TabContent(QScrollArea):
                     field_combo.addItem(each, userData=i)
                     if each == dict_fld_name or i == dict_fld_ord:
                         field_combo.setCurrentIndex(i)
-            service_pool.put(service)
+            service_manager.put(service)
 
     @property
     def data(self):

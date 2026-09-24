@@ -24,11 +24,11 @@ class Ldoce5plus(MdxService):
         dict_path = FORCE_DICT_PATH
         # if FORCE_DICT_PATH is a path, stop auto detect
         if not dict_path:
-            from ...service import service_manager, service_pool
+            from ...service import service_manager
             for clazz in service_manager.mdx_services:
-                service:MdxService = service_pool.get(clazz._unique_)
+                service:MdxService = service_manager.get(clazz._unique_)
                 title = service.backend._title if service and service.support else u''
-                service_pool.put(service)
+                service_manager.put(service)
                 # print(f'Dict Service: {title} -- {service.dict_path}')
                 if title.startswith(u'LDOCE5++'):
                     dict_path = service.dict_path

@@ -24,11 +24,11 @@ class oalecd9_mdx(MdxService):
         dict_path = FORCE_DICT_PATH
         # if FORCE_DICT_PATH is a path, stop auto detect
         if not dict_path:
-            from .. import service_manager, service_pool
+            from .. import service_manager
             for clazz in service_manager.mdx_services:
-                service = service_pool.get(clazz._unique_)
+                service = service_manager.get(clazz._unique_)
                 title = service.backend._title if service and service.support else u''
-                service_pool.put(service)
+                service_manager.put(service)
                 if title.startswith(u'牛津高阶英汉双解词典'):
                     dict_path = service.dict_path
                     break

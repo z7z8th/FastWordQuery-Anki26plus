@@ -24,7 +24,7 @@ from aqt.qt import *
 
 from ..context import config
 from ..lang import _, _sl
-from ..service import service_manager, service_pool
+from ..service import service_manager
 from .base import WIDGET_SIZE, Dialog
 
 # 2x3 compatible

@@ -65,19 +65,15 @@ Thread 152068 (idle): "MainThread"
 class Ldoce6(MdxService):
 
     def __init__(self):
-        import traceback
-        # traceback.format_stack()
-        traceback.print_stack()
-        
         dict_path = FORCE_DICT_PATH
         # if FORCE_DICT_PATH is a path, stop auto detect
         if not dict_path:
-            from ...service import service_manager, service_pool
+            from ...service import service_manager
             for clazz in service_manager.mdx_services:
                 # print(f'Ldoce6.__init__ clazz title {clazz._title_} unique {clazz._unique_}')
-                service: MdxService = cast(MdxService, service_pool.get(clazz._unique_))
+                service: MdxService = cast(MdxService, service_manager.get(clazz._unique_))
                 title = service.backend._title if service and service.support else u''
-                service_pool.put(service)
+                service_manager.put(service)
                 # print(f'Dict Service: {title} -- {service.dict_path}')
                 if title.startswith(u'LDOCE6') or u'LDOCE6' in os.path.basename(service.dict_path):
                     print(f"--- MDX-LDOCE6 Found dict_path: {service.dict_path}")

@@ -31,7 +31,7 @@ from aqt.utils import showInfo
 
 from ..constants import Template
 from ..context import config
-from ..service import Service, QueryResult, copy_static_file, service_pool
+from ..service import Service, QueryResult, copy_static_file, service_manager
 from ..service.base import LocalService, WordNotFoundError
 from ..utils import wrap_css, QueryStat
 from ..lang import _
