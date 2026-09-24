@@ -25,7 +25,7 @@ class MerriamWebster(WebService):
             else:    
                 a['href'] = 'https://www.merriam-webster.com{}'.format(a['href'])
         word_info['sa'] = str(sym_div)
-        return self.cache_this(word_info)
+        return word_info
 
     @export([u'同义词反义词', u'Synonyms & Antonyms'])
     @with_styles(css_file='_mw.css')

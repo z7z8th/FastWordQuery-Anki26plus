@@ -19,7 +19,7 @@ class SpanishDict(WebService):
 
         word_info['image_url'] = soup.find_all('img')[1]['src']
         word_info['test'] = str(soup.find_all('img'))
-        return self.cache_this(word_info)
+        return word_info
         
     @export([u'图片', u'Image'])
     def fld_image(self):

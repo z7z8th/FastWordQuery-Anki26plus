@@ -53,8 +53,7 @@ class OxfordLearning(WebService):
         if not ret:
             return None
 
-        return self.cache_this(
-            {
+        return {
                 'phonetic': f'{ret.phon_bre} {ret.phon_ame}'.strip(),
                 'phon_bre': ret.phon_bre,
                 'phon_ame': ret.phon_ame,
@@ -68,7 +67,7 @@ class OxfordLearning(WebService):
                 'word_origin': ret.word_origin,
                 'idioms': ret.idioms,
             }
-        )
+        
 
     # --- Media Handlers ---
 

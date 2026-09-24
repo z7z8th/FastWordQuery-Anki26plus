@@ -122,7 +122,7 @@ class Longman(WebService):
             body_html += str(dict_link)
 
         word_info['ee'] = body_html
-        return self.cache_this(word_info)
+        return word_info
 
     @export('PHON')
     def fld_phonetic(self):
