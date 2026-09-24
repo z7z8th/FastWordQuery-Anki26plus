@@ -22,6 +22,7 @@ from aqt.qt import *
 from ..context import config
 from ..lang import _
 from .base import Dialog
+from ..utils.llm import *
 
 __all__ = ['SettingDialog']
 
@@ -89,6 +90,53 @@ class SettingDialog(Dialog):
         layout.addLayout(hbox)
 
         hbox = QHBoxLayout()
+        self.ollama_host_edit = QLineEdit()
+        self.ollama_host_edit.setText(config.ollama_host)
+        label = QLabel(_("OLLAMA_HOST") + ":", parent=self)
+        hbox.addWidget(label)
+        hbox.setStretchFactor(label, 1)
+        hbox.addWidget(self.ollama_host_edit)
+        hbox.setStretchFactor(self.ollama_host_edit, 2)
+        layout.addLayout(hbox)
+
+        hbox = QHBoxLayout()
+        self.ollama_model_edit = QLineEdit()
+        self.ollama_model_edit.setText(config.ollama_model)
+
+        self.ollama_model_edit = QLineEdit()
+        self.ollama_model_edit.setPlaceholderText(config.ollama_model)
+
+        self.ollama_menu = QMenu()
+        for model in get_ollama_models():
+            model_name = model["name"]
+            # print(f'model_name {model_name}')
+            action = self.ollama_menu.addAction(model_name)
+            action.setData(model_name)
+            action.triggered.connect(lambda: \
+                                     self.ollama_model_edit.setText(self.sender().data()) \
+                                        if self.sender() \
+                                        else None
+                )
+
+        # 使用 QStyle.StandardPixmap 引用图标
+        icon = self.style().standardIcon(QStyle.StandardPixmap.SP_TitleBarUnshadeButton)
+
+        self.ollama_menu_action = self.ollama_model_edit.addAction(
+            icon,
+            QLineEdit.ActionPosition.TrailingPosition
+        )
+        self.ollama_menu_action.setMenu(self.ollama_menu)
+
+        label = QLabel(_("OLLAMA_MODEL") + ":", parent=self)
+        hbox.addWidget(label)
+        hbox.setStretchFactor(label, 1)
+        hbox.addWidget(self.ollama_model_edit)
+        hbox.setStretchFactor(self.ollama_model_edit, 2)
+        layout.addLayout(hbox)
+
+
+
+        hbox = QHBoxLayout()
         okbtn = QDialogButtonBox(parent=self)
         okbtn.setStandardButtons(QDialogButtonBox.StandardButton.Ok)
         okbtn.clicked.connect(self.accept)
@@ -112,6 +160,9 @@ class SettingDialog(Dialog):
 
         layout.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
         self.setLayout(layout)
+
+    def on_ollam_combo_changed(self, text):
+        self.ollama_model_edit.setText(text)
 
     def accept(self):
         self.save()
@@ -141,6 +192,8 @@ class SettingDialog(Dialog):
             'ignore_mdx_wordcase': self.check_ighore_mdx_wordcase.isChecked(),
             'thread_number': self.input_thread_number.value(),
             'cloze_str': self.input_cloze_str.text(),
-            'sound_str': self.input_sound_str.text()
+            'sound_str': self.input_sound_str.text(),
+            'ollama_host': self.ollama_host_edit.text(),
+            'ollama_model': self.ollama_model_edit.text(),
         }
         config.update(data)

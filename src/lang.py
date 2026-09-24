@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import re
 from anki.lang import current_lang
 
 try:
@@ -124,11 +125,12 @@ def _(key, lang=current_lang):
     if lang != 'zh-CN' and lang != 'en':
         lang = 'en'
 
-    def disp(s):
-        return s.lower().capitalize()
+    def format_name(text: str) -> str:
+        # Split by underscore, capitalize each word, and join with a space
+        return " ".join(word.capitalize() for word in re.split(r"[_\s]+", text))
 
     if key not in _trans or lang not in _trans[key]:
-        return disp(key)
+        return format_name(key)
     return _trans[key][lang]
 
 

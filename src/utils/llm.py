@@ -1,9 +1,18 @@
+import traceback
+
 import requests
 import json
 from ..context import config
 
-def get_ollama_models(host="http://localhost:11434"):
+def _norm_ollam_host(host):
+    if not host.startswith('http'):
+        host = f'http://{host}'
+
+    return host
+
+def get_ollama_models(host=config.ollama_host):
     try:
+        host = _norm_ollam_host(host)
         response = requests.get(f"{host}/api/tags")
         response.raise_for_status()
         
@@ -18,7 +27,10 @@ def get_ollama_models(host="http://localhost:11434"):
             
         return models
     except Exception as e:
+        traceback.print_exc()
         print(f"Failed to fetch models: {e}")
+
+    return [{"name":"Error fetching ollama models..."}]
 
 def query_ollama(prompt, host=config.ollama_host, model=config.ollama_model, timeout=180) -> str:
     """
@@ -28,7 +40,8 @@ def query_ollama(prompt, host=config.ollama_host, model=config.ollama_model, tim
     :param model: 使用的 Ollama 模型名称
     :param timeout: 超时时间（秒）
     """
-    url = f"http://{host}:11434/api/generate"
+    host = _norm_ollam_host(host)
+    url = f"{host}/api/generate"
 
     payload = {
         "model": model,

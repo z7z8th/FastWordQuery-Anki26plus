@@ -210,7 +210,7 @@ class Config(object):
 
     @property
     def ollama_host(self):
-        return self.data.get('ollama_host', 'localhost')
+        return self.data.get('ollama_host', 'localhost:11434')
 
     @property
     def ollama_model(self):
