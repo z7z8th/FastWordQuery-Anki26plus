@@ -4,21 +4,22 @@ import requests
 import markdown
 
 from ..base import WebService, export, register
-from ...context import config
+from ... import context
 
 OLLAMA_HOST="localhost"
 OLLAMA_MODEL="qwen3.8:27b"
 
 print(f"TODO: use config.ollama_host config.ollama_model")
 
-@register([u'LLM解释', u'LLM Explain'], enabled=True)
+@register([u'LLM中文解释', u'LLM Chinese'], enabled=True)
 class LLM_Chinese(WebService):
     def __init__(self):
         super().__init__()
 
     def _get_from_api(self):
-        ret = self.query_ollama_word(self.word)
-        return ret
+        with context.get_worker_lock('llm'):
+            ret = self.query_ollama_word(self.word)
+            return ret
 
     def query_ollama_word(self, word, model=OLLAMA_MODEL, timeout=180) -> dict:
         """
@@ -97,11 +98,11 @@ class LLM_Chinese(WebService):
 
         return defaultdict(str)
 
-    @export([u'详细解释', 'Explains'])
-    def fld_explain(self):
-        return self._get_field('explains')
-
     @export([u'例句', 'Examples'])
     def fld_explains(self):
         return self._get_field('examples')
+    
+    @export([u'详细解释', 'Explains'])
+    def fld_explain(self):
+        return self._get_field('explains')
     

@@ -82,6 +82,7 @@ class QueryWorkerManager(object):
         self.fails = 0
 
         self.mdx_backend_lock = self.ctx.Lock()
+        self.llm_lock = self.ctx.Lock()
         gui_hooks.profile_will_close.append(self.terminate_processes)
 
     def add_note_task(self, note: Note):
@@ -127,7 +128,7 @@ class QueryWorkerManager(object):
             for _ in range(num_workers):
                 p = self.ctx.Process(
                     target=process_worker_loop,
-                    args=(self.stop_event, self.task_queue, self.result_queue, self.query_fields, self.mdx_backend_lock),
+                    args=(self.stop_event, self.task_queue, self.result_queue, self.query_fields, self.mdx_backend_lock, self.llm_lock),
                     # Pass the parent's full sys.path list to the initializer
                     # initializer=_init_worker,
                     # initargs=(list(sys.path),)

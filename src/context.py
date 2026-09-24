@@ -73,7 +73,7 @@ misc.hook_builtins_open_exception()
 from .constants import VERSION
 from .utils.events import events
 
-# __all__ = ['config', 'set_mdx_backend_lock', 'get_mdx_backend_lock', 'ADDON_NAME']
+# __all__ = ['config', 'ADDON_NAME']
 
 
 class Config(object):
@@ -229,13 +229,15 @@ def gui_processEvents():
         return mw.app.processEvents()
 
 
-_MDX_BACKEND_LOCK = threading.Lock()
+from collections import defaultdict
+_WORKER_LOCKS = defaultdict(threading.Lock)
 
-def set_mdx_backend_lock(lock):
-    global _MDX_BACKEND_LOCK
-    if _MDX_BACKEND_LOCK:
-        print(f'*** Warning: overriding _MDX_BACKEND_LOCK with new lock')
-    _MDX_BACKEND_LOCK = lock
+def set_worker_lock(ltype, lock):
+    if ltype in _WORKER_LOCKS:
+        print(f'*** Warning: overriding lock type `{ltype}` with new lock {lock}')
+    _WORKER_LOCKS[ltype] = lock
 
-def get_mdx_backend_lock():
-    return _MDX_BACKEND_LOCK
+def get_worker_lock(ltype):
+    if ltype not in _WORKER_LOCKS:
+        print(f'*** Warning: no existing lock of type `{ltype}`, new one')
+    return _WORKER_LOCKS[ltype]

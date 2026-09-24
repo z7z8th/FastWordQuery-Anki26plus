@@ -710,7 +710,7 @@ class LocalService(Service):
 
     @staticmethod
     def _get_backend(key: str, builder: ObjectBuilder):
-        with context.get_mdx_backend_lock():
+        with context.get_worker_lock('mdx_backend'):
             key = md5(str(key).encode('utf-8')).hexdigest()
             # print(f'_get_builder key {key} {func} builders[key] {LocalService._mdx_builders[key]}')
             if builder:

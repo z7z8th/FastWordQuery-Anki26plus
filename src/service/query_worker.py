@@ -188,13 +188,14 @@ _stemmer = stemmer('english')
 #         if path not in sys.path:
 #             sys.path.insert(0, path)
 
-def process_worker_loop(stop_event, task_queue: mp.Queue, result_queue: mp.Queue, query_fields, mdx_backend_lock):
+def process_worker_loop(stop_event, task_queue: mp.Queue, result_queue: mp.Queue, query_fields, mdx_backend_lock, llm_lock):
     """
     Top-level worker function executed in isolated child processes.
     Pulls lightweight note payload data, performs queries, and sends back results.
     """
     print(f"--- worker STARTED {mp.current_process()}")
-    context.set_mdx_backend_lock(mdx_backend_lock)
+    context.set_worker_lock('mdx_backend', mdx_backend_lock)
+    context.set_worker_lock('llm', llm_lock)
     # print(f'---process_worker_loop col_path {col_path}')
     n = 0
     while not stop_event.is_set():
