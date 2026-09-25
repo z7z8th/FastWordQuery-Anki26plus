@@ -3,6 +3,7 @@
 ## What's new
 
 * Support Anki 26+.
+* Support Query OLLAMA AI Model for Chinese Words.
 * Support Querying 10K+ words in multi-process.(File descriptor leak fixed.)
 * Replaced QThread with Multi-process to achieve **TRUE** concurrent query.
 * Fixed LDOCE6 voice match. LDOCE6 add match MDX dict by file name in addition to dict title.

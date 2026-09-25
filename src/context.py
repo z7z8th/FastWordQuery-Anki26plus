@@ -144,6 +144,14 @@ class Config(object):
         return self.data.get(str(model_id), {'query_configs':[], 'default': -1})
 
     @property
+    def version(self):
+        return Version(self.data.get('version', '0'))
+    
+    @version.setter
+    def version(self, new_ver):
+        self.data.update({'version': new_ver})
+
+    @property
     def last_model_id(self):
         return self.data.get('%s_last' % self.pm_name, 0)
 
@@ -217,12 +225,9 @@ class Config(object):
         return self.data.get('ollama_model', 'gemma4:26b')
 
     @property
-    def version(self):
-        return Version(self.data.get('version', '0'))
-    
-    @version.setter
-    def version(self, new_ver):
-        self.data.update({'version': new_ver})
+    def ollama_lang(self):
+        return self.data.get('ollama_lang', '中文')
+
 
     
 # should chdir on profile change through hook,

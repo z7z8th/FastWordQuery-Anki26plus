@@ -132,7 +132,16 @@ class SettingDialog(Dialog):
         hbox.setStretchFactor(self.ollama_model_edit, 2)
         layout.addLayout(hbox)
 
-
+        hbox = QHBoxLayout()
+        self.ollama_lang_combo = QComboBox()
+        self.ollama_lang_combo.addItems(["中文", "English"])
+        self.ollama_lang_combo.setCurrentText(config.ollama_lang)
+        label = QLabel(_("OLLAMA_LANG") + ":", parent=self)
+        hbox.addWidget(label)
+        hbox.setStretchFactor(label, 1)
+        hbox.addWidget(self.ollama_lang_combo)
+        hbox.setStretchFactor(self.ollama_lang_combo, 2)
+        layout.addLayout(hbox)
 
         hbox = QHBoxLayout()
         okbtn = QDialogButtonBox(parent=self)
@@ -159,7 +168,7 @@ class SettingDialog(Dialog):
         layout.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
         self.setLayout(layout)
 
-    def on_ollam_combo_changed(self, text):
+    def on_ollam_model_combo_changed(self, text):
         self.ollama_model_edit.setText(text)
 
     def accept(self):
@@ -182,6 +191,9 @@ class SettingDialog(Dialog):
         self.input_thread_number.setValue(config.thread_number)
         self.input_cloze_str.setText(config.cloze_str)
         self.input_sound_str.setText(config.sound_str)
+        self.ollama_host_edit.setText(config.ollama_host)
+        self.ollama_model_edit.setText(config.ollama_model)
+        self.ollama_lang_combo.setCurrentText(config.ollama_lang)
 
     def save(self):
         data = {
@@ -193,5 +205,6 @@ class SettingDialog(Dialog):
             'sound_str': self.input_sound_str.text(),
             'ollama_host': self.ollama_host_edit.text(),
             'ollama_model': self.ollama_model_edit.text(),
+            'ollama_lang': self.ollama_lang_combo.currentText(),
         }
         config.update(data)

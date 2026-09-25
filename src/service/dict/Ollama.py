@@ -9,7 +9,7 @@ from ...context import config
 from ...utils.llm import *
 
 
-@register([u'LLM中文解释', u'LLM Chinese'], enabled=True)
+@register([u'LLM解释', u'LLM Explains'], enabled=True)
 class LLM_Chinese(WebService):
     def __init__(self):
         super().__init__()
@@ -25,16 +25,25 @@ class LLM_Chinese(WebService):
         """
 
         field_separator = '~~~~~~'
-        prompt = (
-            f"请详细解释汉语词语 '{word}' 的含义、用法和背景。\n"
-            f"然后请给出 3 到 5 个使用了该词语的例句。\n"
-            f"注意：在详细解释和例句之间，请务必用 '{field_separator}' 作为单独的一行进行分隔。"
-        )
+        if config.ollama_lang == "English":
+            prompt = (
+                f"Please use English to explain the meaning, usage, and context of the word or phrase '{word}' in detail.\n"
+                f"Next, provide 3 to 5 example sentences demonstrating its usage.\n"
+                f"Note: Be sure to place '{field_separator}' on its own line as a separator between the detailed explanation and the example sentences."
+            )
+        elif config.ollama_lang == "中文":
+            prompt = (
+                f"请用中文详细解释词语 '{word}' 的含义、用法和背景。\n"
+                f"然后请给出 3 到 5 个使用了该词语的例句。\n"
+                f"注意：在详细解释和例句之间，请务必用 '{field_separator}' 作为单独的一行进行分隔。"
+            )
+        else:
+            raise Exception("No ollama language specified. Please set it in FastWQ Options -> Settings.")
         
-        print(f"正在查询词语 [{word}]，请稍候...\n")
+        print(f"Querying [{word}], please wait...\n")
 
         raw_response = query_ollama(prompt, think=False)
-        print("\n\n[查询完成]")
+        print("\n\n[Query Done]")
         if not raw_response:
             return defaultdict(str)
 
