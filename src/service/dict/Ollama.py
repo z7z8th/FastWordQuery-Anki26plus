@@ -9,7 +9,7 @@ from ...context import config
 from ...utils.llm import *
 
 
-@register([u'LLM解释', u'LLM Explains'], enabled=True)
+@register([u'AI 解释(Ollama)', u'AI Explains(Ollama)'], enabled=True)
 class LLM_Chinese(WebService):
     def __init__(self):
         super().__init__()
