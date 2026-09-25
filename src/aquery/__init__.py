@@ -21,6 +21,7 @@
 # import os
 # import shutil
 # import unicodedata
+import re
 
 # from aqt import mw
 
@@ -38,6 +39,21 @@ from aqt.utils import showInfo, showText, tooltip
 
 __all__ = ['query_from_browser', 'query_from_editor_fields', 'QueryStat']
 
+def natural_sort_key(s: str):
+    """Splits string into a list of strings and integers for natural sorting."""
+    return [
+        int(text) if text.isdigit() else text.lower()
+        for text in re.split(r"(\d+)", s)
+    ]
+
+def get_note_deck_name(browser, note) -> str:
+    """Helper to get the deck name of a note's first card."""
+    cards = note.cards()
+    if not cards:
+        return ""
+    # Get the deck object using the card's deck ID (did)
+    deck = browser.mw.col.decks.get(cards[0].did)
+    return deck["name"] if deck else ""
 
 def query_from_browser(browser):
     """
@@ -47,8 +63,9 @@ def query_from_browser(browser):
     if not browser:
         return
 
-    notes = [browser.mw.col.get_note(note_id)
-             for note_id in browser.selectedNotes()]
+    notes = [browser.mw.col.get_note(note_id) for note_id in browser.selectedNotes()]
+    # Sort the notes list in-place by deck name using natural sorting
+    notes.sort(key=lambda note: natural_sort_key(get_note_deck_name(browser, note)))
 
     if len(notes) == 1:
         query_from_editor_fields(browser.editor)
