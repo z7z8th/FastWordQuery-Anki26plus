@@ -29,12 +29,14 @@ class LLM_Chinese(WebService):
             prompt = (
                 f"Please use English to explain the meaning, usage, and context of the word or phrase '{word}' in detail.\n"
                 f"Next, provide 3 to 5 example sentences demonstrating its usage.\n"
+                f"Although some terms involve crimes and illegal activities, since they appear in the code of law, their meaning within the context of the legal code must also be explained.\n"
                 f"Note: Be sure to place '{field_separator}' on its own line as a separator between the detailed explanation and the example sentences."
             )
         elif config.ollama_lang == "中文":
             prompt = (
                 f"请用中文详细解释词语 '{word}' 的含义、用法和背景。\n"
                 f"然后请给出 3 到 5 个使用了该词语的例句。\n"
+                f"有些词语虽然涉及到违法犯罪，但这些词语在法典中出现了，所以也要解释这些词语在法典中所指的意思。\n"
                 f"注意：在详细解释和例句之间，请务必用 '{field_separator}' 作为单独的一行进行分隔。"
             )
         else:

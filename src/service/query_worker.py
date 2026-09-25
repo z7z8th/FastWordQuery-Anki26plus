@@ -90,6 +90,7 @@ def query_flds(note_fields_len_list, word_ord, word, cfg_qfields, qfields:list[i
 
     # print(f'---query_flds tasks {tasks}')
     if not tasks:
+        qstat.note_skip_count = 1
         print(f"*** Error: No tasks generated for word `{word}`")
 
     missed_css_info_list = list()

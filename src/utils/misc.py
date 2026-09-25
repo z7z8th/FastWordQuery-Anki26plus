@@ -153,13 +153,13 @@ class MapDict(dict):
 @dataclass
 class QueryStat:
     note_count: int = 0
+    note_skip_count: int = 0
     field_skip_count:int = 0
     field_success_count:int = 0
     field_no_result_count:int = 0
     field_error_count:int = 0
     field_updated_count: int = 0
 
-    field_result_count:int = 0
     elapsed_time:int = 0
     estimated_time_done:int = 0
 

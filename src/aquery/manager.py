@@ -177,16 +177,15 @@ class QueryWorkerManager(object):
 
     def reset_result_time(self):
         self.start_time = datetime.now()
-        self.result_count = 0
         self.last_update_progress = None
         self.qstat.elapsed_time = 0
         self.qstat.estimated_time_done = 0
 
     def update_result_time(self):
-        self.qstat.field_result_count = self.result_count
         self.qstat.elapsed_time = (datetime.now() - self.start_time).total_seconds()
         try:
-            self.qstat.estimated_time_done = int(datetime.now().timestamp() + (self.total - self.result_count) * (self.qstat.elapsed_time/self.result_count))
+            self.qstat.estimated_time_done = int(datetime.now().timestamp() + (self.total - self.qstat.note_count) * \
+                                                  (self.qstat.elapsed_time/(self.qstat.note_count-self.qstat.note_skip_count)))
         except:
             self.qstat.estimated_time_done = 0
 
@@ -195,7 +194,6 @@ class QueryWorkerManager(object):
         while not self.result_queue.empty():
             try:
                 status, data = self.result_queue.get_nowait()
-                self.result_count += 1
                 self.update_result_time()
                 if status == 'success':
                     note_id, results, qstat, missed_css_info_list = data
