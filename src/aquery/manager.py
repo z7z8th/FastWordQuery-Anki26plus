@@ -15,6 +15,7 @@ import queue
 import pickle
 import traceback
 from collections import defaultdict
+from datetime import datetime, timedelta
 import time
 
 import anki.notes
@@ -79,7 +80,6 @@ class QueryWorkerManager(object):
         self.flush = True
         self.query_fields:list[int] = []
         self.note_map = {}  # Keep track of Note instances by ID on the main process
-        self.fails = 0
 
         self.mdx_backend_lock = self.ctx.Lock()
         self.llm_lock = self.ctx.Lock()
@@ -98,6 +98,8 @@ class QueryWorkerManager(object):
 
 
     def start(self):
+        self.reset_result_time()
+
         self.total = self.task_queue.qsize() if hasattr(self.task_queue, 'qsize') else len(self.note_map)
         self.progress.start(min=0, max=self.total)
         self.update_progress()
@@ -107,22 +109,23 @@ class QueryWorkerManager(object):
         main_mod = sys.modules.get('__main__')
         # Store original __name__ attribute
         orig_name = getattr(main_mod, '__name__', None)
-        print(f'--- worker process_worker_loop.__module__ {process_worker_loop.__module__}')
-        print(f"--- worker sys.modules['__main__'] {sys.modules['__main__']}")
+        # print(f'--- worker process_worker_loop.__module__ {process_worker_loop.__module__}')
+        # print(f"--- worker sys.modules['__main__'] {sys.modules['__main__']}")
         main_module = sys.modules['__main__']
         main_mod_name = getattr(main_module.__spec__, "name", None)
         main_path = getattr(main_module, '__file__', None)
-        print(f'main_module {main_module} {dir(main_module)}')
-        print(f'main_mod_name {main_mod_name}')
-        print(f'main_path {main_path}')
+        # print(f'main_module {main_module} {dir(main_module)}')
+        # print(f'main_mod_name {main_mod_name}')
+        # print(f'main_path {main_path}')
+        #### if error, try debug in sys lib multiprocesisng: spawn_main, _main
 
         try:
             # Temporarily unset or override __name__ so get_preparation_data()
             # does not set init_main_from_name to 'anki.__main__'
             if main_mod:
                 setattr(main_mod.__spec__, 'name', f'{ADDON_NAME}.service.__init__')
-            print(f'__name__ {__name__}')
-            print(f'getattr(main_module.__spec__, "name", None) {getattr(main_module.__spec__, "name", None)}')
+            # print(f'__name__ {__name__}')
+            # print(f'getattr(main_module.__spec__, "name", None) {getattr(main_module.__spec__, "name", None)}')
 
             # Spawn worker processes
             for _ in range(num_workers):
@@ -161,14 +164,39 @@ class QueryWorkerManager(object):
             self.handle_flush(note)
 
     def update_progress(self):
+        if not self.last_update_progress:
+            self.last_update_progress = datetime.now()
+        elif datetime.now() - self.last_update_progress < timedelta(seconds=1):
+            return
+        self.last_update_progress = datetime.now()
+        
+        self.qstat.elapsed_time = (datetime.now() - self.start_time).total_seconds()
+        # print(f'elapsed time {self.qstat.elapsed_time}  ETA {self.qstat.estimated_time_done}')
         self.progress.update_labels(self.qstat)
         mw.app.processEvents()
+
+    def reset_result_time(self):
+        self.start_time = datetime.now()
+        self.result_count = 0
+        self.last_update_progress = None
+        self.qstat.elapsed_time = 0
+        self.qstat.estimated_time_done = 0
+
+    def update_result_time(self):
+        self.qstat.field_result_count = self.result_count
+        self.qstat.elapsed_time = (datetime.now() - self.start_time).total_seconds()
+        try:
+            self.qstat.estimated_time_done = int(datetime.now().timestamp() + (self.total - self.result_count) * (self.qstat.elapsed_time/self.result_count))
+        except:
+            self.qstat.estimated_time_done = 0
 
     def process_results(self):
         """Drains the IPC result queue without blocking the main event loop."""
         while not self.result_queue.empty():
             try:
                 status, data = self.result_queue.get_nowait()
+                self.result_count += 1
+                self.update_result_time()
                 if status == 'success':
                     note_id, results, qstat, missed_css_info_list = data
                     # for debug _ForkingPickler.loads: None is not callable.
@@ -177,11 +205,12 @@ class QueryWorkerManager(object):
                     note = self.note_map.get(note_id)
                     if note:
                         self.update(note, results, qstat, missed_css_info_list)
-                elif status == 'invalid_word':
-                    self.fails += 1
+                # elif status == 'invalid_word':
+                #     self.qstat.field_error_count += 1
                     # if self.total == 1:
                     #     showInfo(_("NO_QUERY_WORD"))
                 elif status == 'error':
+                    self.qstat.field_error_count += 1
                     note_id, err_str, tb = data
                     print(f"Error processing note {note_id}: {err_str}\n{tb}")
             except queue.Empty:
@@ -189,8 +218,6 @@ class QueryWorkerManager(object):
 
     def join(self):
         """Waits for processes to complete while maintaining UI responsiveness."""
-        timer = QElapsedTimer()
-        timer.start()
 
         while any(p.is_alive() for p in self.processes) or not self.result_queue.empty():
             # Handle user cancellation
@@ -204,7 +231,7 @@ class QueryWorkerManager(object):
             mw.app.processEvents()
 
             # Brief sleep to prevent high CPU loop on the main thread
-            QThread.msleep(50)
+            time.sleep(0.2)
 
         for p in self.processes:
             p.join()

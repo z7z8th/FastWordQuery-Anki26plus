@@ -18,6 +18,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import time
+from datetime import datetime, timedelta
 from collections import defaultdict
 
 from aqt.qt import *
@@ -29,16 +30,37 @@ from ..context import gui_processEvents
 
 __all__ = ['ProgressWindow']
 
+def formated_timedelta(td:timedelta):
+    # Calculate total hours, minutes, and seconds
+    total_seconds = int(td.total_seconds())
+    hours, remainder = divmod(total_seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    days, hours = divmod(hours, 24)
+    if days > 1:
+        dstr = f'{days} days '
+    elif days == 1:
+        dstr = f'{days} day '
+    else:
+        dstr = ''
 
-def get_info_msg(qstat):
+    # Format zero-padded string
+    formatted_time = f"""{dstr}{hours:02d}:{minutes:02d}:{seconds:02d}"""
+    return formatted_time
+
+
+def get_info_msg(qstat:QueryStat):
+    eta = formated_timedelta(timedelta(seconds=(qstat.estimated_time_done-datetime.now().timestamp()))) if qstat.estimated_time_done > 0 else _("Calculating...")
     msg = \
-        f"""<strong>{_('QUERIED')}</strong>
+    f"""<strong>{_('QUERIED')}</strong>
         <p>{'-' * 45}</p>
         <p>{_('CARDS')} <b>{qstat.note_count}</b> {_('WORDS')}</p>
         <p>{_('SUCCESS')} <b>{qstat.field_success_count}</b> {_('FIELDS')}</p>
         <p>{_('SKIPED')} <b>{qstat.field_skip_count}</b> {_('FIELDS')}</p>
         <p>{_('UPDATE')} <b>{qstat.field_updated_count}</b> {_('FIELDS')}</p>
         <p>{_('FAILURE')} <b>{qstat.field_error_count}</b> {_('FIELDS')}</p>
+        <p>{'-' * 45}</p>
+        <p>{_('Elapsed Time')} <b>{formated_timedelta(timedelta(seconds=qstat.elapsed_time))}</b></p>
+        <p>{_('Estimated Time Left')} <b>{eta}</b></p>
     """
     return msg
 
@@ -74,8 +96,8 @@ class ProgressWindow(QProgressDialog):
         self._msg_count = qstat
         query_stat_info = get_info_msg(qstat)
         self._update(
-            label=query_stat_info,
-            value=qstat.note_count)
+            label = query_stat_info,
+            value = qstat.note_count)
         self.adjustSize()
         gui_processEvents()
 

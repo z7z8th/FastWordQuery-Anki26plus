@@ -30,7 +30,7 @@ def is_main_process():
             return True
     return False
 
-print(f'---sys.argv {sys.argv}')
+# print(f'---sys.argv {sys.argv}')
 print(f"[PID {os.getpid()}] Starting worker module import...", flush=True)
 # Print loaded modules before any add-on imports
 # print("Loaded Qt modules before add-on imports:", [m for m in sys.modules if "Qt" in m or "aqt" in m], flush=True)
@@ -42,7 +42,7 @@ else:
     mw = None
 # print("Loaded Qt modules before add-on imports:", [m for m in sys.modules if "Qt" in m or "aqt" in m], flush=True)
 
-print(f'===mw {mw}')
+# print(f'===mw {mw}')
 
 def start_here():
     import ssl

@@ -159,6 +159,10 @@ class QueryStat:
     field_error_count:int = 0
     field_updated_count: int = 0
 
+    field_result_count:int = 0
+    elapsed_time:int = 0
+    estimated_time_done:int = 0
+
     def reset(self) -> None:
         """Reset all dataclass fields to their default values defined in class type annotations."""
         for f in dataclass_fields(self):

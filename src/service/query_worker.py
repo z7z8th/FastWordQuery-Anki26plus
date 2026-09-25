@@ -117,11 +117,12 @@ def query_flds(note_fields_len_list, word_ord, word, cfg_qfields, qfields:list[i
                 qstat.field_no_result_count += 1
         except WordNotFoundError as e:
             # print(f'{e}')
+            qstat.field_error_count += 1
             pass
         except Exception as e:
             qstat.field_error_count += 1
-            print(traceback.format_exc())
-            print(_("NO_QUERY_WORD"), e)
+            print(f'*** Error querying word {word}', traceback.format_exc())
+            # print(_("NO_QUERY_WORD"), e)
         finally:
             service_manager.put(service)
 
@@ -223,6 +224,7 @@ def process_worker_loop(stop_event, task_queue: mp.Queue, result_queue: mp.Queue
         try:
             # Reconstruction or dummy encapsulation if query_flds needs field data
             # Adjust query_flds call depending on whether it works with dict or Note
+            # qstat contains error count
             results, qstat, missed_css_info_list = query_flds(note_fields_len_list, word_ord, word, cfg_qfields, query_fields)
             result_queue.put(('success', (note_id, results, qstat, missed_css_info_list)))
             # result_queue.put(('success', (note_id, pickle.dumps(results), pickle.dumps(qstat), missed_css_info_list)))

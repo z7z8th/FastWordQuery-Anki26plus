@@ -8,10 +8,6 @@ from ... import context
 from ...context import config
 from ...utils.llm import *
 
-# OLLAMA_HOST="localhost"
-# OLLAMA_MODEL="gemma4:e4b"
-
-print(f"TODO: use config.ollama_host config.ollama_model")
 
 @register([u'LLM中文解释', u'LLM Chinese'], enabled=True)
 class LLM_Chinese(WebService):
@@ -37,7 +33,7 @@ class LLM_Chinese(WebService):
         
         print(f"正在查询词语 [{word}]，请稍候...\n")
 
-        raw_response = query_ollama(prompt)
+        raw_response = query_ollama(prompt, think=False)
         print("\n\n[查询完成]")
         if not raw_response:
             return defaultdict(str)
