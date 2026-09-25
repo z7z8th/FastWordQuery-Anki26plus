@@ -54,6 +54,7 @@ def get_info_msg(qstat:QueryStat):
     f"""<strong>{_('QUERIED')}</strong>
         <p>{'-' * 45}</p>
         <p>{_('CARDS')} <b>{qstat.note_count}</b> {_('WORDS')}</p>
+        <p>{_('SKIPED')} <b>{qstat.note_skip_count}</b> {_('WORDS')}</p>
         <p>{_('SUCCESS')} <b>{qstat.field_success_count}</b> {_('FIELDS')}</p>
         <p>{_('SKIPED')} <b>{qstat.field_skip_count}</b> {_('FIELDS')}</p>
         <p>{_('UPDATE')} <b>{qstat.field_updated_count}</b> {_('FIELDS')}</p>
