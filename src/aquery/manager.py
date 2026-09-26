@@ -25,7 +25,7 @@ from anki.notes import Note
 # from anki.collection import Collection
 
 from .. import context
-from ..context import config, ADDON_NAME
+from ..context import config, ADDON_NAME, gui_processEvents
 from ..lang import _
 
 from .common import inspect_note, query_flds, QueryStat, update_note_fields
@@ -163,17 +163,17 @@ class QueryWorkerManager(object):
         else:
             self.handle_flush(note)
 
-    def update_progress(self):
+    def update_progress(self, force=False):
         if not self.last_update_progress:
             self.last_update_progress = datetime.now()
-        elif datetime.now() - self.last_update_progress < timedelta(seconds=1):
+        elif not force and datetime.now() - self.last_update_progress < timedelta(seconds=1):
             return
         self.last_update_progress = datetime.now()
         
         self.qstat.elapsed_time = (datetime.now() - self.start_time).total_seconds()
         # print(f'elapsed time {self.qstat.elapsed_time}  ETA {self.qstat.estimated_time_done}')
         self.progress.update_labels(self.qstat)
-        mw.app.processEvents()
+        gui_processEvents()
 
     def reset_result_time(self):
         self.start_time = datetime.now()
@@ -226,7 +226,7 @@ class QueryWorkerManager(object):
             # Drain IPC message queue
             self.process_results()
             self.update_progress()
-            mw.app.processEvents()
+            gui_processEvents()
 
             # Brief sleep to prevent high CPU loop on the main thread
             time.sleep(0.2)
@@ -234,9 +234,12 @@ class QueryWorkerManager(object):
         for p in self.processes:
             p.join()
 
+        print(f'*** All active child processes Exited Normally.')
+
         # Final drain of any lingering queue messages
         self.process_results()
         self.progress.set_finished()
+        self.update_progress(force=True)
 
     def terminate_processes(self):
         """Terminates active child processes immediately."""
@@ -252,8 +255,8 @@ class QueryWorkerManager(object):
                 if p.is_alive():
                     p.terminate()
                     p.join(timeout = 0.1)
-                    mw.app.processEvents()
-        print(f'*** All active child processes Exited.')
+                    gui_processEvents()
+        print(f'*** All active child processes Terminated.')
 
     def handle_flush(self, note: anki.notes.Note):
         if self.flush and note:

@@ -63,11 +63,11 @@ def query_flds(note_fields_len_list, word_ord, word, cfg_qfields, qfields:list[i
 
         # print(f"---dict_unique {dict_unique} dict_fld_ord {dict_fld_ord} fld_ord {fld_ord}")
         if not dict_unique or dict_fld_ord < 0 or fld_ord < 0:
-            print(f"---dict_unique {dict_unique} dict_fld_ord {dict_fld_ord} fld_ord {fld_ord}")
+            print(f"***Warning: invalid: dict_unique {dict_unique} dict_fld_ord {dict_fld_ord} fld_ord {fld_ord}")
             continue
         # print(f"---qfields {qfields}")
         if qfields and fld_ord not in qfields:
-            print(f'---word `{word}` fld_ord `{fld_ord}` not in qfields {qfields}')
+            print(f'***Warning: word `{word}` fld_ord `{fld_ord}` not in qfields {qfields}')
             continue
 
         svc = services.get(dict_unique, None)
@@ -76,7 +76,7 @@ def query_flds(note_fields_len_list, word_ord, word, cfg_qfields, qfields:list[i
             if svc and svc.support:
                 services[dict_unique] = svc
             else:
-                print(f'*** Error: service `{dict_unique}` `{svc}` is not supported')
+                print(f'*** Warning: service `{dict_unique}` `{svc}` is not supported')
 
         # print(f"---service {svc} support {svc.support} for {dict_unique}")
         if svc and svc.support:
@@ -91,7 +91,7 @@ def query_flds(note_fields_len_list, word_ord, word, cfg_qfields, qfields:list[i
     # print(f'---query_flds tasks {tasks}')
     if not tasks:
         qstat.note_skip_count = 1
-        print(f"*** Error: No tasks generated for word `{word}`")
+        print(f"*** Warning: No tasks generated for word `{word}`")
 
     missed_css_info_list = list()
 

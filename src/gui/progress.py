@@ -48,20 +48,52 @@ def formated_timedelta(td:timedelta):
     return formatted_time
 
 
-def get_info_msg(qstat:QueryStat):
+def get_info_msg(qstat:QueryStat, status):
+    # print(f'---get_info_msg status {status}')
+    status = f'<font color="green">{_("DONE")}</span>' if status == 'done' else ''
     eta = formated_timedelta(timedelta(seconds=(qstat.estimated_time_done-datetime.now().timestamp()))) if qstat.estimated_time_done > 0 else _("Calculating...")
     msg = \
-    f"""<strong>{_('QUERIED')}</strong>
-        <p>{'-' * 45}</p>
-        <p>{_('CARDS')} <b>{qstat.note_count}</b> {_('WORDS')}</p>
-        <p>{_('SKIPED')} <b>{qstat.note_skip_count}</b> {_('WORDS')}</p>
-        <p>{_('SUCCESS')} <b>{qstat.field_success_count}</b> {_('FIELDS')}</p>
-        <p>{_('SKIPED')} <b>{qstat.field_skip_count}</b> {_('FIELDS')}</p>
-        <p>{_('UPDATE')} <b>{qstat.field_updated_count}</b> {_('FIELDS')}</p>
-        <p>{_('FAILURE')} <b>{qstat.field_error_count}</b> {_('FIELDS')}</p>
-        <p>{'-' * 45}</p>
-        <p>{_('Elapsed Time')} <b>{formated_timedelta(timedelta(seconds=qstat.elapsed_time))}</b></p>
-        <p>{_('Estimated Time Left')} <b>{eta}</b></p>
+    f"""
+        <style>
+            table {{
+                margin-left: auto;
+                margin-right: auto;
+                border-collapse: collapse;
+                width: 100%;
+            }}
+
+            td {{
+                padding: 6px 10px;
+                border: 1px none #ddd;
+            }}
+
+            tr.th1 td {{
+                text-align: center;
+            }}
+
+            td.field {{
+                text-align: right;
+                white-space: nowrap; /* Keeps key/label names on a single line */
+                padding-right: 20px;
+            }}
+        </style>
+        <div>
+        <table align="center">
+            <tr class="th1"><td colspan="2"><strong>{_('QUERYING')} {status}</strong></td></tr>
+            <tr><td class="field">{_('CARDS')}   </td> <td><b>{qstat.note_count}</b> {_('WORDS')}          </td></tr>
+            <tr><td class="field">{_('SKIPED')}  </td> <td><b>{qstat.note_skip_count}</b> {_('WORDS')}     </td></tr>
+            <tr><td class="field">{_('SUCCESS')} </td> <td><b>{qstat.field_success_count}</b> {_('FIELDS')}</td></tr>
+            <tr><td class="field">{_('SKIPED')}  </td> <td><b>{qstat.field_skip_count}</b> {_('FIELDS')}   </td></tr>
+            <tr><td class="field">{_('UPDATE')}  </td> <td><b>{qstat.field_updated_count}</b> {_('FIELDS')}</td></tr>
+            <tr><td class="field">{_('FAILURE')} </td> <td><b>{qstat.field_error_count}</b> {_('FIELDS')}  </td></tr>
+        </table>
+
+        <table>
+            <!-- <tr class="th1"><td colspan="2"></td></tr> -->
+            <tr><td>{_('Elapsed Time')} </td> <td>{formated_timedelta(timedelta(seconds=qstat.elapsed_time))}</td></tr>
+            <tr><td>{_('Estimated Time Left')} </td> <td>{eta}</td></tr>
+        </table>
+        </div>
     """
     return msg
 
@@ -76,7 +108,8 @@ class ProgressWindow(QProgressDialog):
         # self.app = QApplication.instance()
         # self._win = None
         super().__init__(parent)
-        self._msg_count = QueryStat()
+        self._qstat = QueryStat()
+        self._status = ''
         self._last_update = 0
         self._first_time = 0
         self._aborted = False
@@ -94,8 +127,8 @@ class ProgressWindow(QProgressDialog):
         if self.is_aborted():
             return
 
-        self._msg_count = qstat
-        query_stat_info = get_info_msg(qstat)
+        self._qstat = qstat
+        query_stat_info = get_info_msg(qstat, self._status)
         self._update(
             label = query_stat_info,
             value = qstat.note_count)
@@ -108,7 +141,8 @@ class ProgressWindow(QProgressDialog):
         self.setWindowTitle(title)
 
     def start(self, max=0, min=0, label=None, parent=None):
-        self._msg_count.reset()
+        self._qstat.reset()
+        self._status = ''
         # setup window
         label = label or _("Processing...")
         # parent = parent or self.app.activeWindow() or self.mw
@@ -152,6 +186,7 @@ class ProgressWindow(QProgressDialog):
     def set_finished(self):
         if self.is_aborted():
             return
+        self._status = 'done'
         self.setWindowTitle('FastWQ - Finished')
         self.setValue(self.maximum())
         # self.setLabelText("Done")

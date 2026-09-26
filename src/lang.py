@@ -42,7 +42,8 @@ _arr = [
     ['CARDS', u'卡片', u'Cards'],
     ['FAILURE', u'失败', u'Failure'],
     ['SUCCESS', u'成功', u'Success'],
-    ['QUERIED', u'查询', u'Queried'],
+    ['QUERYING', u'查询中...', u'Querying...'],
+    ['DONE', u'完成', u'Done'],
     ['FIELDS', u'字段', u'Fields'],
     ['WORDS', u'单词', u'Words'],
     ['NOT_DICT_FIELD', u'忽略', u'Ignore'],  # 不是字典字段
