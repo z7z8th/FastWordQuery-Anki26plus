@@ -1,6 +1,8 @@
 import base64
 import re
 import zlib
+# import zstandard as zstd
+
 from aqt import gui_hooks
 from aqt import mw
 from aqt.qt import QAction
@@ -10,8 +12,8 @@ from ..context import config, gui_processEvents
 from ..lang import _
 
 COMPRESS_PREFIX = "ZLIB::"
-MIN_LENGTH = 150  # Minimum length required to trigger compression
-
+MIN_LENGTH = 80  # Minimum length required to trigger compression
+LEN_COMPRESS_PREFIX = len(COMPRESS_PREFIX)
 
 def compress_text(text: str) -> str:
     """Compresses plain text/HTML into a base64-encoded zlib string."""
@@ -27,7 +29,10 @@ def decompress_text(text: str) -> str:
     if not text or not text.startswith(COMPRESS_PREFIX):
         return text
     try:
-        raw_b64 = text[len(COMPRESS_PREFIX) :]
+        if LEN_COMPRESS_PREFIX:
+            raw_b64 = text[LEN_COMPRESS_PREFIX:]
+        else:
+            raw_b64 = text
         compressed_bytes = base64.b64decode(raw_b64)
         return zlib.decompress(compressed_bytes).decode("utf-8")
     except Exception:
@@ -63,7 +68,7 @@ def on_editor_will_save_note(txt, editor):
         return txt
     if len(txt) >= MIN_LENGTH and not txt.startswith(COMPRESS_PREFIX):
         txt = compress_text(txt)
-        tooltip(_("Note Compressed."), period=1000)
+        # tooltip(_("Note Compressed."), period=1000)
 
     return txt
 
