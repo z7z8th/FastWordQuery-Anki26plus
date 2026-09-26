@@ -169,7 +169,7 @@ class Config(object):
 
     @property
     def export_media(self):
-        return self.data.get('export_media', False)
+        return self.data.get('export_media', True)
 
     @property
     def force_update(self):

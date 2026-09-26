@@ -1,952 +1,952 @@
 * {
-  word-wrap: break-word !important;
+    word-wrap: break-word !important;
 }
 
 .entry {
-  line-height: 150%;
-  color: black;
-  display: block;
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  color: #d8d8d8;
+    line-height: 150%;
+    color: black;
+    display: block;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color: #f2f2f2;
 }
 
 a {
-  color: #426def;
-  text-decoration: none;
+    color: #aec1f8;
+    text-decoration: none;
 }
 
 a:hover {
-  text-decoration: underline;
+    text-decoration: underline;
 }
 
 .abbr {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 .ac, .ac {
-  padding-left: 2px;
-  padding-right: 2px;
-  border-radius: 2px 2px 2px 2px;
-  border-style: solid;
-  border-width: 1px;
-  font-variant: small-caps;
-  font-size: 80%;
-  font-weight: bold;
-  color: #135f9f;
+    padding-left: 2px;
+    padding-right: 2px;
+    border-radius: 2px 2px 2px 2px;
+    border-style: solid;
+    border-width: 1px;
+    font-variant: small-caps;
+    font-size: 80%;
+    font-weight: bold;
+    color: #b8b8f9;
 }
 
 .amequiv {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 .brequiv {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 .collo {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 .colloexa {
-  display: block;
+    display: block;
 }
 
 .colloinexa {
-  font-style: italic;
-  font-weight: bold;
+    font-style: italic;
+    font-weight: bold;
 }
 
 .comp {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 .deriv {
-  font-weight: bold;
-  color: #135f9f;
+    font-weight: bold;
+    color: #b8b8f9;
 }
 
 .errorbox {
-  display: block;
+    display: block;
 }
 
 .etymsense {
-  display: block;
+    display: block;
 }
 
 .etymrefhwd {
-  font-style: italic;
+    font-style: italic;
 }
 
 .etymrefhom {
-  font-size: 80%;
-  vertical-align: super;
-  font-style: normal;
+    font-size: 80%;
+    vertical-align: super;
+    font-style: normal;
 }
 
 .etymorigin {
-  font-style: italic;
+    font-style: italic;
 }
 
 .etymtran {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 .etymbox {
-  margin-top: 1em;
-  display: block;
+    margin-top: 1em;
+    display: block;
 }
 
 .example {
-  font-style: italic;
-  display: block;
-  color: #135f9f;
+    font-style: italic;
+    display: block;
+    color: #b8b8f9;
 }
 
 .freq, .freq {
-  padding-left: 2px;
-  padding-right: 2px;
-  border-radius: 2px 2px 2px 2px;
-  border-style: solid;
-  border-width: 1px;
-  font-variant: small-caps;
-  font-size: 80%;
-  font-weight: bold;
-  color: #eb1313;
+    padding-left: 2px;
+    padding-right: 2px;
+    border-radius: 2px 2px 2px 2px;
+    border-style: solid;
+    border-width: 1px;
+    font-variant: small-caps;
+    font-size: 80%;
+    font-weight: bold;
+    color: #f9b8b8;
 }
 
 .level {
-  color: #eb1313;
-  font-size: 160%;
+    color: #f9b8b8;
+    font-size: 160%;
 }
 
 .fullform {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 .geo, span.geo {
-  font-weight: normal;
-  font-style: italic;
-  color: #f7a0f7;
+    font-weight: normal;
+    font-style: italic;
+    color: #fbcffb;
 }
 
 .gloss, .collgloss {
-  font-weight: normal;
-  font-style: normal;
-  color: #d8d8d8;
+    font-weight: normal;
+    font-style: normal;
+    color: #f2f2f2;
 }
 
 .gram {
-  color: #a0f7a0;
+    color: #cffbcf;
 }
 
 .hintbold {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 .hintitalic {
-  font-style: italic;
+    font-style: italic;
 }
 
 .homnum {
-  vertical-align: super;
-  font-size: 8pt;
-  color: #135f9f;
-  font-weight: bold;
+    vertical-align: super;
+    font-size: 8pt;
+    color: #b8b8f9;
+    font-weight: bold;
 }
 
 .hwd {
-  display: none;
+    display: none;
 }
 
 .hyphenation {
-  font-weight: bold;
-  font-size: 120%;
-  color: #135f9f;
+    font-weight: bold;
+    font-size: 120%;
+    color: #b8b8f9;
 }
 
 .frequent {
-  color: #eb1313;
+    color: #f9b8b8;
 }
 
 .lexunit {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 .lexvar {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 .linkword {
-  font-style: italic;
+    font-style: italic;
 }
 
 object {
-  font-weight: normal;
+    font-weight: normal;
 }
 
 .opp {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 .orthvar {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 .pastpart {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 .pasttense {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 .phrvbentry {
-  display: block;
-  margin-top: 10px;
-  margin-left: 10px;
+    display: block;
+    margin-top: 10px;
+    margin-left: 10px;
 }
 
 .phrvbhwd {
-  font-weight: bold;
-  color: #135f9f;
+    font-weight: bold;
+    color: #b8b8f9;
 }
 
 .pluralform {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 .pos {
-  font-style: italic;
-  color: #a0f7a0;
-  font-weight: normal;
+    font-style: italic;
+    color: #cffbcf;
+    font-weight: normal;
 }
 
 .prespart {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 .propform {
-  font-weight: bold;
-  display: block;
+    font-weight: bold;
+    display: block;
 }
 
 .propformprep {
-  font-weight: bold;
-  display: block;
+    font-weight: bold;
+    display: block;
 }
 
 .ptandpp {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 .refhomnum {
-  vertical-align: super;
-  font-size: 60%;
+    vertical-align: super;
+    font-size: 60%;
 }
 
 .refhwd, .refsensenum {
-  font-style: normal;
-  font-variant: small-caps;
-  text-transform: lowercase;
+    font-style: normal;
+    font-variant: small-caps;
+    text-transform: lowercase;
 }
 
 .refsensenum {
-  font-size: 80%;
+    font-size: 80%;
 }
 
 .reflex {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 .registerlab {
-  font-style: italic;
-  color: #f7a0f7;
+    font-style: italic;
+    color: #fbcffb;
 }
 
 .relatedwd {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 .runon {
-  display: block;
-  margin-top: 8px;
+    display: block;
+    margin-top: 8px;
 }
 
 .sense {
-  display: block;
+    display: block;
 }
 
 .signpost {
-  color: #fff;
-  background-color: #07365d;
-  margin-left: 0.5em;
-  font-weight: bold;
-  font-variant: small-caps;
-  text-transform: uppercase;
-  font-size: 80%;
-  padding: 1px 2px 1px 1px;
+    color: #fff;
+    background-color: #07365d;
+    margin-left: 0.5em;
+    font-weight: bold;
+    font-variant: small-caps;
+    text-transform: uppercase;
+    font-size: 80%;
+    padding: 1px 2px 1px 1px;
 }
 
 .spokensect {
-  border-top: solid;
-  border-bottom: solid;
-  border-width: 2px;
-  display: block;
-  margin-bottom: 1ex;
-  clear: both;
-  margin-top: 1ex;
-  border-color: #119bd6;
-  padding: 3px;
+    border-top: solid;
+    border-bottom: solid;
+    border-width: 2px;
+    display: block;
+    margin-bottom: 1ex;
+    clear: both;
+    margin-top: 1ex;
+    border-color: #119bd6;
+    padding: 3px;
 }
 
 .spokensecthead {
-  display: block;
-  color: #8dd6f5;
-  font-weight: bold;
+    display: block;
+    color: #bce7f9;
+    font-weight: bold;
 }
 
 .pronstrong {
-  font-style: italic;
+    font-style: italic;
 }
 
 .subsense {
-  display: block;
+    display: block;
 }
 
 .superl {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 .syn {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 .t3perssing {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 span.neutral {
-  font-style: normal;
-  font-weight: normal;
-  font-variant: normal;
-  color: #d8d8d8;
-  text-decoration: none;
+    font-style: normal;
+    font-weight: normal;
+    font-variant: normal;
+    color: #f2f2f2;
+    text-decoration: none;
 }
 
 .cross {
-  color: #eb1313;
-  font-weight: bold;
+    color: #f9b8b8;
+    font-weight: bold;
 }
 
 span.italic {
-  color: #d8d8d8;
-  font-style: italic;
-  font-weight: normal;
+    color: #f2f2f2;
+    font-style: italic;
+    font-weight: normal;
 }
 
 .badexa {
-  text-decoration: line-through;
-  font-style: italic;
+    text-decoration: line-through;
+    font-style: italic;
 }
 
 .hint .expl {
-  display: inline;
+    display: inline;
 }
 
 span.infllab {
-  font-style: italic;
-  font-weight: normal;
+    font-style: italic;
+    font-weight: normal;
 }
 
 span.warning {
-  font-style: normal;
-  font-weight: bold;
-  color: #eb1313;
+    font-style: normal;
+    font-weight: bold;
+    color: #f9b8b8;
 }
 
 span.sensenum {
-  font-style: normal;
-  font-weight: bold;
-  margin-right: 3px;
-  color: #135f9f;
+    font-style: normal;
+    font-weight: bold;
+    margin-right: 3px;
+    color: #b8b8f9;
 }
 
 span.synopp {
-  padding-left: 3px;
-  padding-right: 3px;
-  border-radius: 2px 2px 2px 2px;
-  border-style: solid;
-  border-width: 1px;
-  font-variant: small-caps;
-  font-size: 80%;
-  font-weight: bold;
-  color: #135f9f;
+    padding-left: 3px;
+    padding-right: 3px;
+    border-radius: 2px 2px 2px 2px;
+    border-style: solid;
+    border-width: 1px;
+    font-variant: small-caps;
+    font-size: 80%;
+    font-weight: bold;
+    color: #b8b8f9;
 }
 
 .subheading, .secheading {
-  display: block;
-  font-weight: bold;
-  font-weight: bold;
-  color: #fff;
-  background-color: #23263f;
-  margin-left: -3px;
-  margin-right: -3px;
-  font-variant: small-caps;
-  padding-left: 3px;
+    display: block;
+    font-weight: bold;
+    font-weight: bold;
+    color: #fff;
+    background-color: #23263f;
+    margin-left: -3px;
+    margin-right: -3px;
+    font-variant: small-caps;
+    padding-left: 3px;
 }
 
 .collocate, .exponent {
-  display: block;
-  margin-top: 5px;
+    display: block;
+    margin-top: 5px;
 }
 
 .collocate.inline {
-  display: inline;
+    display: inline;
 }
 
 .expl {
-  display: block;
-  padding: 0 3px;
+    display: block;
+    padding: 0 3px;
 }
 
 .colloc {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 .exp {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 .expr {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 .colloc.key {
-  color: #135f9f;
+    color: #b8b8f9;
 }
 
 span.keycollo {
-  font-weight: bold;
-  color: #135f9f;
+    font-weight: bold;
+    color: #b8b8f9;
 }
 
 .thespropform {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 .goodcollo {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 .badcollo {
-  text-decoration: line-through;
+    text-decoration: line-through;
 }
 
 .defbold {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 .thesref.newline {
-  display: block;
+    display: block;
 }
 
 .heading.newline {
-  display: block;
+    display: block;
 }
 
 .thesref span.thesaurus {
-  color: #135f9f;
-  font-variant: small-caps;
+    color: #b8b8f9;
+    font-variant: small-caps;
 }
 
 .thesref .refhwd, .thesref .refhomnum {
-  color: #135f9f;
-  font-weight: bold;
+    color: #b8b8f9;
+    font-weight: bold;
 }
 
 i {
-  font-style: italic;
+    font-style: italic;
 }
 
 .imgholder {
-  cursor: pointer;
-  display: block;
-  margin-bottom: 1ex;
-  padding: 2px;
-  clear: both;
+    cursor: pointer;
+    display: block;
+    margin-bottom: 1ex;
+    padding: 2px;
+    clear: both;
 }
 
 .imgholder img {
-  max-height: 4em;
+    max-height: 4em;
 }
 
 .buttons {
-  display: block;
+    display: block;
 }
 
 .popup-button {
-  background-color: #0a1136;
-  border-radius: 2px;
-  border: 1px solid #202941;
-  color: #8394c1;
-  text-transform: uppercase;
-  font-size: 66%;
-  padding: 2px 3px;
-  text-decoration: none;
+    background-color: #0a1136;
+    border-radius: 2px;
+    border: 1px solid #202941;
+    color: #c2cae0;
+    text-transform: uppercase;
+    font-size: 66%;
+    padding: 2px 3px;
+    text-decoration: none;
 }
 
 .popup-button-hover {
-  background-color: #0c1338;
-  cursor: pointer;
+    background-color: #0c1338;
+    cursor: pointer;
 }
 
 .popverbs {
-  display: block;
-  color: #fff;
-  font-weight: bold;
-  background-color: #da1189;
-  padding-left: 3px;
-  margin-bottom: 5px;
+    display: block;
+    color: #fff;
+    font-weight: bold;
+    background-color: #da1189;
+    padding-left: 3px;
+    margin-bottom: 5px;
 }
 
 .verbtable .lemma {
-  color: #135f9f;
-  font-size: 120%;
-  font-weight: bold;
+    color: #b8b8f9;
+    font-size: 120%;
+    font-weight: bold;
 }
 
 .verbtable table {
-  border-collapse: separate;
-  border-spacing: 1px;
-  margin-top: 10px;
+    border-collapse: separate;
+    border-spacing: 1px;
+    margin-top: 10px;
 }
 
 .verbtable td {
-  padding: 0 5px 0 2px;
-  border-style: solid;
-  border-width: 1px;
-  border-color: #272727;
+    padding: 0 5px 0 2px;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #272727;
 }
 
 .header {
-  font-weight: bold;
-  font-variant: small-caps;
+    font-weight: bold;
+    font-variant: small-caps;
 }
 
 .verbtable td.col1 {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 .verbtable td.col2 {
-  font-style: italic;
+    font-style: italic;
 }
 
 .verbtable .geo {
-  font-style: italic;
-  color: #d8d8d8;
-  font-size: 100%;
-  font-weight: normal;
+    font-style: italic;
+    color: #f2f2f2;
+    font-size: 100%;
+    font-weight: normal;
 }
 
 .verbtable .aux {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 .verbtable .verb_form {
-  color: #135f9f;
-  font-weight: bold;
+    color: #b8b8f9;
+    font-weight: bold;
 }
 
 .collocations .last {
-  margin-bottom: 20px;
+    margin-bottom: 20px;
 }
 
 .collocations .colloc {
-  display: inline-block;
-  font-weight: bold;
-  margin-left: -2px;
+    display: inline-block;
+    font-weight: bold;
+    margin-left: -2px;
 }
 
 .collobox, .thesbox, .usagebox, .grambox, .f2nbox {
-  border-radius: 9px 9px 9px 9px;
-  border-style: solid;
-  border-width: 2px;
-  display: block;
-  margin-bottom: 1ex;
-  clear: both;
-  margin-top: 1ex;
+    border-radius: 9px 9px 9px 9px;
+    border-style: solid;
+    border-width: 2px;
+    display: block;
+    margin-bottom: 1ex;
+    clear: both;
+    margin-top: 1ex;
 }
 
 .f2nbox {
-  border-color: #119bd6;
+    border-color: #119bd6;
 }
 
 .f2nbox .heading {
-  color: #8dd6f5;
+    color: #bce7f9;
 }
 
 .heading {
-  color: #fff;
-  font-weight: bold;
-  line-height: 100%;
-  padding: 3px;
+    color: #fff;
+    font-weight: bold;
+    line-height: 100%;
+    padding: 3px;
 }
 
 .section {
-  display: block;
-  padding: 0 3px;
+    display: block;
+    padding: 0 3px;
 }
 
 .last {
-  border-bottom-left-radius: 9px;
-  border-bottom-right-radius: 9px;
+    border-bottom-left-radius: 9px;
+    border-bottom-right-radius: 9px;
 }
 
 .thesbox {
-  background-color: #643489;
-  border-color: #643489;
+    background-color: #643489;
+    border-color: #643489;
 }
 
 .thesbox .section {
-  background-color: #21172e;
+    background-color: #21172e;
 }
 
 .collobox {
-  background-color: #26428f;
-  border-color: #26428f;
+    background-color: #26428f;
+    border-color: #26428f;
 }
 
 .collobox .section {
-  background-color: #042b3f;
+    background-color: #042b3f;
 }
 
 .usagebox {
-  background-color: #119bd6;
-  border-color: #119bd6;
+    background-color: #119bd6;
+    border-color: #119bd6;
 }
 
 .usagebox .expl {
-  background-color: #042b3f;
+    background-color: #042b3f;
 }
 
 .grambox {
-  background-color: #11a4dc;
-  border-color: #11a4dc;
+    background-color: #11a4dc;
+    border-color: #11a4dc;
 }
 
 .grambox .expl, .grambox .compareword {
-  background-color: #042b3f;
-  display: block;
-  padding-left: 3px;
+    background-color: #042b3f;
+    display: block;
+    padding-left: 3px;
 }
 
 .compareword {
-  padding-top: 5px;
-  padding-bottom: 5px;
+    padding-top: 5px;
+    padding-bottom: 5px;
 }
 
 .gramrefcont {
-  display: block;
-  text-transform: lowercase;
-  font-variant: small-caps;
-  padding-left: 3px;
-  padding-bottom: 1px;
+    display: block;
+    text-transform: lowercase;
+    font-variant: small-caps;
+    padding-left: 3px;
+    padding-bottom: 1px;
 }
 
 .thesaurus .sense {
-  padding-left: 3px;
-  padding-right: 3px;
-  margin-top: 0;
+    padding-left: 3px;
+    padding-right: 3px;
+    margin-top: 0;
 }
 
 .thesaurus .section, .collocations .section {
-  margin-bottom: 10px;
+    margin-bottom: 10px;
 }
 
 .thesaurus .secheading, .thesbox .secheading {
-  background-color: #31243d;
+    background-color: #31243d;
 }
 
 .add_exa {
-  font-style: italic;
-  display: block;
+    font-style: italic;
+    display: block;
 }
 
 .nodeword {
-  color: #135f9f;
-  font-weight: bold;
+    color: #b8b8f9;
+    font-weight: bold;
 }
 
 .phrase {
-  display: block;
+    display: block;
 }
 
 .phrasetext {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 .expandable {
-  cursor: pointer;
+    cursor: pointer;
 }
 
 .entry div.content {
-  display: none;
-  margin-bottom: 10px;
+    display: none;
+    margin-bottom: 10px;
 }
 
 .group, .w {
-  display: block;
+    display: block;
 }
 
 .group .pos {
-  font-weight: bold;
-  display: block;
+    font-weight: bold;
+    display: block;
 }
 
 .item {
-  display: block;
+    display: block;
 }
 
 .w {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 .popheader {
-  display: block;
-  color: #fff;
-  font-weight: bold;
-  padding-left: 3px;
+    display: block;
+    color: #fff;
+    font-weight: bold;
+    padding-left: 3px;
 }
 
 .popheader.popexa {
-  background-color: #eb1313;
+    background-color: #eb1313;
 }
 
 .popheader.popphrase {
-  background-color: #760976;
+    background-color: #760976;
 }
 
 .popheader.popcollo {
-  background-color: #26428f;
+    background-color: #26428f;
 }
 
 .popheader.popthes {
-  background-color: #643489;
+    background-color: #643489;
 }
 
 .popheader.popetym {
-  background-color: #097609;
+    background-color: #097609;
 }
 
 .popheader.popwf {
-  background-color: #5a4607;
+    background-color: #5a4607;
 }
 
 .popheader.pope_menu {
-  background-color: #144250;
+    background-color: #144250;
 }
 
 .ws-head {
-  font-weight: bold;
-  color: #135f9f;
-  font-size: larger;
+    font-weight: bold;
+    color: #b8b8f9;
+    font-size: larger;
 }
 
 .ws-head.ref {
-  display: block;
-  margin-top: 10px;
+    display: block;
+    margin-top: 10px;
 }
 
 .wswd {
-  font-weight: bold;
-  display: block;
+    font-weight: bold;
+    display: block;
 }
 
 .cyan {
-  color: #8dd6f5;
-  font-size: larger;
+    color: #bce7f9;
+    font-size: larger;
 }
 
 .menuitem {
-  display: block;
+    display: block;
 }
 
 ul.exas {
-  margin-top: 0.5em;
-  margin-bottom: 0.5em;
-  padding-left: 2em;
-  padding-right: 1em;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+    padding-left: 2em;
+    padding-right: 1em;
 }
 
 ul.exas li {
-  font-style: italic;
-  color: #135f9f;
+    font-style: italic;
+    color: #b8b8f9;
 }
 
 .grammar {
-  display: block;
+    display: block;
 }
 
 .str {
-  font-size: large;
-  font-weight: bold;
+    font-size: large;
+    font-weight: bold;
 }
 
 .etymology {
-  margin-top: 10px;
+    margin-top: 10px;
 }
 
 .group {
-  margin-top: 10px;
+    margin-top: 10px;
 }
 
 .menuitem .signpost {
-  background-color: transparent;
-  color: #d8d8d8;
-  margin-left: 0;
-  font-size: 90%;
+    background-color: transparent;
+    color: #f2f2f2;
+    margin-left: 0;
+    font-size: 90%;
 }
 
 .phrvbs {
-  display: block;
-  margin-top: 10px;
-  margin-left: 5px;
+    display: block;
+    margin-top: 10px;
+    margin-left: 5px;
 }
 
 .phrvbs .heading {
-  display: block;
-  color: #135f9f;
-  font-weight: bold;
+    display: block;
+    color: #b8b8f9;
+    font-weight: bold;
 }
 
 .phrv {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 .secheading, .subheading {
-  font-variant: normal;
-  text-transform: uppercase;
+    font-variant: normal;
+    text-transform: uppercase;
 }
 
 .secheading.no_convert {
-  text-transform: none;
+    text-transform: none;
 }
 
 .grambox .heading.newline {
-  background-color: #0b3d50;
+    background-color: #0b3d50;
 }
 
 img[src*="spkr_"] {
-  max-height: 1em;
-  margin-bottom: -3px;
-  margin-right: 2px;
+    max-height: 1em;
+    margin-bottom: -3px;
+    margin-right: 2px;
 }
 
 img[src*="spkr_g"] {
-  max-height: 0.7em;
-  margin-bottom: 0;
+    max-height: 0.7em;
+    margin-bottom: 0;
 }
 
 .chwd {
-  margin-top: 10px;
+    margin-top: 10px;
 }
 
 .chwd a {
-  display: inline-block;
-  background-color: #097609;
-  color: #fff;
-  padding-top: 2px;
-  padding-bottom: 3px;
-  padding-left: 5px;
-  padding-right: 5px;
-  margin-bottom: 3px;
-  text-decoration: none;
-  font-size: 80%;
-  border-radius: 2px;
+    display: inline-block;
+    background-color: #097609;
+    color: #fff;
+    padding-top: 2px;
+    padding-bottom: 3px;
+    padding-left: 5px;
+    padding-right: 5px;
+    margin-bottom: 3px;
+    text-decoration: none;
+    font-size: 80%;
+    border-radius: 2px;
 }
 
 .chwd .hw {
-  color: #fff;
+    color: #fff;
 }
 
 .entry, .entry.lozenge, .verbtable {
-  margin-top: 0.5em;
+    margin-top: 0.5em;
 }
 
 .no-sound img {
-  border: 1px solid #383838;
-  border-radius: 3px;
-  max-height: 0.9em;
+    border: 1px solid #383838;
+    border-radius: 3px;
+    max-height: 0.9em;
 }
 
 .at-link {
-  border: 1px solid #242424;
-  border-radius: 9px;
-  padding: 0.1em 0.5em;
-  margin: 0.5em 0;
-  background-color: rgba(184, 108, 20, 0.1);
+    border: 1px solid #242424;
+    border-radius: 9px;
+    padding: 0.1em 0.5em;
+    margin: 0.5em 0;
+    background-color: rgba(184, 108, 20, 0.1);
 }
 
 .at-link {
-  display: none;
+    display: none;
 }
 
 .popup-button:hover {
-  cursor: pointer;
+    cursor: pointer;
 }
 
 .popup-button {
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  -khtml-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 span[onclick*="toggle"] {
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  -khtml-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 .hs0:before {
-  content: "‧";
+    content: "‧";
 }
 
 .arrow {
-  color: #cecece;
-  border: 1px solid #666;
-  border-radius: 2px;
-  font-size: smaller;
+    color: #e8e8e8;
+    border: 1px solid #666;
+    border-radius: 2px;
+    font-size: smaller;
 }
 
 .dict-faq img[src*="cover"] {
-  max-height: 8em;
+    max-height: 8em;
 }
 
 .defcn {
-  margin-left: 5px;
+    margin-left: 5px;
 }
 
 expcn {
-  margin-left: 5px;
-  font-style: normal;
+    margin-left: 5px;
+    font-style: normal;
 }
 
 .collocn {
-  margin-left: 5px;
+    margin-left: 5px;
 }
 
 explcn {
-  margin-left: 5px;
-  font-style: normal;
-  display: block;
+    margin-left: 5px;
+    font-style: normal;
+    display: block;
 }
 
 .gramcn {
-  margin-left: 5px;
+    margin-left: 5px;
 }

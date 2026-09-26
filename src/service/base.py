@@ -1040,7 +1040,8 @@ class MdxService(LocalService):
 
         if do_html_deepcopy:
             audio = deepcopy(audio)
-        audio['href']=f'sound:{dest_name}'
+        audio['href']=f'sound://{dest_name}'
+        audio['onclick']="event.preventDefault(); new Audio(this.getAttribute('href').replace('sound://', '')).play();"
 
         return audio
 
