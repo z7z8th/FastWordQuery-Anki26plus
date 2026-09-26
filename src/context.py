@@ -228,7 +228,9 @@ class Config(object):
     def ollama_lang(self):
         return self.data.get('ollama_lang', '中文')
 
-
+    @property
+    def auto_compress_notes(self):
+        return self.data.get('auto_compress_notes', False)
     
 # should chdir on profile change through hook,
 # since context.py is only imported once.

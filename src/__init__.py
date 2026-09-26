@@ -63,6 +63,7 @@ def start_here():
 
     from .context import config
     from .gui import common as fastwq
+    from .gui import compress_notes
     # config is only imported once, we should call read every time profile changed
     config.read()
     fastwq.my_shortcut = shortcut

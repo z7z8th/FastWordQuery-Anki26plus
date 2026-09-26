@@ -37,6 +37,7 @@ from .dictmanager import DictManageDialog
 from .foldermanager import FoldersManageDialog
 from .options import OptionsDialog
 from .base import *
+from . import compress_notes
 
 from ..aquery import query_from_browser, query_from_editor_fields
 from ..utils.events import events
@@ -177,6 +178,8 @@ def browser_menu():
             # action.triggered.connect(lambda: check_updates(background=False, parent=browser))
             # menu.addAction(action)
 
+            compress_notes.setup_browser_menu(browser, menu)
+            menu.addSeparator()
             # About
             action = QAction(_('ABOUT'), browser)
             action.triggered.connect(lambda: show_about_dialog(browser))
