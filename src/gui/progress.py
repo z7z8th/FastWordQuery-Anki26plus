@@ -50,8 +50,17 @@ def formated_timedelta(td:timedelta):
 
 def get_info_msg(qstat:QueryStat, status):
     # print(f'---get_info_msg status {status}')
-    status = f'<font color="green">{_("DONE")}</span>' if status == 'done' else ''
-    eta = formated_timedelta(timedelta(seconds=(qstat.estimated_time_done-datetime.now().timestamp()))) if qstat.estimated_time_done > 0 else _("Calculating...")
+    if qstat.estimated_time_done > 0:
+        eta = formated_timedelta(timedelta(seconds=(qstat.estimated_time_done-datetime.now().timestamp())))
+    else:
+        eta = _("Calculating...")
+
+    if status == 'done':
+        status = f'<font color="green">{_("DONE")}</span>'
+        eta = 0
+    else:
+        status = ''
+
     msg = \
     f"""
         <style>
@@ -74,7 +83,7 @@ def get_info_msg(qstat:QueryStat, status):
             td.field {{
                 text-align: right;
                 white-space: nowrap; /* Keeps key/label names on a single line */
-                padding-right: 20px;
+                padding-right: 10px;
             }}
         </style>
         <div>
@@ -90,13 +99,12 @@ def get_info_msg(qstat:QueryStat, status):
 
         <table>
             <!-- <tr class="th1"><td colspan="2"></td></tr> -->
-            <tr><td>{_('Elapsed Time')} </td> <td>{formated_timedelta(timedelta(seconds=qstat.elapsed_time))}</td></tr>
-            <tr><td>{_('Estimated Time Left')} </td> <td>{eta}</td></tr>
+            <tr><td class="field">{_('Elapsed Time')} </td> <td>{formated_timedelta(timedelta(seconds=qstat.elapsed_time))}</td></tr>
+            <tr><td class="field">{_('Estimated Time Left')} </td> <td>{eta}</td></tr>
         </table>
         </div>
     """
     return msg
-
 
 
 class ProgressWindow(QProgressDialog):
