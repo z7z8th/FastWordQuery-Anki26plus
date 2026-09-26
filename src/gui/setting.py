@@ -134,7 +134,7 @@ class SettingDialog(Dialog):
 
         hbox = QHBoxLayout()
         self.ollama_lang_combo = QComboBox()
-        self.ollama_lang_combo.addItems(["中文", "English"])
+        self.ollama_lang_combo.addItems(["中文", "English", "儿童中文", "Child English"])
         self.ollama_lang_combo.setCurrentText(config.ollama_lang)
         label = QLabel(_("OLLAMA_LANG") + ":", parent=self)
         hbox.addWidget(label)
