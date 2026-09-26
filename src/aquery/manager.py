@@ -92,6 +92,9 @@ class QueryWorkerManager(object):
         # note_id, note_fields, word_ord, word, cfg_qfields = payload
         note_fields_len_list = [ len(f) for f in note.fields ]
         word_ord, word, cfg_qfields = inspect_note(note)
+        if not word:
+            print(f"***Warning: Field `{word_ord}` of `{note.fields[0]}` note {note} is empty. Skip querying this note.")
+            return
         payload = (note.id, note_fields_len_list, word_ord, word, cfg_qfields)
 
         self.task_queue.put(payload)
@@ -212,6 +215,8 @@ class QueryWorkerManager(object):
                     note_id, err_str, tb = data
                     print(f"Error processing note {note_id}: {err_str}\n{tb}")
             except queue.Empty:
+                break
+            except ValueError: # queue is closed when canceling
                 break
 
     def join(self):

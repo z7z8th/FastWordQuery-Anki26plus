@@ -27,7 +27,6 @@ def query_flds(note_fields_len_list, word_ord, word, cfg_qfields, qfields:list[i
     # print(f"qfields {qfields}")
     # print(f'query_flds {word_ord}, {word}, {fields}')
     if not word:
-        # raise InvalidWordException
         raise Exception(f'Empty Word')
 
     if config.ignore_accents:

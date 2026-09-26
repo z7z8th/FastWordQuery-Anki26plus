@@ -1245,3 +1245,11 @@ class WordNotFoundError(Exception):
         if message is None:
             message = f"Word '{word}' was not found in dict {dict_name}."
         super().__init__(message)
+
+class WordEmptyError(Exception):
+    def __init__(self, note: str, field: str, message: str = None):
+        self.note = note
+        self.field = field
+        if message is None:
+            message = f"Field `{field}` of `{note}` is empty."
+        super().__init__(message)
