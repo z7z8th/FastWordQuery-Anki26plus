@@ -51,7 +51,8 @@ def get_anki_spawn_context():
         os.path.join(anki_dir, "lib", "python3"),
     ]
     if sys.platform == 'win32':
-        possible_pythons.append(os.path.join(context.ADDON_DIR, "bin", "python3.exe"))
+        possible_pythons.insert(0, os.path.join(context.ADDON_DIR, "bin", "python3w.exe"))
+        possible_pythons.insert(1, os.path.join(context.ADDON_DIR, "bin", "python3.exe"))
     
     for py_bin in possible_pythons:
         if os.path.isfile(py_bin) and os.access(py_bin, os.X_OK):
