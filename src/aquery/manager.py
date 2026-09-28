@@ -40,6 +40,9 @@ __all__ = ['QueryWorkerManager']
 def get_anki_spawn_context():
     ctx = mp.get_context("spawn")
     anki_dir = os.path.dirname(sys.executable)
+
+    print('---os.environ', os.environ['PATH'])
+    os.environ['PATH'] = f'{anki_dir};{os.environ['PATH']}'
     
     # Check for embedded python binaries inside Anki's install folder
     possible_pythons = [
@@ -47,6 +50,8 @@ def get_anki_spawn_context():
         os.path.join(anki_dir, "python", "bin", "python"),
         os.path.join(anki_dir, "lib", "python3"),
     ]
+    if sys.platform == 'win32':
+        possible_pythons.append(os.path.join(context.ADDON_DIR, "bin", "python3.exe"))
     
     for py_bin in possible_pythons:
         if os.path.isfile(py_bin) and os.access(py_bin, os.X_OK):
