@@ -85,22 +85,26 @@ def get_info_msg(qstat:QueryStat, status):
                 white-space: nowrap; /* Keeps key/label names on a single line */
                 padding-right: 10px;
             }}
+
+            .val {{
+                font-family: monospace;
+            }}
         </style>
         <div>
         <table align="center">
             <tr class="th1"><td colspan="2"><strong>{_('QUERYING')} {status}</strong></td></tr>
-            <tr><td class="field">{_('CARDS')}   </td> <td><b>{qstat.note_count}</b> {_('WORDS')}          </td></tr>
-            <tr><td class="field">{_('SKIPED')}  </td> <td><b>{qstat.note_skip_count}</b> {_('WORDS')}     </td></tr>
-            <tr><td class="field">{_('SUCCESS')} </td> <td><b>{qstat.field_success_count}</b> {_('FIELDS')}</td></tr>
-            <tr><td class="field">{_('SKIPED')}  </td> <td><b>{qstat.field_skip_count}</b> {_('FIELDS')}   </td></tr>
-            <tr><td class="field">{_('UPDATE')}  </td> <td><b>{qstat.field_updated_count}</b> {_('FIELDS')}</td></tr>
-            <tr><td class="field">{_('FAILURE')} </td> <td><b>{qstat.field_error_count}</b> {_('FIELDS')}  </td></tr>
+            <tr><td class="field">{_('CARDS')}   </td> <td><span class="val">{qstat.note_count}</span> {_('WORDS')}          </td></tr>
+            <tr><td class="field">{_('SKIPED')}  </td> <td><span class="val">{qstat.note_skip_count}</span> {_('WORDS')}     </td></tr>
+            <tr><td class="field">{_('SUCCESS')} </td> <td><span class="val">{qstat.field_success_count}</span> {_('FIELDS')}</td></tr>
+            <tr><td class="field">{_('SKIPED')}  </td> <td><span class="val">{qstat.field_skip_count}</span> {_('FIELDS')}   </td></tr>
+            <tr><td class="field">{_('UPDATE')}  </td> <td><span class="val">{qstat.field_updated_count}</span> {_('FIELDS')}</td></tr>
+            <tr><td class="field">{_('FAILURE')} </td> <td><span class="val">{qstat.field_error_count}</span> {_('FIELDS')}  </td></tr>
         </table>
 
         <table>
             <!-- <tr class="th1"><td colspan="2"></td></tr> -->
-            <tr><td class="field">{_('Elapsed Time')} </td> <td>{formated_timedelta(timedelta(seconds=qstat.elapsed_time))}</td></tr>
-            <tr><td class="field">{_('Estimated Time Left')} </td> <td>{eta}</td></tr>
+            <tr><td class="field">{_('Elapsed Time')} </td> <td class="val">{formated_timedelta(timedelta(seconds=qstat.elapsed_time))}</td></tr>
+            <tr><td class="field">{_('Estimated Time Left')} </td> <td class="val">{eta}</td></tr>
         </table>
         </div>
     """
@@ -134,14 +138,17 @@ class ProgressWindow(QProgressDialog):
     def update_labels(self, qstat:QueryStat):
         if self.is_aborted():
             return
+        
+        elapsed = time.time() - self._last_update
+        if elapsed < 0.5:
+            return
+        self._last_update = time.time()
 
         self._qstat = qstat
         query_stat_info = get_info_msg(qstat, self._status)
         self._update(
             label = query_stat_info,
             value = qstat.note_count)
-        self.adjustSize()
-        gui_processEvents()
 
     def update_title(self, title):
         if self.is_aborted():
@@ -160,7 +167,7 @@ class ProgressWindow(QProgressDialog):
         self.canceled.connect(self.finish)
         self.setWindowTitle("FastWQ - Querying...")
         # TODO
-        self.setModal(True)
+        self.setModal(False)
         self.setWindowFlags(self.windowFlags() & ~Qt.WindowType.WindowContextHelpButtonHint)
         self.setWindowIcon(APP_ICON)
         self.setAutoReset(False)
@@ -182,6 +189,9 @@ class ProgressWindow(QProgressDialog):
             bar.setFormat(r"Completed %v of %m files (%p%)")
         else:
             print(f"*** Error: can't find QProgressBar in QProgressDialog")
+            
+        self.adjustSize()
+        
         gui_processEvents()
 
     def is_aborted(self):
@@ -206,12 +216,11 @@ class ProgressWindow(QProgressDialog):
         self.destroy()
 
     def _update(self, label, value, process=True):
-        elapsed = time.time() - self._last_update
         if label:
             self.setLabelText(label)
         if value:
             self.setValue(value)
-        if process and elapsed >= 0.2:
-            gui_processEvents()
-            self._last_update = time.time()
-            self.update()
+ 
+        self.update()
+        self.adjustSize()
+        gui_processEvents()

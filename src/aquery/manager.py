@@ -173,20 +173,20 @@ class QueryWorkerManager(object):
             self.handle_flush(note)
 
     def update_progress(self, force=False):
-        if not self.last_update_progress:
-            self.last_update_progress = datetime.now()
-        elif not force and datetime.now() - self.last_update_progress < timedelta(seconds=1):
-            return
-        self.last_update_progress = datetime.now()
+        # if not self.last_update_progress:
+        #     self.last_update_progress = datetime.now()
+        # elif not force and datetime.now() - self.last_update_progress < timedelta(microseconds=100):
+        #     return
+        # self.last_update_progress = datetime.now()
         
         self.qstat.elapsed_time = (datetime.now() - self.start_time).total_seconds()
         # print(f'elapsed time {self.qstat.elapsed_time}  ETA {self.qstat.estimated_time_done}')
         self.progress.update_labels(self.qstat)
-        gui_processEvents()
+        # gui_processEvents()
 
     def reset_result_time(self):
         self.start_time = datetime.now()
-        self.last_update_progress = None
+        # self.last_update_progress = None
         self.qstat.elapsed_time = 0
         self.qstat.estimated_time_done = 0
 
