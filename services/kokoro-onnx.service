@@ -1,0 +1,12 @@
+[Unit]
+Description=Kokoro-ONNX Lightweight TTS Service
+After=network.target
+
+[Service]
+User=bob
+WorkingDirectory=/home/bob/Education/English
+ExecStart=/home/bob/Education/English/.venv/bin/python server.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
