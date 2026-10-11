@@ -27,28 +27,48 @@ app.add_middleware(
 kokoro = Kokoro("kokoro-v1.1-zh.onnx", "voices-v1.1-zh.bin")
 
 # 2. Initialize Sherpa-ONNX (Best for Mandarin Chinese)
+# rule_fsts_paths = [
+#     "vits-zh-aishell3/phone.fst",
+#     "vits-zh-aishell3/date.fst",
+#     "vits-zh-aishell3/number.fst",
+#     "vits-zh-aishell3/new_heteronym.fst"
+# ]
+
+# sherpa_config = sherpa_onnx.OfflineTtsConfig(
+#     model=sherpa_onnx.OfflineTtsModelConfig(
+#         vits=sherpa_onnx.OfflineTtsVitsModelConfig(
+#             model="vits-zh-aishell3/vits-aishell3.onnx",
+#             lexicon="vits-zh-aishell3/lexicon.txt",
+#             tokens="vits-zh-aishell3/tokens.txt",
+#         )
+#     ),
+#     rule_fsts=",".join(rule_fsts_paths),
+#     rule_fars="vits-zh-aishell3/rule.far",
+#     max_num_sentences=1,
+# )
+# sherpa_tts = sherpa_onnx.OfflineTts(sherpa_config)
+
 rule_fsts_paths = [
-    "vits-zh-aishell3/phone.fst",
-    "vits-zh-aishell3/date.fst",
-    "vits-zh-aishell3/number.fst",
-    "vits-zh-aishell3/new_heteronym.fst"
+    "matcha-icefall-zh-baker/phone.fst",
+    "matcha-icefall-zh-baker/date.fst",
+    "matcha-icefall-zh-baker/number.fst"
 ]
 
 sherpa_config = sherpa_onnx.OfflineTtsConfig(
     model=sherpa_onnx.OfflineTtsModelConfig(
-        vits=sherpa_onnx.OfflineTtsVitsModelConfig(
-            model="vits-zh-aishell3/vits-aishell3.onnx",
-            lexicon="vits-zh-aishell3/lexicon.txt",
-            tokens="vits-zh-aishell3/tokens.txt",
+        matcha=sherpa_onnx.OfflineTtsMatchaModelConfig(
+            acoustic_model="matcha-icefall-zh-baker/model-steps-3.onnx",
+            vocoder="vocos-22khz-univ.onnx",
+            lexicon="matcha-icefall-zh-baker/lexicon.txt",
+            tokens="matcha-icefall-zh-baker/tokens.txt",
         )
     ),
     rule_fsts=",".join(rule_fsts_paths),
-    rule_fars="vits-zh-aishell3/rule.far",
     max_num_sentences=1,
 )
 sherpa_tts = sherpa_onnx.OfflineTts(sherpa_config)
 
-print("Hybrid TTS Service initialized successfully with Kokoro and Sherpa-ONNX!")
+print("Hybrid TTS Service initialized with Kokoro and Matcha-Sherpa!")
 
 class SpeechRequest(BaseModel):
     input: str
