@@ -24,7 +24,7 @@ app.add_middleware(
 )
 
 # 1. Initialize Kokoro-ONNX (Best for English)
-kokoro = Kokoro("kokoro-v1.1-zh.onnx", "voices-v1.1-zh.bin")
+kokoro = Kokoro("kokoro-v1.0.onnx", "voices-v1.0.bin")
 
 # 2. Initialize Sherpa-ONNX (Best for Mandarin Chinese)
 # rule_fsts_paths = [
@@ -83,13 +83,13 @@ def generate_audio(req: SpeechRequest):
         lang = req.lang.lower()
         
         # Route Chinese requests to Sherpa-ONNX for high-quality Mandarin synthesis
-        if lang in ["zh", "zh-cn", "zh_cn", "cmn", "chinese"]:
+        if lang.lower() in ["zh", "zh-cn", "zh_cn", "cmn", "chinese"]:
             sid = int(req.voice) if req.voice.isdigit() else 0
             audio = sherpa_tts.generate(req.input, sid=sid, speed=req.speed)
             samples = audio.samples
             sample_rate = audio.sample_rate
             
-        else:
+        elif lang.lower() in ["en", "en-us", "en_us", "en-uk", "en_uk"]:
             # Route English/other languages to Kokoro-ONNX
             samples, sample_rate = kokoro.create(
                 text=req.input,
@@ -97,6 +97,9 @@ def generate_audio(req: SpeechRequest):
                 speed=req.speed,
                 lang=lang
             )
+        else:
+            raise Exception(f"*** Error: Unsupported lang {lang}")
+
         if req.volume != 1.0:
             print(f"amplify volume {req.volume}")
             samples = np.array(samples, dtype=np.float32)

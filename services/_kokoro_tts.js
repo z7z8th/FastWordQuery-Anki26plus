@@ -1,3 +1,13 @@
+async function list_voices()
+{
+    // 1. Fetch voices and parse JSON
+    const voicesResponse = await fetch('http://localhost:8880/v1/voices');
+    const voicesData = await voicesResponse.json();
+
+    console.log(`voices`, JSON.stringify(voicesData, null, 2))
+}
+list_voices();
+
 document.getElementById('play-audio-btn').addEventListener('click', async () => {
     const sentences = document.querySelectorAll('div.auto-tts');
     // let rawText = "谢谢你我很好。";
@@ -28,8 +38,8 @@ document.getElementById('play-audio-btn').addEventListener('click', async () => 
             return {
                 text: chunk.trim(),
                 lang: isChinese ? 'zh' : 'en-us',
-                voice: isChinese ? '8' : 'af_sol',
-                volume: isChinese ? 4.0 : 1.0,
+                voice: isChinese ? '0' : 'af_sarah',
+                volume: isChinese ? 1.0 : 1.0,
             };
         }).filter(item => item.text.length > 0);
 
