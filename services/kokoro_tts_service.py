@@ -61,6 +61,7 @@ sherpa_config = sherpa_onnx.OfflineTtsConfig(
             vocoder="vocos-22khz-univ.onnx",
             lexicon="matcha-icefall-zh-baker/lexicon.txt",
             tokens="matcha-icefall-zh-baker/tokens.txt",
+            dict_dir="matcha-icefall-zh-baker/dict", # <--- Required for Chinese jieba tokenization
         )
     ),
     rule_fsts=",".join(rule_fsts_paths),

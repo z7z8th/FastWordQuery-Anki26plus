@@ -23,3 +23,28 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/voco
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-zh-aishell3.tar.bz2
 tar xvf vits-zh-aishell3.tar.bz2
 ```
+
+## Anki
+
+```css
+
+example, def_en, .auto-tts-div, .auto-tts li {
+    list-style-type: none;
+    cursor: pointer;
+}
+
+example::before, def_en::before, .auto-tts-div::before, .auto-tts li::before {
+    content: "";
+    display: inline-block;
+    width: 16px;  /* Set your desired width */
+    height: 16px; /* Set your desired height */
+    margin-right: 6px;
+    background-image: url('_spkr.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    vertical-align: middle;
+}
+
+```
+
+

@@ -8,9 +8,10 @@ async function list_voices()
 }
 list_voices();
 
-document.getElementById('play-audio-btn').addEventListener('click', async () => {
-    const sentences = document.querySelectorAll('div.auto-tts');
+async function playAudioOfElement() {
+    // const sentences = document.querySelectorAll('.auto-tts, example');
     // let rawText = "谢谢你我很好。";
+    const sentences = [this];
     
     // 1. Split text into mixed language segments
     const regex = /([\u4e00-\u9fa5]+|[^\u4e00-\u9fa5]+)/g;
@@ -75,4 +76,7 @@ document.getElementById('play-audio-btn').addEventListener('click', async () => 
             console.error('Error playing mixed language audio:', error.stack);
         }
     }
-});
+}
+
+document.querySelectorAll('example, def_en, .auto-tts-div, .auto-tts li').forEach((e) => {e.addEventListener('click', playAudioOfElement)});
+// document.getElementById('play-audio-btn').addEventListener('click', playAudioOfElement);
