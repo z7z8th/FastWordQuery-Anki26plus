@@ -1,12 +1,22 @@
 # TTS
 
+## Offline pytorch
+
+```sh
+pip download torch torchvision   --index-url https://download.pytorch.org/whl/cu132   --python-version 3.13    --only-binary=:all: -d ~/Downloads/pytorch_wheels-cp3.13/cu132
+pip download torch torchvision    --index-url https://download.pytorch.org/whl/cu121   --python-version 3.13    --only-binary=:all: -d ~/Downloads/pytorch_wheels-cp3.13/cu121
+
+pip download torch torchvision  torchaudio  --index-url https://download.pytorch.org/whl/cu124   --python-version 3.13    --only-binary=:all: -d ~/Downloads/pytorch_wheels-cp3.13/cu124
+
+uv pip install --no-index --find-links ~/Downloads/pytorch_wheels-cp3.13/cu124 torch torchvision torchaudio
+```
+
 ## Kokoro ONNX for English
 
 ```sh
 wget https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.onnx
 wget https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin
 ```
-
 
 ## Sherpa VITS for Chinese
 
