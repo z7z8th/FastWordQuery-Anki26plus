@@ -10,7 +10,7 @@ import soundfile as sf
 from kokoro_onnx import Kokoro
 import sherpa_onnx
 import numpy as np
-
+import unicodedata
 
 app = FastAPI(title="Hybrid Kokoro + Sherpa TTS Service")
 
@@ -81,7 +81,11 @@ class SpeechRequest(BaseModel):
 @app.post("/v1/audio/speech")
 def generate_audio(req: SpeechRequest):
     try:
+        print(f"--- {req}")
         lang = req.lang.lower()
+        if len(req.input) == 1:
+            if unicodedata.category(req.input).startswith('P'):
+                return
         
         # Route Chinese requests to Sherpa-ONNX for high-quality Mandarin synthesis
         if lang.lower() in ["zh", "zh-cn", "zh_cn", "cmn", "chinese"]:
