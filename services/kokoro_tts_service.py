@@ -83,9 +83,12 @@ def generate_audio(req: SpeechRequest):
     try:
         print(f"--- {req}")
         lang = req.lang.lower()
-        if len(req.input) == 1:
-            if unicodedata.category(req.input).startswith('P'):
-                return
+        char_cnt = 0
+        for c in req.input:
+            if not unicodedata.category(c).startswith('P'):
+                char_cnt += 1
+        if char_cnt == 0:
+            return
         
         # Route Chinese requests to Sherpa-ONNX for high-quality Mandarin synthesis
         if lang.lower() in ["zh", "zh-cn", "zh_cn", "cmn", "chinese"]:
