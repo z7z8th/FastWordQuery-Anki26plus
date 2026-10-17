@@ -1,0 +1,12 @@
+[Unit]
+Description=IndexTTS2 Service
+After=network.target
+
+[Service]
+User=bob
+WorkingDirectory=/home/bob/src/index-tts
+ExecStart=/home/bob/src/index-tts/.venv/bin/python indextts2_service.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
