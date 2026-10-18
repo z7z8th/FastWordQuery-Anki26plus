@@ -21,7 +21,7 @@ app.add_middleware(
 model_dir = "checkpoints"
 
 # Initialize IndexTTS
-tts = IndexTTS2(model_dir=model_dir, cfg_path=f"{model_dir}/config.yaml", use_bf16=False, use_accel=False, use_torch_compile=False)
+tts = IndexTTS2(model_dir=model_dir, cfg_path=f"{model_dir}/config.yaml", use_bf16=True, use_cuda_kernel=False, use_accel=False, use_torch_compile=False)
 
 class SpeechRequest(BaseModel):
     input: str
@@ -46,7 +46,7 @@ def generate_audio(req: SpeechRequest):
             output_path=output_path,
             # duration_factor=req.speed,  # <-- Updated parameter
             lang='ZH',
-            max_mel_tokens = 16384,
+            # max_mel_tokens = 20*10**6,
         )
         
         with open(output_path, "rb") as f:
