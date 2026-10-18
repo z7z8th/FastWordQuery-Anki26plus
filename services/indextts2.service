@@ -5,7 +5,7 @@ After=network.target
 [Service]
 User=bob
 WorkingDirectory=/home/bob/src/index-tts
-ExecStart=/home/bob/src/index-tts/.venv/bin/python indextts2_service.py
+ExecStart=/home/bob/src/index-tts/.venv/bin/python indextts2_5_service.py
 Restart=always
 
 [Install]

@@ -17,10 +17,12 @@ async function playAudioOfElement() {
     const regex = /([\u4e00-\u9fa5]+|[^\u4e00-\u9fa5]+)/g;
 
     // Helper function that returns a Promise resolving when the audio finishes playing
-    const playAudio = (url, volume=1.0) => {
+    const playAudio = (url, seg) => {
         return new Promise((resolve) => {
+            console.log('--- playAudio', JSON.stringify(seg))
             const audio = new Audio(url);
-            audio.volume = volume;
+            audio.playbackRate = seg.speed;
+            audio.volume = seg.volume;
             audio.onended = () => resolve();
             audio.onerror = () => resolve(); // Prevent hanging if an audio fails
             audio.play().catch(err => {
@@ -47,6 +49,8 @@ async function playAudioOfElement() {
             {
                 text: rawText.trim(),
                 lang: 'ZH',
+                speed: 0.8,
+                volume: 1.0,
             }
         ]
 
@@ -61,7 +65,7 @@ async function playAudioOfElement() {
                         input: seg.text,
                         voice: seg.voice,
                         lang: seg.lang,
-                        speed: 1.0,
+                        speed: seg.speed,
                         volume: seg.volume,
                     })
                 });
@@ -75,7 +79,7 @@ async function playAudioOfElement() {
                 
                 const blob = await response.blob();
                 const audioUrl = URL.createObjectURL(blob);
-                await playAudio(audioUrl);
+                await playAudio(audioUrl, seg);
 
             }
         } catch (error) {
