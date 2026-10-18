@@ -9,6 +9,7 @@ async function list_voices()
 // list_voices();
 
 async function playAudioOfElement() {
+    const word = document.querySelector('hw').innerText[0]
     // const sentences = document.querySelectorAll('.auto-tts, example');
     // let rawText = "谢谢你我很好。";
     const sentences = [this];
@@ -34,6 +35,7 @@ async function playAudioOfElement() {
 
     for (let rawText of sentences) {
         rawText = rawText.innerText;
+        rawText = rawText.replace(/~|～/g, word)
         // const rawChunks = rawText.match(regex) || [];
         
         // const segments = rawChunks.map(chunk => {
@@ -88,5 +90,5 @@ async function playAudioOfElement() {
     }
 }
 
-document.querySelectorAll('example, def_en, .auto-tts-div, .auto-tts li').forEach((e) => {e.addEventListener('click', playAudioOfElement)});
+document.querySelectorAll('example, def_en, .auto-tts-div, .auto-tts li, def').forEach((e) => {e.addEventListener('click', playAudioOfElement)});
 // document.getElementById('play-audio-btn').addEventListener('click', playAudioOfElement);
