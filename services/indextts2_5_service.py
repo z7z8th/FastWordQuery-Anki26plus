@@ -1,14 +1,20 @@
-from fastapi import FastAPI, Response, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-import torch
+import re
+import io
 import traceback
 import unicodedata
 
-from indextts.infer_v2_5 import IndexTTS2  # Adjust import based on your exact module path
+from fastapi import FastAPI, Response, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+
+from pydantic import BaseModel
+import torch
+import torchaudio
+
+
+# Import IndexTTS inference module
+from indextts.infer_v2_5 import IndexTTS2
 
 app = FastAPI()
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -17,43 +23,123 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# model_dir = "checkpoints_2_5"
-model_dir = "checkpoints"
+# Initialize IndexTTS on your local GPU/weights directory
+# Ensure your offline environment variable is set if running air-gapped: export HF_HUB_OFFLINE=1
+# tts = IndexTTS(model_dir="checkpoints/IndexTTS-2")
+# tts = IndexTTS2(cfg_path="checkpoints/config.yaml", model_dir="checkpoints", use_bf16=True)
+IS_V25 = True
+HALF_PRECISION = True
+model_dir = "./checkpoints"
 
-# Initialize IndexTTS
-tts = IndexTTS2(model_dir=model_dir, cfg_path=f"{model_dir}/config.yaml", use_bf16=True, use_cuda_kernel=False, use_accel=False, use_torch_compile=False)
+
+def build_tts(use_accel=False, use_torch_compile=False):
+    """Build an IndexTTS2 instance with the requested acceleration options."""
+    import torch
+
+    kwargs = dict(
+        model_dir=model_dir,
+        cfg_path=f"{model_dir}/config.yaml",
+        use_deepspeed=False,
+        use_cuda_kernel=False,
+        use_accel=use_accel,
+        use_torch_compile=use_torch_compile,
+        use_qwen_emo=True,
+    )
+    if IS_V25:
+        use_bf16 = HALF_PRECISION and torch.cuda.is_bf16_supported()
+        if HALF_PRECISION and not use_bf16:
+            print(
+                ">> BF16 is not supported on this device, falling back to full precision."
+            )
+        kwargs["use_bf16"] = use_bf16
+    else:
+        kwargs["use_fp16"] = HALF_PRECISION
+    print(f"--- build_tts options {kwargs}")
+    return IndexTTS2(**kwargs)
+
+
+tts = build_tts(use_accel=False, use_torch_compile=False)
+
+
+def normalize_circled_chars(text: str) -> str:
+    # White circled digits (① to ⑳) -> Unicode U+2460 to U+2473
+    trans_white = {chr(0x2460 + i - 1): str(i) for i in range(1, 21)}
+    
+    # Black circled digits (❶ to ❿) -> Unicode U+2776 to U+277F
+    trans_black = {chr(0x2776 + i - 1): str(i) for i in range(1, 11)}
+    
+    # Combine both dictionaries
+    mapping = {**trans_white, **trans_black}
+    
+    # Translate text using the mapping
+    text = text.translate(str.maketrans(mapping))
+    text = re.sub(r'[|｜]', ',', text)
+
+    return text
 
 class SpeechRequest(BaseModel):
     input: str
     speaker_audio: str = "preset-kokoro.wav"
-    speed: float = 1.0  # Changed from speed to duration_factor
-    lang: str = "ZH"
+
+    speed: float = 1.0
+    emotion: str = "neutral"
+    lang: str = "ZH"  # Default to Chinese
+
 
 @app.post("/v1/audio/speech")
 def generate_audio(req: SpeechRequest):
     try:
-        print(f'--- req {req}')
+        print(f"--- req {req}")
         output_path = "/tmp/output_speech.wav"
         # 过滤掉所有标点符号
         cleaned_text = [c for c in req.input if not unicodedata.category(c).startswith('P')]
         if not cleaned_text:
             return
+
+        input = normalize_circled_chars(req.input)
+        print(f'--- normalized input `{input}`')
         
-        # Pass duration_factor instead of speed
-        tts.infer(
+        # IndexTTS generates audio conditioned on the reference speaker clip and text input
+        # Note: You can also inject explicit pinyin inline (e.g., "银行hang2长") to override multi-pronunciation errors
+        # kwargs = {
+        #     'emo_audio_prompt': None,
+        #     'emo_alpha': 1,
+        #     'emo_vector': None,
+        #     'use_emo_text': False,
+        #     'emo_text': None,
+        #     'use_random': False,
+        #     'verbose': False,
+        #     'max_text_tokens_per_segment': 120,
+        #     'do_sample': True,
+        #     'top_p': 0.8,
+        #     'top_k': 30,
+        #     'temperature': 0.8,
+        #     'length_penalty': 0.0,
+        #     'num_beams': 3,
+        #     'repetition_penalty': 10.0,
+        #     'max_mel_tokens': 1500,
+        #     'lang': 'ZH',
+        #     'duration_factor': 1.0,
+        # }
+        kwargs = { 
+            'lang': 'ZH'
+        }
+
+        kwargs.update(dict(
             spk_audio_prompt=req.speaker_audio,
-            text=req.input,
+            text=input,
             output_path=output_path,
-            # duration_factor=req.speed,  # <-- Updated parameter
-            lang='ZH',
-            # max_mel_tokens = 20*10**6,
-        )
-        
+            duration_factor=req.speed,
+        ))
+
+        tts.infer(**kwargs)
+
+        # Read the resulting wav file into a buffer to return via FastAPI
         with open(output_path, "rb") as f:
             audio_bytes = f.read()
-            
+
         return Response(content=audio_bytes, media_type="audio/wav")
-            
+
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
@@ -61,4 +147,5 @@ def generate_audio(req: SpeechRequest):
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="127.0.0.1", port=8880)

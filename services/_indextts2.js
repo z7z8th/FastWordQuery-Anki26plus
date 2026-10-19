@@ -8,19 +8,41 @@ async function list_voices()
 }
 // list_voices();
 
+function destroyAudioPlay(player) {
+    player.pause();
+    player.currentTime = 0;
+    player.src = '';
+    player.load();
+}
+
 async function playAudioOfElement() {
-    const word = document.querySelector('hw').innerText[0]
+    // XDHY head word
+    let word = document.querySelector('hw')
+    let rawText;
+    if (word) {
+        word = word.innerText && word.innerText[0]
+        let elem = this.cloneNode(true);
+        elem.querySelectorAll('num, ps').forEach(e => e.remove())
+        rawText = elem.innerText;
+        // replace for XDHY
+        rawText = rawText.replace(/~|～/g, word);
+    } else {
+        rawText = this.innerText;
+    }
     // const sentences = document.querySelectorAll('.auto-tts, example');
     // let rawText = "谢谢你我很好。";
-    const sentences = [this];
+    const sentences = [rawText];
+    // console.log(`--- sentences ${sentences}`)
     
     // 1. Split text into mixed language segments
-    const regex = /([\u4e00-\u9fa5]+|[^\u4e00-\u9fa5]+)/g;
 
     // Helper function that returns a Promise resolving when the audio finishes playing
     const playAudio = (url, seg) => {
         return new Promise((resolve) => {
             console.log('--- playAudio', JSON.stringify(seg))
+            if (window.audioPlayer) {
+                destroyAudioPlay(window.audioPlayer);
+            }
             const audio = new Audio(url);
             audio.playbackRate = seg.speed;
             audio.volume = seg.volume;
@@ -30,12 +52,15 @@ async function playAudioOfElement() {
                 console.error("Playback error:", err);
                 resolve();
             });
+            window.audioPlayer = audio;
         });
     };
 
+    // const regex = /([\u4e00-\u9fa5]+|[^\u4e00-\u9fa5]+)/g;
     for (let rawText of sentences) {
-        rawText = rawText.innerText;
-        rawText = rawText.replace(/~|～/g, word)
+
+        console.log(`--- rawText '${rawText}'`)
+
         // const rawChunks = rawText.match(regex) || [];
         
         // const segments = rawChunks.map(chunk => {
