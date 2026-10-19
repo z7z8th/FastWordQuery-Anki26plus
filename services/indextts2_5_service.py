@@ -19,7 +19,7 @@ from typing import Optional
 
 class TTSLRUCache:
 
-    def __init__(self, capacity: int = 100, cache_dir: str = "/tmp/index-tts-cache/"):
+    def __init__(self, capacity: int = 1000, cache_dir: str = "/tmp/index-tts-cache/"):
         self.capacity = capacity
         self.cache_dir = cache_dir
         self.cache = OrderedDict()
@@ -66,6 +66,9 @@ class TTSLRUCache:
                     except OSError:
                         pass
             self.cache[key] = filepath
+
+    def get_key(self, text: str) -> str:
+        return self._get_sha1(text)
 
     def get(self, text: str) -> Optional[str]:
         """Retrieves the audio file path if it exists, updating its recency."""
@@ -114,7 +117,7 @@ class TTSLRUCache:
         return dest_path
 
 
-tts_cache = TTSLRUCache()
+tts_cache = TTSLRUCache(capacity=5000, cache_dir=os.path.expanduser("~/.cache/index-tts-cache/"))
 
 # Import IndexTTS inference module
 from indextts.infer_v2_5 import IndexTTS2
@@ -197,7 +200,7 @@ def generate_audio(req: SpeechRequest):
         print(f"--- req {req}")
         cc_path = tts_cache.get(req.input)
         if cc_path:
-            print(f"--- hit cache")
+            print(f"--- hit cache {tts_cache.get_key(req.input)}")
             # Read the resulting wav file into a buffer to return via FastAPI
             with open(cc_path, "rb") as f:
                 audio_bytes = f.read()
