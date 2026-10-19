@@ -118,3 +118,19 @@ example::before, def_en::before, .auto-tts-div::before, .auto-tts li::before, de
 ```
 
 * XDHY -> Back
+
+````html
+
+{{Back}}
+
+<hr>
+
+<div class="auto-tts-div" style='font-family: "Liberation Sans"; font-size: 20px;'>{{Explains}}</div>
+
+<hr>
+
+<div class="auto-tts" style='font-family: "Liberation Sans"; font-size: 20px;'>{{Examples}}</div>
+
+<script src="_indextts2.js" />
+
+```
