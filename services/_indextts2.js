@@ -44,7 +44,7 @@ async function playAudioOfElement() {
                 destroyAudioPlay(window.audioPlayer);
             }
             const audio = new Audio(url);
-            audio.playbackRate = seg.speed;
+            // audio.playbackRate = seg.speed;
             audio.volume = seg.volume;
             audio.onended = () => resolve();
             audio.onerror = () => resolve(); // Prevent hanging if an audio fails
@@ -76,7 +76,7 @@ async function playAudioOfElement() {
             {
                 text: rawText.trim(),
                 lang: 'ZH',
-                speed: 0.8,
+                duration_factor: 1.2,
                 volume: 1.0,
             }
         ]
@@ -92,7 +92,7 @@ async function playAudioOfElement() {
                         input: seg.text,
                         voice: seg.voice,
                         lang: seg.lang,
-                        speed: seg.speed,
+                        duration_factor: seg.duration_factor,
                         volume: seg.volume,
                     })
                 });
