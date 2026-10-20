@@ -2,6 +2,8 @@
 
 ## What's new
 
+* Add Chinese and English TTS support by IndexTTS2 Service (need GPU), see [README.md](services/README.md).
+* Add English only TTS support by kokoro-onnx service (runs with CPU), see [README.md](services/README.md).
 * Add Query OLLAMA AI Model for 中文/English/儿童中文/Child English explains and examples.
 * Support Querying 10K+ words in multi-process.(File descriptor leak fixed.)
 * Replaced QThread with Multi-process to achieve **TRUE** concurrent query.

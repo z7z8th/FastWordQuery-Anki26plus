@@ -78,5 +78,5 @@ async function playAudioOfElement() {
     }
 }
 
-document.querySelectorAll('example, def_en, .auto-tts-div, .auto-tts li').forEach((e) => {e.addEventListener('click', playAudioOfElement)});
+document.querySelectorAll('example, .auto-tts-div, .auto-tts li').forEach((e) => {e.addEventListener('click', playAudioOfElement)});
 // document.getElementById('play-audio-btn').addEventListener('click', playAudioOfElement);

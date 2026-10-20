@@ -4,8 +4,8 @@ After=network.target
 
 [Service]
 User=bob
-WorkingDirectory=/home/bob/Education/Anki/FastWordQuery-Anki26plus/services/
-ExecStart=/home/bob/Education/Anki/FastWordQuery-Anki26plus/.venv/bin/python kokoro_tts_service.py
+WorkingDirectory=%h/Education/Anki/FastWordQuery-Anki26plus/services/
+ExecStart=%h/Education/Anki/FastWordQuery-Anki26plus/.venv/bin/python kokoro_tts_service.py
 Restart=always
 
 [Install]
