@@ -43,7 +43,7 @@ class LLM_Chinese(WebService):
         elif config.ollama_lang == "儿童中文":
             prompt = (
                 f"请用小学三年级能理解的中文解释词语 '{word}'。\n"
-                f"然后请给出 3 到 5 个使用了该词语的例句。\n"
+                f"然后请给出 3 到 5 个使用了该词语的例句，如果'{word}'是英语，则给出英文例句，并紧接着在括号中给出英文例句的中文翻译，否则仅给出中文例句即可。\n"
                 f"注意：在详细解释和例句之间，请务必用 '{field_separator}' 作为单独的一行进行分隔。"
             )
         elif config.ollama_lang == "Child English":
@@ -64,8 +64,8 @@ class LLM_Chinese(WebService):
 
         explains, examples = raw_response.split(field_separator)
         explains, examples = [ 
-            markdown.markdown(x, extensions=["tables", "fenced_code"])
-            if ('#' in x or '*' in x) else x
+            markdown.markdown(x, extensions=["extra", "tables", "fenced_code"])
+            # if ('#' in x or '*' in x) else x
             for x in [explains, examples] 
         ]
 
