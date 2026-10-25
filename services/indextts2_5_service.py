@@ -246,6 +246,10 @@ def generate_audio(req: SpeechRequest):
             output_path = output_path,
             duration_factor = req.duration_factor,
             lang = 'ZH',
+            emo_alpha=0.6,
+            use_emo_text=True,
+            use_random=False,
+            verbose=True
         )
 
         tts.infer(**kwargs)
