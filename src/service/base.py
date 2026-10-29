@@ -143,6 +143,27 @@ def register(labels, enabled = False):
     return _deco
 
 
+def ignore_extra_kwargs(func, kwargs):
+    """Decorator that strips out unexpected keyword arguments 
+    if the target function doesn't accept them or **kwargs.
+    """
+    sig = inspect.signature(func)
+    
+    # Check if the function explicitly accepts **kwargs
+    has_var_keyword = any(
+        p.kind == inspect.Parameter.VAR_KEYWORD 
+        for p in sig.parameters.values()
+    )
+    
+    # Get the names of all explicitly defined parameters
+    allowed_params = set(sig.parameters.keys())
+    
+    if not has_var_keyword:
+        kwargs = {k: v for k, v in kwargs.items() if k in allowed_params}
+
+    return kwargs
+
+
 def export(labels):
     """
     export dict field function with a labels, which will be shown in the fields list.
@@ -150,6 +171,7 @@ def export(labels):
     def _with(fld_func):
         @wraps(fld_func)
         def _deco(self, *args, **kwargs):
+            kwargs = ignore_extra_kwargs(fld_func, kwargs)
             res = fld_func(self, *args, **kwargs)
             # print(f'--- fld_func {fld_func} ret {res}')
             return QueryResult(result=res) if not isinstance(res, QueryResult) else res
@@ -437,11 +459,11 @@ class Service(object):
         # [(label, method), (label, method)]
         return [flds[key] for key in sorted_flds]
 
-    def active(self, dict_fld_ord, word):
+    def active(self, dict_fld_ord, word, current_field_value):
         self.word = word
         # print(f'--- active {dict_fld_ord} {self.actions[dict_fld_ord]}')
         if dict_fld_ord >= 0 and dict_fld_ord < len(self.actions):
-            return self.actions[dict_fld_ord]()
+            return self.actions[dict_fld_ord](word=word, current_field_value=current_field_value)
         else:
             print(f"*** Error: {self.unique} query {dict_fld_ord} not in range [0, {len(self.actions)}) self.actions {self.actions}")
         return QueryResult.default()

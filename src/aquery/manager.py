@@ -97,11 +97,18 @@ class QueryWorkerManager(object):
         # Send lightweight primitive data instead of SWIG/C++ dependent Note objects
         # note_id, note_fields, word_ord, word, cfg_qfields = payload
         note_fields_len_list = [ len(f) for f in note.fields ]
+
         word_ord, word, cfg_qfields = inspect_note(note)
         if not word:
             print(f"***Warning: Field `{word_ord}` of `{note.fields[0]}` note {note} is empty. Skip querying this note.")
             return
-        payload = (note.id, note_fields_len_list, word_ord, word, cfg_qfields)
+        
+        current_fields_value_map = {}
+        for qf in cfg_qfields:
+            ford = qf['fld_ord']
+            current_fields_value_map[ford] = note.fields[ford]
+            
+        payload = (note.id, note_fields_len_list, word_ord, word, cfg_qfields, current_fields_value_map)
 
         self.task_queue.put(payload)
 
@@ -120,9 +127,9 @@ class QueryWorkerManager(object):
         orig_name = getattr(main_mod, '__name__', None)
         # print(f'--- worker process_worker_loop.__module__ {process_worker_loop.__module__}')
         # print(f"--- worker sys.modules['__main__'] {sys.modules['__main__']}")
-        main_module = sys.modules['__main__']
-        main_mod_name = getattr(main_module.__spec__, "name", None)
-        main_path = getattr(main_module, '__file__', None)
+        # main_module = sys.modules['__main__']
+        # main_mod_name = getattr(main_module.__spec__, "name", None)
+        # main_path = getattr(main_module, '__file__', None)
         # print(f'main_module {main_module} {dir(main_module)}')
         # print(f'main_mod_name {main_mod_name}')
         # print(f'main_path {main_path}')

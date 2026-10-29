@@ -18,7 +18,7 @@ def strip_combining(txt):
     return u"".join([c for c in norm if not unicodedata.combining(c)])
 
 
-def query_flds(note_fields_len_list, word_ord, word, cfg_qfields, qfields:list[int]) -> tuple[defaultdict[int, QueryResult], QueryStat, list]:
+def query_flds(note_fields_len_list, word_ord, word, cfg_qfields, qfields:list[int], current_field_value_map: dict[int, str|None] = defaultdict[int, None]) -> tuple[defaultdict[int, QueryResult], QueryStat, list]:
     """
     Query fields of single note
     """
@@ -59,6 +59,7 @@ def query_flds(note_fields_len_list, word_ord, word, cfg_qfields, qfields:list[i
         dict_unique = field.get('dict_unique', '').strip()
         dict_fld_ord = field.get('dict_fld_ord', -1)
         fld_ord = field.get('fld_ord', -1)
+        current_field_value = current_field_value_map[fld_ord]
 
         # print(f"---dict_unique {dict_unique} dict_fld_ord {dict_fld_ord} fld_ord {fld_ord}")
         if not dict_unique or dict_fld_ord < 0 or fld_ord < 0:
@@ -84,6 +85,7 @@ def query_flds(note_fields_len_list, word_ord, word, cfg_qfields, qfields:list[i
                 'word': word,
                 'dict_fld_ord': dict_fld_ord,
                 'fld_ord': fld_ord,
+                'current_field_value': current_field_value,
                 'cloze': cloze,
             })
 
@@ -98,7 +100,7 @@ def query_flds(note_fields_len_list, word_ord, word, cfg_qfields, qfields:list[i
     for task in tasks:
         try:
             service = services.get(task['dict_uniq'], None)
-            qr = service.active(task['dict_fld_ord'], task['word'])
+            qr = service.active(task['dict_fld_ord'], task['word'], task['current_field_value'])
             # print(f"--- qr {str(qr)[:100]}")
             if qr:
                 if isinstance(service, LocalService):
@@ -217,7 +219,7 @@ def process_worker_loop(stop_event, task_queue: mp.Queue, result_queue: mp.Queue
             break
 
 
-        note_id, note_fields_len_list, word_ord, word, cfg_qfields = payload
+        note_id, note_fields_len_list, word_ord, word, cfg_qfields, current_fields_value_map = payload
         # note = col.get_note(note_id)
         # print(f'--- note_id {note_id} payload {payload}')
 
@@ -225,7 +227,7 @@ def process_worker_loop(stop_event, task_queue: mp.Queue, result_queue: mp.Queue
             # Reconstruction or dummy encapsulation if query_flds needs field data
             # Adjust query_flds call depending on whether it works with dict or Note
             # qstat contains error count
-            results, qstat, missed_css_info_list = query_flds(note_fields_len_list, word_ord, word, cfg_qfields, query_fields)
+            results, qstat, missed_css_info_list = query_flds(note_fields_len_list, word_ord, word, cfg_qfields, query_fields, current_fields_value_map)
             result_queue.put(('success', (note_id, results, qstat, missed_css_info_list)))
             # result_queue.put(('success', (note_id, pickle.dumps(results), pickle.dumps(qstat), missed_css_info_list)))
         # except InvalidWordException:
