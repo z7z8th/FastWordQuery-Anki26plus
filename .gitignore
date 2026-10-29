@@ -129,3 +129,10 @@ README.txt
 
 c/python3.exe
 c/python3w.exe
+
+# service tts
+services/matcha*
+services/*.onnx
+services/*.bin
+services/*.tar.*
+
