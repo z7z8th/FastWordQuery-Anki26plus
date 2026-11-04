@@ -1,34 +1,3 @@
-// (async function() {
-// async function loadDefinition(word) {
-    
-//     try {
-//         // 1. Try fetching the first endpoint
-//         let response = await fetch(`http://localhost:8001/${word}`);
-        
-//         if (!response.ok) {
-//             throw new Error(`HTTP error! status: ${response.status}`);
-//         }
-        
-//         // 2. Render response as HTML
-//         const html = await response.text();
-//         // container.innerHTML = html;
-//         return html;
-//     } catch (error) {
-//         console.error("Request failed:", error);
-//         // container.innerHTML = "<p style='color: red;'>Failed to load definition.</p>";
-//     }
-// }
-
-// // Run the function
-// let html = await loadDefinition(document.querySelector('#front').innerText)
-// if (!html) {
-//     console.warn("Front fetch failed, trying BaseForm...");
-//     html = await loadDefinition(document.querySelector('#baseform').innerText)
-// }
-// const container = document.querySelector("#definition");
-// container.innerHTML = html;
-// })();
-
 
 (async function() {
     const target = document.querySelector("#definition");
