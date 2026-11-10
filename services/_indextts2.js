@@ -1,7 +1,11 @@
+(function () {
+const host = "df-ai";
+const port = 8880;
+
 async function list_voices()
 {
     // 1. Fetch voices and parse JSON
-    const voicesResponse = await fetch('http://localhost:8880/v1/voices');
+    const voicesResponse = await fetch(`http://${host}:${port}/v1/voices`);
     const voicesData = await voicesResponse.json();
 
     console.log(`voices`, JSON.stringify(voicesData, null, 2))
@@ -85,7 +89,7 @@ async function playAudioOfElement() {
             // 2. Fetch audio blobs for each segment sequentially
             const audioBuffers = [];
             for (let seg of segments) {
-                const response = await fetch('http://localhost:8880/v1/audio/speech', {
+                const response = await fetch(`http://${host}:${port}/v1/audio/speech`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -117,3 +121,4 @@ async function playAudioOfElement() {
 
 document.querySelectorAll('example, def_en, .auto-tts-div, .auto-tts li, def').forEach((e) => {e.addEventListener('click', playAudioOfElement)});
 // document.getElementById('play-audio-btn').addEventListener('click', playAudioOfElement);
+})();

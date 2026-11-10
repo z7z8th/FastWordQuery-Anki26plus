@@ -7,6 +7,7 @@ User=bob
 WorkingDirectory=%h/src/index-tts
 ExecStart=%h/src/index-tts/.venv/bin/python indextts2_5_service.py
 Restart=always
+#Environment="INDEXTTS_HOST=127.0.0.1"
 
 [Install]
 WantedBy=multi-user.target

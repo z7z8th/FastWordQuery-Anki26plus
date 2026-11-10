@@ -1,5 +1,4 @@
 import re
-import io
 import traceback
 import unicodedata
 
@@ -7,8 +6,6 @@ from fastapi import FastAPI, Response, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from pydantic import BaseModel
-import torch
-import torchaudio
 
 import os
 import hashlib
@@ -269,4 +266,4 @@ def generate_audio(req: SpeechRequest):
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host = "127.0.0.1", port = 8880)
+    uvicorn.run(app, host = os.getenv("INDEXTTS_HOST", "127.0.0.1"), port = int(os.getenv("INDEXTTS_PORT", 8880)))
