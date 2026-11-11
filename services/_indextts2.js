@@ -1,12 +1,62 @@
 (function () {
-const host = "df-ai";
+// const host = "df-ai";
+let host = "df-ai";
 const port = 8880;
+
+
+/**
+ * Fetch with a built-in timeout.
+ * @param {string} url - The URL to fetch.
+ * @param {object} options - Standard fetch options (headers, method, etc.).
+ * @param {number} timeout - Timeout in milliseconds (default: 5000ms).
+ * @returns {Promise<Response>}
+ */
+async function fetchWithTimeout(url, options = {}, timeout = 5000) {
+  const controller = new AbortController();
+  
+  // Set a timer to abort the request after the specified timeout
+  const timer = setTimeout(() => controller.abort(), timeout);
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal // Attach the abort signal to fetch
+    });
+    
+    // Clear the timeout if the request succeeds in time
+    clearTimeout(timer);
+    return response;
+    
+  } catch (error) {
+    clearTimeout(timer);
+    
+    if (error.name === 'AbortError') {
+      throw new Error(`Request timed out after ${timeout}ms`);
+    }
+    throw error;
+  }
+}
+
+async function checkAIHost() {
+  try {
+    console.log(`[IndexTTS] Trying ${host}:${port}`);
+    // const response = await fetch(`http://${host}:${port}`, { mode: 'no-cors' });
+    const response = await fetchWithTimeout(`http://${host}:${port}`, {}, 300);
+    console.log(`[IndexTTS] Use ${host}:${port}`);
+  } catch (error) {
+    console.log(`[IndexTTS] Fallback to localhost. ${error.message}`);
+    host = "127.0.0.1"
+  }
+}
 
 async function list_voices()
 {
     // 1. Fetch voices and parse JSON
-    const voicesResponse = await fetch(`http://${host}:${port}/v1/voices`);
-    const voicesData = await voicesResponse.json();
+    let voicesResponse;
+    let voicesData;
+
+    voicesResponse = await fetch(`http://${host}:${port}/v1/voices`);
+    voicesData = await voicesResponse.json();
 
     console.log(`voices`, JSON.stringify(voicesData, null, 2))
 }
@@ -20,6 +70,8 @@ function destroyAudioPlay(player) {
 }
 
 async function playAudioOfElement() {
+    await checkAIHost();
+
     // XDHY head word
     let word = document.querySelector('hw')
     let rawText;

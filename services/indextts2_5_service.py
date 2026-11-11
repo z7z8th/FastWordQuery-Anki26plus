@@ -266,4 +266,8 @@ def generate_audio(req: SpeechRequest):
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host = os.getenv("INDEXTTS_HOST", "127.0.0.1"), port = int(os.getenv("INDEXTTS_PORT", 8880)))
+    try:
+        uvicorn.run(app, host = os.getenv("INDEXTTS_HOST", "127.0.0.1"), port = int(os.getenv("INDEXTTS_PORT", 8880)))
+    except:
+        traceback.print_exc()
+        uvicorn.run(app, host = "127.0.0.1", port = 8880)
