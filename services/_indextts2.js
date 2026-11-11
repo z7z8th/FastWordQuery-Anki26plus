@@ -41,7 +41,7 @@ async function checkAIHost() {
   try {
     console.log(`[IndexTTS] Trying ${host}:${port}`);
     // const response = await fetch(`http://${host}:${port}`, { mode: 'no-cors' });
-    const response = await fetchWithTimeout(`http://${host}:${port}`, {}, 300);
+    const response = await fetchWithTimeout(`http://${host}:${port}`, {}, 200);
     console.log(`[IndexTTS] Use ${host}:${port}`);
   } catch (error) {
     console.log(`[IndexTTS] Fallback to localhost. ${error.message}`);
